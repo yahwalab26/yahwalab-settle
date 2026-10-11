@@ -62,6 +62,9 @@ th{font-weight:500;color:var(--mute);font-size:12px;letter-spacing:.04em}
   .card{padding:16px}.row{gap:8px}.row>select{flex:1 1 100%}.row>button{flex:1 1 auto}
   th,td{font-size:13px}.drop{padding:36px 14px}
 }
+header .logo{height:36px;width:auto;max-width:none;flex:none;object-fit:contain}
+header>div{flex:none;max-width:100%}
+.logo{object-fit:contain}
 </style></head><body>
 <div class="wrap">
 
@@ -104,8 +107,18 @@ th{font-weight:500;color:var(--mute);font-size:12px;letter-spacing:.04em}
   <div id="prev"></div>
 
   <h2><small>(03)</small>작가 계정 발급 도우미</h2>
-  <div class="card" style="margin-top:0"><p class="k" style="margin:0 0 10px">임시 비밀번호를 만들어 Supabase에서 작가 계정을 생성할 때 사용하세요. 작가는 첫 로그인 직후 새 비밀번호를 직접 설정해야 합니다.</p>
-    <div class="row"><button id="gen">임시 비밀번호 생성</button><span id="tp" class="pre" hidden></span><button class="ghost" id="cp" hidden>복사</button></div></div>
+  <div class="card" style="margin-top:0">
+    <p class="k" style="margin:0 0 14px">작가 이메일과 작가를 선택하면, 그 계정용 임시 비밀번호 · 로그인 안내문 · 권한 부여 SQL을 한 번에 만들어 드립니다.</p>
+    <div class="login" style="max-width:420px;gap:10px">
+      <input id="ae" type="email" placeholder="작가 이메일" autocomplete="off">
+      <select id="aa"></select>
+      <button id="gen">임시 비밀번호 생성</button>
+    </div>
+    <div id="gres" hidden style="margin-top:20px">
+      <div class="pre" id="tp"></div>
+      <div class="row" style="margin-top:12px"><button class="ghost" id="c1">비밀번호 복사</button><button class="ghost" id="c2">안내문 복사</button><button class="ghost" id="c3">SQL 복사</button></div>
+      <p class="k" style="margin:12px 0 0">① Supabase &gt; Authentication &gt; Users &gt; Add user에서 위 이메일과 비밀번호로 계정 생성 (Auto Confirm 켜기) → ② 복사한 SQL을 SQL Editor에서 실행하세요.</p>
+    </div></div>
 </section>
 
 </div>
@@ -117,7 +130,7 @@ const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_pu
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 const PN={aladin:'알라딘',yes24:'예스24',kyobo:'교보문고'},c=v=>String(v??'').trim();
-let S=null,WORKS=[],ISBN={};
+let S=null,WORKS=[],ISBN={},AUTHORS=[],WA={};
 
 /* ---------- 인증 ---------- */
 const view=id=>['login','chpw','denied','app'].forEach(v=>$('#'+v).hidden=v!==id);
@@ -146,16 +159,27 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
   if(error)return m.textContent=/different|same/i.test(error.message)?'기존 비밀번호와 다른 비밀번호를 입력하세요.':error.message;
   await SB.rpc('complete_password_change');enter(ME)};
 
-/* ---------- 임시 비밀번호 생성 ---------- */
-$('#gen').onclick=()=>{const A='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=crypto.getRandomValues(new Uint32Array(14));
-  $('#tp').textContent=[...r].map(x=>A[x%A.length]).join('');$('#tp').hidden=$('#cp').hidden=false;$('#cp').textContent='복사'};
-$('#cp').onclick=async e=>{await navigator.clipboard.writeText($('#tp').textContent);e.target.textContent='복사됨'};
+/* ---------- 작가 계정 발급 도우미 ---------- */
+let G=null;
+const fillAuthors=()=>{$('#aa').innerHTML='<option value="">연결할 작가 선택…</option>'+AUTHORS.map(a=>`<option value="${a.id}">${esc(a.pen_name)}</option>`).join('')};
+$('#gen').onclick=()=>{const em=$('#ae').value.trim().toLowerCase(),aid=$('#aa').value;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))return alert('올바른 이메일 주소를 입력하세요.');
+  if(!aid)return alert('연결할 작가를 선택하세요.');
+  const A='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789',r=crypto.getRandomValues(new Uint32Array(14));
+  G={em,aid,pw:[...r].map(x=>A[x%A.length]).join('')};
+  $('#tp').innerHTML=`${esc(em)}<br><b>${G.pw}</b>`;$('#gres').hidden=false};
+const cpy=async(t,b)=>{await navigator.clipboard.writeText(t);const o=b.textContent;b.textContent='복사됨';setTimeout(()=>b.textContent=o,1200)};
+$('#c1').onclick=e=>G&&cpy(G.pw,e.target);
+$('#c2').onclick=e=>G&&cpy(`[야화랩 정산 사이트] 로그인 안내\n주소: ${location.origin.startsWith('http')?location.origin:'https://settle.yahwalab.xyz'}\n아이디: ${G.em}\n임시 비밀번호: ${G.pw}\n\n첫 로그인 시 새 비밀번호를 직접 설정해야 합니다.`,e.target);
+$('#c3').onclick=e=>G&&cpy(`insert into public.profiles (id, role, author_id)\nselect id, 'author', '${G.aid}' from auth.users where email = '${G.em.replace(/'/g,"''")}';`,e.target);
 
 (async()=>{const{data:{session}}=await SB.auth.getSession();session?enter(session.user):view('login')})();
 
-async function loadRefs(){const[w,i]=await Promise.all([SB.from('works').select('id,title').order('title'),
-  SB.from('work_identifiers').select('work_id,value').eq('id_type','isbn')]);
-  WORKS=w.data||[];ISBN={};(i.data||[]).forEach(x=>ISBN[x.value]=x.work_id)}
+async function loadRefs(){const[w,i,a,l]=await Promise.all([SB.from('works').select('id,title').order('title'),
+  SB.from('work_identifiers').select('work_id,value').eq('id_type','isbn'),
+  SB.from('authors').select('id,pen_name').order('pen_name'),SB.from('work_authors').select('work_id,author_id')]);
+  WORKS=w.data||[];ISBN={};(i.data||[]).forEach(x=>ISBN[x.value]=x.work_id);
+  AUTHORS=a.data||[];WA={};(l.data||[]).forEach(x=>(WA[x.work_id]??=[]).push(x.author_id));fillAuthors()}
 async function loadFresh(){const{data}=await SB.from('v_data_freshness').select('*').order('platform_code');
   $('#fresh').innerHTML=(data||[]).map(r=>`<tr><td>${esc(r.platform_name)}</td><td>${r.granularity==='monthly'?'월 집계':'일별'}</td>
   <td>${r.last_sale_date||(r.last_sale_month?r.last_sale_month.slice(0,7):'-')}</td>
@@ -196,7 +220,7 @@ function parse(rows,p,hi){
       if(p==='kyobo'){const per=c(g(r,'판매기간'));
         if(per==='합계'){total=num(g(r,'판매금액'));return}
         if(!/^\d{4}-\d{2}$/.test(per))throw `판매기간 형식 오류: ${per}`;
-        L.push({isbn:isbn(g(r,'epub isbn')),title:c(g(r,'상품명')),granularity:'monthly',line_type:'sale',sale_date:null,sale_month:per+'-01',
+        L.push({isbn:isbn(g(r,'epub isbn')),title:c(g(r,'상품명')),author:c(g(r,'저자명')),granularity:'monthly',line_type:'sale',sale_date:null,sale_month:per+'-01',
           channel:c(g(r,'판매채널')),sale_method:c(g(r,'판매방식')),quantity:num(g(r,'판매수량')),list_price:num(g(r,'정가')),
           sale_price:num(g(r,'판매가')),gross_amount:num(g(r,'판매금액')),net_amount:null,raw});return}
       let refund,when,orig=null,list,sale,net,ik,title;
@@ -208,7 +232,7 @@ function parse(rows,p,hi){
         when=dt(refund&&rf!==''?g(r,'환불일'):g(r,'판매일'));if(refund&&c(g(r,'판매일'))!=='')orig=dt(g(r,'판매일')).ts;
         list=g(r,'출판사판매가');sale=g(r,'서점판매가');net=g(r,'출판사정산액');ik=g(r,'전자책ISBN');title=g(r,'도서명')}
       const q=refund?-1:1,sp=Math.abs(num(sale)),nt=num(net);if(nt==null)throw '정산액 없음';
-      L.push({isbn:isbn(ik),title:c(title),granularity:'transaction',line_type:refund?'refund':'sale',sold_at:when.ts,sale_date:when.date,
+      L.push({isbn:isbn(ik),title:c(title),author:c(g(r,'저자명')),granularity:'transaction',line_type:refund?'refund':'sale',sold_at:when.ts,sale_date:when.date,
         sale_month:when.month,original_sold_at:orig,quantity:q,list_price:num(list),sale_price:sp,gross_amount:q*sp,net_amount:q*Math.abs(nt),raw});
     }catch(e){E.push(`${hi+n+2}행: ${e}`)}});
   if(p==='kyobo'&&total!=null){const s=L.reduce((a,l)=>a+l.gross_amount,0);if(s!==total)E.push(`합계 불일치: 행 합 ${won(s)} ≠ 파일의 합계 ${won(total)}`)}
@@ -237,19 +261,20 @@ const inRange=()=>S.lines.every(l=>S.p==='kyobo'?(l.sale_month>=S.ps.slice(0,7)+
 
 function render(){
   const s=S,U=unmatched(),gross=s.lines.reduce((a,l)=>a+l.gross_amount,0),net=s.p==='kyobo'?null:s.lines.reduce((a,l)=>a+l.net_amount,0);
-  const by={};s.lines.forEach(l=>{const k=l.isbn;by[k]??={t:l.title,q:0,g:0};by[k].q+=l.quantity;by[k].g+=l.gross_amount});
+  const by={};s.lines.forEach(l=>{const k=l.isbn;by[k]??={t:l.title,a:l.author,q:0,g:0};by[k].q+=l.quantity;by[k].g+=l.gross_amount});
   const range=s.ps&&s.pe&&s.ps<=s.pe&&inRange(),ok=!s.errs.length&&!Object.keys(U).length&&range&&s.lines.length;
   $('#prev').innerHTML=`<div class="card">
     <div class="row"><b>${PN[s.p]}</b><span class="k">${esc(s.name)}</span></div>
-    <div class="tw"><table style="margin-top:12px"><thead><tr><th>작품</th><th class="r">수량</th><th class="r">판매금액</th></tr></thead><tbody>
-    ${Object.entries(by).map(([k,v])=>`<tr><td>${esc(ISBN[k]?(WORKS.find(w=>w.id===ISBN[k])||{}).title:v.t)} ${ISBN[k]?'':'<span class="bad">· 미등록</span>'}</td><td class="r">${v.q}</td><td class="r">${won(v.g)}</td></tr>`).join('')}
-    <tr><td><b>합계 ${s.lines.length}행</b></td><td></td><td class="r"><b>${won(gross)}</b></td></tr></tbody></table></div>
+    <div class="tw"><table style="margin-top:12px"><thead><tr><th>작품</th><th>작가</th><th class="r">수량</th><th class="r">판매금액</th></tr></thead><tbody>
+    ${Object.entries(by).map(([k,v])=>`<tr><td>${esc(ISBN[k]?(WORKS.find(w=>w.id===ISBN[k])||{}).title:v.t)} ${ISBN[k]?'':'<span class="bad">· 미등록</span>'}</td><td>${authCell(k,v.a)}</td><td class="r">${v.q}</td><td class="r">${won(v.g)}</td></tr>`).join('')}
+    <tr><td><b>합계 ${s.lines.length}행</b></td><td></td><td></td><td class="r"><b>${won(gross)}</b></td></tr></tbody></table></div>
     <p class="k" style="margin:10px 0 0">${net==null?'교보문고는 정산액이 파일에 없어 정산율로 계산됩니다.':`CP 정산액 합계 ${won(net)}`}</p></div>
   ${s.errs.length?`<div class="card bad"><b>오류 ${s.errs.length}건 — 수정 후 다시 올려주세요</b><br>${s.errs.slice(0,8).map(esc).join('<br>')}${s.errs.length>8?'<br>…':''}</div>`:''}
   ${Object.keys(U).length?`<div class="card"><b>미등록 작품 ${Object.keys(U).length}건</b><p class="k" style="margin:4px 0 12px">ISBN으로 작품을 연결해야 업로드할 수 있습니다. 한 번 연결하면 이후 파일에서는 자동 인식됩니다.</p>
     ${Object.entries(U).map(([i,t])=>`<div class="row" style="margin-bottom:8px"><span style="flex:1 1 200px;min-width:0;overflow-wrap:anywhere">${esc(t)}<br><span class="k">${i}</span></span>
     <select data-sel="${i}"><option value="">작품 선택…</option><option value="__new">+ 새 작품으로 등록</option>${WORKS.map(w=>`<option value="${w.id}">${esc(w.title)}</option>`).join('')}</select>
     <button class="ghost" data-link="${i}" data-title="${esc(t)}">연결</button></div>`).join('')}</div>`:''}
+  ${authCard()}
   <div class="card"><div class="row"><span>적용 기간</span>
     <input type="date" id="ps" value="${s.ps||''}"> <span>~</span> <input type="date" id="pe" value="${s.pe||''}"></div>
     <p class="k" style="margin:8px 0 0">이 기간의 ${PN[s.p]} 기존 데이터는 이번 파일로 교체됩니다. ${s.p==='kyobo'?'(월 단위로 교체)':''}</p>
@@ -259,7 +284,7 @@ function render(){
   $('#ps').onchange=e=>{S.ps=e.target.value;render()};$('#pe').onchange=e=>{S.pe=e.target.value;render()};
   $('#go').onclick=commit;if(s.ps&&s.pe&&s.ps<=s.pe)overlap()}
 
-$('#prev').onclick=async e=>{const i=e.target.dataset.link;if(!i)return;
+$('#prev').onclick=async e=>{if(e.target.dataset.alink)return linkAuthor(e.target.dataset.alink,e.target);const i=e.target.dataset.link;if(!i)return;
   const sel=$(`[data-sel="${i}"]`).value;if(!sel)return alert('연결할 작품을 선택하세요.');
   let wid=sel;e.target.disabled=true;
   if(sel==='__new'){const{data,error}=await SB.from('works').insert({title:e.target.dataset.title.replace(/^\[[^\]]*\]\s*/,'')}).select('id').single();
@@ -268,11 +293,24 @@ $('#prev').onclick=async e=>{const i=e.target.dataset.link;if(!i)return;
   if(error){e.target.disabled=false;return alert(error.message)}
   await loadRefs();render()};
 
+const authCell=(k,name)=>{const w=ISBN[k];if(!w)return `<span class="k">${esc(name)||'-'}</span>`;
+  const ids=WA[w]||[];if(!ids.length)return `<span class="bad">${esc(name)||'-'} · 미연결</span>`;
+  const ns=ids.map(i=>(AUTHORS.find(a=>a.id===i)||{}).pen_name);
+  return esc(ns.join(', '))+(name&&!ns.includes(name)?` <span class="k">(파일: ${esc(name)})</span>`:'')};
+function authCard(){const NA={};S.lines.forEach(l=>{const w=ISBN[l.isbn];if(w&&!(WA[w]||[]).length)NA[w]??=l.author});const K=Object.entries(NA);if(!K.length)return '';
+  return `<div class="card"><b>작가 미연결 작품 ${K.length}건</b><p class="k" style="margin:4px 0 12px">작가를 연결하면 해당 작가 화면에 이 작품의 판매가 표시됩니다. 지금 연결하지 않고 업로드해도 되며, 나중에 연결하면 그대로 반영됩니다.</p>
+  ${K.map(([w,name])=>{const m=AUTHORS.find(a=>a.pen_name===name);return `<div class="row" style="margin-bottom:8px"><span style="flex:1 1 200px;min-width:0;overflow-wrap:anywhere">${esc((WORKS.find(x=>x.id===w)||{}).title)}<br><span class="k">파일의 저자명: ${esc(name)||'-'}</span></span>
+  <select data-asel="${w}"><option value="">작가 선택…</option>${name&&!m?`<option value="__new" selected>+ 새 작가 "${esc(name)}" 등록</option>`:''}${AUTHORS.map(a=>`<option value="${a.id}" ${m&&m.id===a.id?'selected':''}>${esc(a.pen_name)}</option>`).join('')}</select>
+  <button class="ghost" data-alink="${w}" data-name="${esc(name)}">연결</button></div>`}).join('')}</div>`}
+async function linkAuthor(w,btn){const sel=$(`[data-asel="${w}"]`).value;if(!sel)return alert('연결할 작가를 선택하세요.');btn.disabled=true;let aid=sel;
+  if(sel==='__new'){const{data,error}=await SB.from('authors').insert({pen_name:btn.dataset.name}).select('id').single();if(error){btn.disabled=false;return alert(error.message)}aid=data.id}
+  const{error}=await SB.from('work_authors').insert({work_id:w,author_id:aid,share_ratio:1});
+  if(error){btn.disabled=false;return alert(error.message)}await loadRefs();render()}
 async function overlap(){const{data}=await SB.rpc('preview_upload_overlap',{p_platform:S.p,p_start:S.ps,p_end:S.pe});const o=data?.[0],el=$('#ov');
   if(el)el.innerHTML=o&&o.existing_rows>0?`<span class="bad">주의: 같은 기간의 기존 데이터 ${o.existing_rows}건(${won(o.existing_gross)})이 삭제되고 이 파일로 교체됩니다.</span>`:'같은 기간의 기존 데이터가 없어 새로 추가됩니다.'}
 
 async function commit(){const b=$('#go');b.disabled=true;$('#msg').textContent='업로드 중…';
-  const lines=S.lines.map(({isbn:i,title,...x})=>({...x,work_id:ISBN[i]}));
+  const lines=S.lines.map(({isbn:i,title,author,...x})=>({...x,work_id:ISBN[i]}));
   const{error}=await SB.rpc('commit_upload',{p_batch:{platform_code:S.p,filename:S.name,file_sha256:S.sha,period_start:S.ps,period_end:S.pe},p_lines:lines});
   if(error){b.disabled=false;$('#msg').innerHTML=`<span class="bad">${error.code==='23505'?'이미 업로드한 동일한 파일입니다.':esc(error.message)}</span>`;return}
   $('#prev').innerHTML=`<div class="card ok"><b>${PN[S.p]} ${lines.length}행 업로드 완료</b></div>`;S=null;fi.value='';loadFresh()}

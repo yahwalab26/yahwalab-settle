@@ -22,7 +22,7 @@ section{animation:in .5s ease both}
 h1{font-size:26px;line-height:1.3;margin:0 0 8px;font-weight:700;letter-spacing:-.01em}
 h2{margin:60px 0 18px;text-align:center;font-size:22px;line-height:1.3;font-weight:700;letter-spacing:-.01em}
 h2 small{display:block;font-size:12px;font-weight:500;color:var(--mute);letter-spacing:.06em;margin-bottom:6px}
-#login,#chpw,#denied{min-height:100vh;min-height:calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom));display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:32px 0}
+#login,#chpw,#denied,#accept{min-height:100vh;min-height:calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom));display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:32px 0}
 header{display:flex;flex-direction:column;align-items:center;gap:6px;padding:34px 0 20px;border-bottom:1px solid var(--ink);text-align:center}
 header .logo{height:36px}header .sub{margin:6px 0 0;font-size:12px}
 .who{display:flex;align-items:center;justify-content:center;gap:4px 16px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin-top:8px}
@@ -82,6 +82,12 @@ header>div{flex:none;max-width:100%}
   <p class="foot">YAHWA LAB · 여성향 웹소설 전문 콘텐츠 레이블</p>
 </section>
 
+<section id="accept" hidden>
+  <img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"><p class="sub">야화랩 정산 사이트</p>
+  <div class="login" style="margin:36px auto 0;text-align:center"><p class="k" style="margin:0 0 12px">계정 활성화를 시작합니다.<br>아래 버튼을 눌러 비밀번호를 설정해 주세요.</p>
+    <button id="ab">비밀번호 설정 시작</button><div id="ae2" class="bad" style="min-height:20px;font-size:13px;margin-top:8px"></div></div>
+</section>
+
 <section id="chpw" hidden>
   <h1 id="ct">비밀번호 설정</h1><p class="k" id="cs"></p>
   <form class="login" id="cf" style="margin:36px auto 0">
@@ -116,7 +122,8 @@ header>div{flex:none;max-width:100%}
   </div>
   <div class="pg" id="pg-authors" hidden>
   <h2><small>(03)</small>작가 관리</h2>
-  <div class="row"><input id="aq" type="text" placeholder="필명 · 이름 · 이메일 검색" style="max-width:300px"><button id="anew">+ 작가 등록</button></div>
+  <div class="row"><input id="aq" type="text" placeholder="필명 · 이름 · 이메일 검색" style="max-width:300px"><button id="anew">+ 작가 등록</button><button class="ghost" id="mp">메일 양식 미리보기</button></div>
+  <div class="card" id="mprev" hidden></div>
   <div class="card" id="afw" hidden><form id="af" class="login" style="max-width:420px;margin:0 auto;gap:10px">
     <p class="k" style="margin:0 0 6px;text-align:center">계약서 기준으로 입력하세요. 개인정보는 서버에서 암호화되어 저장됩니다.</p>
     <input id="f1" type="text" placeholder="실명" autocomplete="off" required>
@@ -126,6 +133,7 @@ header>div{flex:none;max-width:100%}
     <input id="f5" type="text" placeholder="계좌번호" autocomplete="off" required>
     <input id="f6" type="email" placeholder="로그인용 이메일" autocomplete="off" required>
     <input id="f7" type="text" placeholder="필명 (여러 개면 쉼표로 구분)" autocomplete="off" required>
+    <label class="chk"><input id="fm" type="checkbox" checked> 등록 후 안내 메일 바로 발송</label>
     <button id="fs">등록하고 설정 링크 만들기</button></form></div>
   <div class="card" id="ares" hidden></div><div class="card" id="adet" hidden></div>
   <div class="tw" style="margin-top:20px"><table><thead><tr><th>필명</th><th>이름</th><th>이메일</th><th class="r">작품</th><th></th></tr></thead><tbody id="alist"></tbody></table></div>
@@ -144,7 +152,7 @@ const PN={aladin:'알라딘',yes24:'예스24',kyobo:'교보문고'},c=v=>String(
 let S=null,WORKS=[],ISBN={},AUTHORS=[],WA={};
 
 /* ---------- 인증 ---------- */
-const view=id=>['login','chpw','denied','app'].forEach(v=>$('#'+v).hidden=v!==id);
+const view=id=>['login','accept','chpw','denied','app'].forEach(v=>$('#'+v).hidden=v!==id);
 document.querySelectorAll('.out').forEach(b=>b.onclick=async()=>{await SB.auth.signOut();view('login')});
 $('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';
   const{data,error}=await SB.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
@@ -191,24 +199,35 @@ function renderPeople(){const q=$('#aq').value.trim().toLowerCase();
     <td style="white-space:nowrap"><button class="ghost" data-pa="view" data-id="${p.id}">정보</button> <button class="ghost" data-pa="pen" data-id="${p.id}">필명 추가</button> <button class="ghost" data-pa="link" data-id="${p.id}">링크 재발급</button></td></tr>`}).join('')||'<tr><td colspan="5" class="k">등록된 작가가 없습니다.</td></tr>'}
 $('#aq').oninput=renderPeople;
 $('#anew').onclick=()=>{$('#afw').hidden=!$('#afw').hidden};
-function showLink(link,msg){const r=$('#ares');
-  r.innerHTML=`<b>${msg}</b><p class="k" style="margin:6px 0 12px">아래 링크를 작가에게 직접 전달하세요. 링크를 열면 비밀번호를 설정하게 되며, 만료되면 다시 발급해야 합니다.</p><div class="pre" style="margin-bottom:12px">${esc(link)}</div><button class="ghost" id="cl">링크 복사</button>`;
+const mailNote=m=>!m?'':m.ok?'<p class="ok" style="margin:6px 0 0">안내 메일을 발송했습니다.</p>':`<p class="bad" style="margin:6px 0 0">메일 발송 실패: ${esc(m.error)}<br>아래 링크를 직접 전달해 주세요.</p>`;
+function showLink(link,msg,mail){const r=$('#ares');
+  r.innerHTML=`<b>${msg}</b>${mailNote(mail)}<p class="k" style="margin:6px 0 12px">링크를 작가에게 직접 전달하셔도 됩니다. 링크를 열면 비밀번호를 설정하게 되며, 만료되면 다시 발급해야 합니다.</p><div class="pre" style="margin-bottom:12px">${esc(link)}</div><button class="ghost" id="cl">링크 복사</button>`;
   r.hidden=false;$('#cl').onclick=e=>cpy(link,e.target)}
 function showPii(d){const L={legal_name:'실명',phone:'전화번호',address:'주소',bank_name:'은행',bank_account:'계좌번호',contact_email:'이메일'},r=$('#adet');
   r.innerHTML=`<b>개인정보 (60초 후 자동으로 닫힙니다)</b><table style="margin-top:10px">${Object.entries(L).map(([k,t])=>`<tr><th>${t}</th><td>${esc(d[k])}</td></tr>`).join('')}</table><button class="ghost" id="cx" style="margin-top:12px">닫기</button>`;
   r.hidden=false;const h=()=>{r.hidden=true;r.innerHTML=''};$('#cx').onclick=h;setTimeout(h,60000)}
-$('#af').onsubmit=async e=>{e.preventDefault();const g=i=>$('#'+i).value.trim(),b=$('#fs');b.disabled=true;
-  const{data,error}=await call({action:'create_person',legal_name:g('f1'),phone:g('f2'),address:g('f3'),bank_name:g('f4'),bank_account:g('f5'),login_email:g('f6'),pen_names:g('f7').split(/[,，]/).map(x=>x.trim()).filter(Boolean)});
+$('#af').onsubmit=async e=>{e.preventDefault();const g=i=>$('#'+i).value.trim(),b=$('#fs'),nm=g('f7').split(/[,，]/)[0].trim()||'작가';b.disabled=true;
+  const{data,error}=await call({action:'create_person',send_email:$('#fm').checked,legal_name:g('f1'),phone:g('f2'),address:g('f3'),bank_name:g('f4'),bank_account:g('f5'),login_email:g('f6'),pen_names:g('f7').split(/[,，]/).map(x=>x.trim()).filter(Boolean)});
   b.disabled=false;if(error)return alert(error);
   if(data.duplicate){$('#ares').innerHTML=`<b class="bad">이미 등록된 작가입니다 (${esc(data.name_masked)})</b><p class="k" style="margin:6px 0 0">실명과 전화번호가 같은 사람이 있습니다. 목록에서 '필명 추가'를 사용하세요.</p>`;$('#ares').hidden=false;return}
-  $('#af').reset();$('#afw').hidden=true;showLink(data.link,`${esc(g('f7')||'작가')} 계정을 만들었습니다.`);loadPeople()};
+  $('#af').reset();$('#afw').hidden=true;showLink(data.link,`${esc(nm)} 계정을 만들었습니다.`,data.mail);loadPeople()};
 $('#alist').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.id,a=b.dataset.pa;
   if(a==='pen'){const n=(prompt('추가할 필명을 입력하세요')||'').trim();if(!n)return;
     const{error}=await SB.from('authors').insert({pen_name:n,person_id:id});if(error)return alert(error.code==='23505'?'이미 사용 중인 필명입니다.':error.message);return loadPeople()}
-  b.disabled=true;const{data,error}=await call(a==='view'?{action:'reveal',person_id:id}:{action:'reissue_link',person_id:id});b.disabled=false;
-  if(error)return alert(error);a==='view'?showPii(data):showLink(data.link,'비밀번호 설정 링크를 다시 만들었습니다.')};
+  b.disabled=true;const sm=a==='link'&&confirm('이메일로도 발송할까요?\n(취소하면 링크만 표시됩니다)');b.disabled=true;const{data,error}=await call(a==='view'?{action:'reveal',person_id:id}:{action:'reissue_link',person_id:id,send_email:sm});b.disabled=false;
+  if(error)return alert(error);a==='view'?showPii(data):showLink(data.link,'비밀번호 설정 링크를 다시 만들었습니다.',data.mail)};
 
-(async()=>{const{data:{session}}=await SB.auth.getSession();session?enter(session.user):view('login')})();
+$('#mp').onclick=async e=>{e.target.disabled=true;const{data,error}=await call({action:'preview_mail'});e.target.disabled=false;if(error)return alert(error);
+  const r=$('#mprev');r.innerHTML=`<b>${esc(data.subject)}</b><div class="row" style="margin-top:10px"><button class="ghost" data-w="100%">PC 폭</button><button class="ghost" data-w="360px">모바일 폭 (360px)</button></div><iframe id="mif" sandbox="" style="display:block;width:100%;max-width:100%;height:600px;border:1px solid var(--line);margin:12px auto 0"></iframe><button class="ghost" id="mx" style="margin-top:12px">닫기</button>`;
+  $('#mif').srcdoc=data.html;r.hidden=false;r.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>$('#mif').style.width=b.dataset.w);$('#mx').onclick=()=>r.hidden=true};
+
+/* ---------- 메일 링크로 들어온 경우: 버튼을 눌러야 계정 활성화 ---------- */
+const QP=new URLSearchParams(location.search);
+$('#ab').onclick=async e=>{e.target.disabled=true;$('#ae2').textContent='';
+  const{data,error}=await SB.auth.verifyOtp({token_hash:QP.get('th'),type:QP.get('t')==='recovery'?'recovery':'invite'});
+  if(error){e.target.disabled=false;return $('#ae2').textContent='링크가 만료되었거나 이미 사용되었습니다. 담당자에게 재발급을 요청해 주세요.'}
+  history.replaceState(null,'',location.pathname+location.hash);enter(data.user)};
+(async()=>{if(QP.get('th'))return view('accept');const{data:{session}}=await SB.auth.getSession();session?enter(session.user):view('login')})();
 
 async function loadRefs(){const[w,i,a,l]=await Promise.all([SB.from('works').select('id,title').order('title'),
   SB.from('work_identifiers').select('work_id,value').eq('id_type','isbn'),

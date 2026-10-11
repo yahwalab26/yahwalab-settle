@@ -29,7 +29,7 @@ header .logo{height:36px}header .sub{margin:6px 0 0;font-size:12px}
 button.lnk{background:none;color:var(--ink);border:0;padding:0;min-height:0;font-size:13px;text-decoration:underline;text-underline-offset:3px}
 button.lnk:hover{background:none;color:var(--mute)}
 .login{display:flex;flex-direction:column;gap:6px;width:100%;max-width:340px;margin:0 auto;text-align:left}
-input[type=email],input[type=password],input[type=date],input[type=text],input[type=tel],select{font:inherit;color:var(--ink);background:#fff;border:0;border-bottom:1px solid var(--ink);border-radius:0;padding:12px 2px;width:100%}
+input[type=email],input[type=password],input[type=date],input[type=text],input[type=tel],input[type=month],select{font:inherit;color:var(--ink);background:#fff;border:0;border-bottom:1px solid var(--ink);border-radius:0;padding:12px 2px;width:100%}
 input::placeholder{color:#a3a3a3}
 input:focus,select:focus{outline:none;border-bottom-width:2px;padding-bottom:11px}
 .row input[type=date]{width:auto}.row select{width:auto;max-width:100%}
@@ -57,7 +57,7 @@ th{font-weight:500;color:var(--mute);font-size:12px;letter-spacing:.04em}
 .pre{font-family:ui-monospace,Menlo,monospace;background:var(--soft);padding:9px 14px;letter-spacing:.05em;word-break:break-all}
 @media(max-width:560px){
   .wrap{padding:0 16px}#app{padding-bottom:64px}h2{margin-top:44px;font-size:20px}h1{font-size:23px}.logo{height:46px}
-  input[type=email],input[type=password],input[type=date],input[type=text],input[type=tel],select{font-size:16px;min-height:44px}
+  input[type=email],input[type=password],input[type=date],input[type=text],input[type=tel],input[type=month],select{font-size:16px;min-height:44px}
   button{min-height:44px}button.ghost{min-height:36px}
   .card{padding:16px}.row{gap:8px}.row>select{flex:1 1 100%}.row>button{flex:1 1 auto}
   th,td{font-size:13px}.drop{padding:36px 14px}
@@ -91,7 +91,7 @@ header>div{flex:none;max-width:100%}
 <section id="chpw" hidden>
   <h1 id="ct">비밀번호 설정</h1><p class="k" id="cs"></p>
   <form class="login" id="cf" style="margin:36px auto 0">
-    <input id="np" type="password" placeholder="새 비밀번호 (10자 이상)" autocomplete="new-password" required>
+    <input id="np" type="password" placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password" required>
     <input id="np2" type="password" placeholder="새 비밀번호 확인" autocomplete="new-password" required>
     <button>비밀번호 변경</button><button type="button" class="ghost" id="cc" hidden>취소</button><div id="ce" class="bad"></div>
   </form>
@@ -109,19 +109,26 @@ header>div{flex:none;max-width:100%}
   <nav id="nav"><a href="#/home" data-r="home">현황</a><a href="#/upload" data-r="upload">업로드</a><a href="#/authors" data-r="authors">작가</a></nav>
 
   <div class="pg" id="pg-home">
-  <h2><small>(01)</small>데이터 현황</h2>
+  <h2><small>(01)</small>정산 현황</h2>
+  <div class="row"><input id="dm" type="month" style="max-width:200px"></div>
+  <div class="row" id="lc" style="margin-top:16px;gap:12px"></div>
+  <div class="card"><b>주간 정산액 (최근 8주)</b><div id="wk" style="margin-top:14px"></div></div>
+  <div class="row" id="pc" style="margin-top:22px"></div>
+  <div class="tw" style="margin-top:12px"><table><thead><tr><th>작품</th><th>레이블</th><th>플랫폼</th><th class="r">수량</th><th class="r">판매금액</th><th class="r">정산액</th></tr></thead><tbody id="dt"></tbody><tfoot id="dtf"></tfoot></table></div>
+  <p class="k" id="dn" style="margin-top:8px"></p>
+  <h2><small>(02)</small>데이터 현황</h2>
   <div class="tw"><table><thead><tr><th>플랫폼</th><th>단위</th><th>마지막 데이터</th><th>마지막 업로드</th></tr></thead><tbody id="fresh"></tbody></table></div>
 
   </div>
   <div class="pg" id="pg-upload" hidden>
-  <h2><small>(02)</small>판매 데이터 업로드</h2>
+  <h2><small>(01)</small>판매 데이터 업로드</h2>
   <label class="drop" id="dz"><b>판매 파일 선택</b>엑셀/CSV 파일을 선택하세요 (PC에서는 끌어다 놓기도 가능)<br><span class="k">알라딘 · 예스24 · 교보문고는 파일 형태로 자동 인식됩니다</span>
     <input id="file" type="file" accept=".xlsx,.xls,.csv" hidden></label>
   <div id="prev"></div>
 
   </div>
   <div class="pg" id="pg-authors" hidden>
-  <h2><small>(03)</small>작가 관리</h2>
+  <h2><small>(01)</small>작가 관리</h2>
   <div class="row"><input id="aq" type="text" placeholder="필명 · 이름 · 이메일 검색" style="max-width:300px"><button id="anew">+ 작가 등록</button><button class="ghost" id="mp">메일 양식 미리보기</button></div>
   <div class="card" id="mprev" hidden></div>
   <div class="card" id="afw" hidden><form id="af" class="login" style="max-width:420px;margin:0 auto;gap:10px">
@@ -129,8 +136,7 @@ header>div{flex:none;max-width:100%}
     <input id="f1" type="text" placeholder="실명" autocomplete="off" required>
     <input id="f2" type="tel" placeholder="전화번호" autocomplete="off" required>
     <input id="f3" type="text" placeholder="주소" autocomplete="off" required>
-    <input id="f4" type="text" placeholder="은행명" autocomplete="off" required>
-    <input id="f5" type="text" placeholder="계좌번호" autocomplete="off" required>
+    <input id="f4" type="text" placeholder="은행명 계좌번호 예금주 (예: 국민은행 123-456-789012 홍길동)" autocomplete="off" required>
     <input id="f6" type="email" placeholder="로그인용 이메일" autocomplete="off" required>
     <input id="f7" type="text" placeholder="필명 (여러 개면 쉼표로 구분)" autocomplete="off" required>
     <label class="chk"><input id="fm" type="checkbox" checked> 등록 후 안내 메일 바로 발송</label>
@@ -173,7 +179,7 @@ function askPw(f){forced=f;$('#ct').textContent=f?'비밀번호 설정':'비밀�
 $('#pwb').onclick=()=>askPw(false);$('#cc').onclick=()=>enter(ME);
 $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce');m.textContent='';
   if(a!==$('#np2').value)return m.textContent='비밀번호 확인이 일치하지 않습니다.';
-  if(a.length<10)return m.textContent='10자 이상으로 입력하세요.';
+  if(a.length<6)return m.textContent='6자 이상으로 입력하세요.';
   const{error}=await SB.auth.updateUser({password:a});
   if(error)return m.textContent=/different|same/i.test(error.message)?'기존 비밀번호와 다른 비밀번호를 입력하세요.':error.message;
   await SB.rpc('complete_password_change');enter(ME)};
@@ -182,8 +188,36 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
 const PG=['home','upload','authors'];
 function route(){const r=location.hash.replace(/^#\/?/,'')||'home',id=PG.includes(r)?r:'home';
   PG.forEach(x=>$('#pg-'+x).hidden=x!==id);document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.r===id));
-  if(id==='authors')loadPeople()}
+  if(id==='authors')loadPeople();if(id==='home')loadHome()}
 addEventListener('hashchange',route);
+
+/* ---------- 현황 ---------- */
+let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',aladin:'알라딘',yes24:'예스24',kyobo:'교보문고'};
+const man=n=>n>=1e4?(n/1e4).toFixed(1)+'만':Math.round(n).toLocaleString('ko-KR'),sum=(a,k)=>a.reduce((t,r)=>t+Number(r[k]),0);
+async function loadHome(){const m=$('#dm');if(!m.value)m.value=new Date(Date.now()+9*36e5).toISOString().slice(0,7);
+  const[w,d]=await Promise.all([SB.rpc('admin_weekly',{p_weeks:8}),SB.rpc('admin_detail',{p_month:m.value+'-01'})]);
+  if(w.error||d.error){reportErr('현황 조회',(w.error||d.error).message);return}DD=d.data||[];drawWeekly(w.data||[]);drawDetail()}
+function drawWeekly(R){const W=[...new Set(R.map(r=>r.week_start))].sort(),by={};R.forEach(r=>{(by[r.week_start]??={})[r.label]=Number(r.net)});
+  if(!W.length){$('#wk').innerHTML='<p class="k" style="margin:0">표시할 주간 데이터가 없습니다.</p>';return}
+  const tot=w=>Object.values(by[w]).reduce((a,b)=>a+b,0),max=Math.max(...W.map(tot),1);
+  $('#wk').innerHTML=`<div style="display:flex;align-items:flex-end;gap:8px;height:190px">${W.map(w=>{const t=tot(w);return `<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;height:100%" title="${w} 주 · ${won(t)}"><div class="k" style="text-align:center;font-size:11px;margin-bottom:3px">${t?man(t):''}</div><div style="height:${Math.max(t/max*150,t?2:0)}px;display:flex;flex-direction:column-reverse">${Object.keys(COL).filter(l=>by[w][l]).map(l=>`<div style="height:${by[w][l]/t*100}%;background:${COL[l]}" title="${l} ${won(by[w][l])}"></div>`).join('')}</div></div>`}).join('')}</div>
+  <div style="display:flex;gap:8px;margin-top:6px">${W.map(w=>`<div class="k" style="flex:1;min-width:0;text-align:center;font-size:11px">${w.slice(5).replace('-','/')}</div>`).join('')}</div>
+  <div class="row k" style="margin-top:12px;font-size:12px">${Object.entries(COL).map(([l,c])=>`<span><i style="display:inline-block;width:10px;height:10px;background:${c};margin-right:5px"></i>${l}</span>`).join('')}</div>
+  <p class="k" style="font-size:12px;margin:8px 0 0">각 주(월요일 시작)의 정산액이며, 월 집계인 교보문고는 날짜가 없어 제외됩니다. 아래 표에는 포함됩니다.</p>`}
+function drawDetail(){const rows=DD.filter(r=>DP==='all'||r.platform_code===DP),LB={};rows.forEach(r=>LB[r.label]=(LB[r.label]||0)+Number(r.net));
+  $('#lc').innerHTML=['야화랩','트루비',...(LB['미지정']?['미지정']:[])].map(l=>`<div class="card" style="flex:1 1 200px;margin:0"><div class="k">${l} 정산액</div><div style="font-size:22px;font-weight:700">${won(LB[l]||0)}</div></div>`).join('');
+  $('#pc').innerHTML=Object.entries(PL).map(([k,t])=>`<button class="${k===DP?'':'ghost'}" data-p="${k}">${t} · ${won(sum(k==='all'?DD:DD.filter(r=>r.platform_code===k),'net'))}</button>`).join('');
+  $('#dt').innerHTML=rows.map(r=>`<tr><td>${esc(r.title)}</td><td>${r.label==='미지정'?`<select data-wl="${r.work_id}"><option value="">레이블 지정…</option><option>야화랩</option><option>트루비</option></select>`:r.label}</td><td>${PN[r.platform_code]}</td><td class="r">${r.quantity}</td><td class="r">${won(r.gross)}</td><td class="r">${won(r.net)}</td></tr>`).join('')||'<tr><td colspan="6" class="k">이 달의 데이터가 없습니다.</td></tr>';
+  $('#dtf').innerHTML=`<tr><td colspan="3"><b>합계</b></td><td class="r"><b>${sum(rows,'quantity')}</b></td><td class="r"><b>${won(sum(rows,'gross'))}</b></td><td class="r"><b>${won(sum(rows,'net'))}</b></td></tr>`;
+  const miss=sum(rows,'missing');$('#dn').textContent=miss?`정산율이 설정되지 않아 금액이 계산되지 않은 ${miss}건이 있습니다. (교보문고는 정산율 설정 필요)`:''}
+$('#dm').onchange=loadHome;
+$('#pc').onclick=e=>{const b=e.target.closest('button');if(b){DP=b.dataset.p;drawDetail()}};
+$('#dt').onchange=async e=>{const t=e.target.closest('select[data-wl]');if(!t||!t.value)return;const{error}=await SB.from('works').update({label:t.value}).eq('id',t.dataset.wl);if(error)return alert(error.message);loadHome()};
+
+/* ---------- 오류 알림(관리자 메일) ---------- */
+let LR=0;async function reportErr(w,m){if(Date.now()-LR<6e4)return;LR=Date.now();try{await SB.functions.invoke('admin-author',{body:{action:'report_error',where:w,message:String(m).slice(0,300)}})}catch{}}
+addEventListener('unhandledrejection',e=>reportErr('예상치 못한 오류',e.reason?.message||e.reason));
+addEventListener('error',e=>reportErr('화면 오류',e.message));
 
 /* ---------- 작가 관리 ---------- */
 let PEOPLE=[];
@@ -203,11 +237,11 @@ const mailNote=m=>!m?'':m.ok?'<p class="ok" style="margin:6px 0 0">안내 메일
 function showLink(link,msg,mail){const r=$('#ares');
   r.innerHTML=`<b>${msg}</b>${mailNote(mail)}<p class="k" style="margin:6px 0 12px">링크를 작가에게 직접 전달하셔도 됩니다. 링크를 열면 비밀번호를 설정하게 되며, 만료되면 다시 발급해야 합니다.</p><div class="pre" style="margin-bottom:12px">${esc(link)}</div><button class="ghost" id="cl">링크 복사</button>`;
   r.hidden=false;$('#cl').onclick=e=>cpy(link,e.target)}
-function showPii(d){const L={legal_name:'실명',phone:'전화번호',address:'주소',bank_name:'은행',bank_account:'계좌번호',contact_email:'이메일'},r=$('#adet');
+function showPii(d){const L={legal_name:'실명',phone:'전화번호',address:'주소',bank:'은행 · 계좌 · 예금주',bank_name:'은행',bank_account:'계좌번호',contact_email:'이메일'},r=$('#adet');
   r.innerHTML=`<b>개인정보 (60초 후 자동으로 닫힙니다)</b><table style="margin-top:10px">${Object.entries(L).map(([k,t])=>`<tr><th>${t}</th><td>${esc(d[k])}</td></tr>`).join('')}</table><button class="ghost" id="cx" style="margin-top:12px">닫기</button>`;
   r.hidden=false;const h=()=>{r.hidden=true;r.innerHTML=''};$('#cx').onclick=h;setTimeout(h,60000)}
 $('#af').onsubmit=async e=>{e.preventDefault();const g=i=>$('#'+i).value.trim(),b=$('#fs'),nm=g('f7').split(/[,，]/)[0].trim()||'작가';b.disabled=true;
-  const{data,error}=await call({action:'create_person',send_email:$('#fm').checked,legal_name:g('f1'),phone:g('f2'),address:g('f3'),bank_name:g('f4'),bank_account:g('f5'),login_email:g('f6'),pen_names:g('f7').split(/[,，]/).map(x=>x.trim()).filter(Boolean)});
+  const{data,error}=await call({action:'create_person',send_email:$('#fm').checked,legal_name:g('f1'),phone:g('f2'),address:g('f3'),bank:g('f4'),login_email:g('f6'),pen_names:g('f7').split(/[,，]/).map(x=>x.trim()).filter(Boolean)});
   b.disabled=false;if(error)return alert(error);
   if(data.duplicate){$('#ares').innerHTML=`<b class="bad">이미 등록된 작가입니다 (${esc(data.name_masked)})</b><p class="k" style="margin:6px 0 0">실명과 전화번호가 같은 사람이 있습니다. 목록에서 '필명 추가'를 사용하세요.</p>`;$('#ares').hidden=false;return}
   $('#af').reset();$('#afw').hidden=true;showLink(data.link,`${esc(nm)} 계정을 만들었습니다.`,data.mail);loadPeople()};
@@ -304,19 +338,26 @@ async function handle(f){
   try{const buf=await f.arrayBuffer(),sha=hex(await crypto.subtle.digest('SHA-256',buf));
     const rows=/\.csv$/i.test(f.name)?parseCSV(decode(buf)):(()=>{const wb=XLSX.read(buf,{type:'array'});return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''})})();
     const[p,hi]=detect(rows);if(!p)return $('#prev').innerHTML='<div class="card bad">알라딘 · 예스24 · 교보문고 양식으로 인식되지 않았습니다. 파일을 확인해 주세요.</div>';
-    const{L,E}=parse(rows,p,hi),D=L.map(l=>l.sale_date||l.sale_month).sort();
-    let ps=D[0],pe=D[D.length-1];
-    if(p==='kyobo'&&D.length){const[y,m]=pe.split('-').map(Number);pe=`${y}-${String(m).padStart(2,'0')}-${String(new Date(Date.UTC(y,m,0)).getUTCDate()).padStart(2,'0')}`}
-    S={p,name:f.name,sha,lines:L,errs:E,ps,pe};render()}
+    const{L,E}=parse(rows,p,hi),lines=await withKeys(L,p),D=lines.map(l=>l.sale_date||l.sale_month).sort();
+    S={p,name:f.name,sha,lines,errs:E,ps:D[0],pe:D[D.length-1],dup:0};
+    if(!E.length&&lines.length){const{data}=await SB.rpc('preview_upload_keys',{p_platform:p,p_keys:lines.map(l=>l.row_key)});S.dup=Number(data||0)}
+    render()}
   catch(e){$('#prev').innerHTML=`<div class="card bad">파일을 읽지 못했습니다: ${esc(e.message||e)}</div>`}}
 
+const h256=async t=>hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)));
+async function withKeys(L,p){const seen={},out=[],agg={};   // 행 지문: 건별은 "같은 내용의 n번째 행", 월 집계는 (작품·월·채널·방식)
+  for(const l of L){
+    if(l.granularity==='monthly'){const k=[p,l.isbn,l.sale_month,l.channel,l.sale_method].join('|');
+      if(agg[k]){agg[k].quantity+=l.quantity;agg[k].gross_amount+=l.gross_amount}else{agg[k]={...l,_k:k};out.push(agg[k])}}
+    else{const b=[p,l.isbn,l.line_type,l.sold_at,l.channel||'',l.sale_method||'',l.sale_price,l.net_amount,l.quantity].join('|');seen[b]=(seen[b]||0)+1;out.push({...l,_k:b+'|'+seen[b]})}}
+  for(const l of out){l.row_key=await h256(l._k);delete l._k}return out}
 const unmatched=()=>{const m={};S.lines.forEach(l=>{if(/^\d{13}$/.test(l.isbn)&&!ISBN[l.isbn])m[l.isbn]??=l.title});return m};
 const inRange=()=>S.lines.every(l=>S.p==='kyobo'?(l.sale_month>=S.ps.slice(0,7)+'-01'&&l.sale_month<=S.pe.slice(0,7)+'-01'):(l.sale_date>=S.ps&&l.sale_date<=S.pe));
 
 function render(){
   const s=S,U=unmatched(),gross=s.lines.reduce((a,l)=>a+l.gross_amount,0),net=s.p==='kyobo'?null:s.lines.reduce((a,l)=>a+l.net_amount,0);
   const by={};s.lines.forEach(l=>{const k=l.isbn;by[k]??={t:l.title,a:l.author,q:0,g:0};by[k].q+=l.quantity;by[k].g+=l.gross_amount});
-  const range=s.ps&&s.pe&&s.ps<=s.pe&&inRange(),ok=!s.errs.length&&!Object.keys(U).length&&range&&s.lines.length;
+  const ok=!s.errs.length&&!Object.keys(U).length&&s.lines.length;
   $('#prev').innerHTML=`<div class="card">
     <div class="row"><b>${PN[s.p]}</b><span class="k">${esc(s.name)}</span></div>
     <div class="tw"><table style="margin-top:12px"><thead><tr><th>작품</th><th>작가</th><th class="r">수량</th><th class="r">판매금액</th></tr></thead><tbody>
@@ -327,21 +368,17 @@ function render(){
   ${Object.keys(U).length?`<div class="card"><b>미등록 작품 ${Object.keys(U).length}건</b><p class="k" style="margin:4px 0 12px">ISBN으로 작품을 연결해야 업로드할 수 있습니다. 한 번 연결하면 이후 파일에서는 자동 인식됩니다.</p>
     ${Object.entries(U).map(([i,t])=>`<div class="row" style="margin-bottom:8px"><span style="flex:1 1 200px;min-width:0;overflow-wrap:anywhere">${esc(t)}<br><span class="k">${i}</span></span>
     <select data-sel="${i}"><option value="">작품 선택…</option><option value="__new">+ 새 작품으로 등록</option>${WORKS.map(w=>`<option value="${w.id}">${esc(w.title)}</option>`).join('')}</select>
-    <button class="ghost" data-link="${i}" data-title="${esc(t)}">연결</button></div>`).join('')}</div>`:''}
+    <select data-lbl="${i}"><option>야화랩</option><option>트루비</option></select><button class="ghost" data-link="${i}" data-title="${esc(t)}">연결</button></div>`).join('')}</div>`:''}
   ${authCard()}
-  <div class="card"><div class="row"><span>적용 기간</span>
-    <input type="date" id="ps" value="${s.ps||''}"> <span>~</span> <input type="date" id="pe" value="${s.pe||''}"></div>
-    <p class="k" style="margin:8px 0 0">이 기간의 ${PN[s.p]} 기존 데이터는 이번 파일로 교체됩니다. ${s.p==='kyobo'?'(월 단위로 교체)':''}</p>
-    ${range?'':'<p class="bad" style="margin:8px 0 0">파일의 데이터가 적용 기간을 벗어났습니다.</p>'}
-    <p id="ov" class="k" style="margin:8px 0 0"></p>
+  <div class="card"><p style="margin:0">신규 <b>${s.lines.length-s.dup}건</b>${s.p==='kyobo'?(s.dup?` · 기존 ${s.dup}건은 새 값으로 갱신됩니다`:''):` · 중복 <b>${s.dup}건</b>은 건너뜁니다`}</p>
+    <p class="k" style="margin:6px 0 0">이미 올린 행은 다시 추가되지 않고, 새 행만 저장됩니다.</p>
     <div class="row" style="margin-top:14px"><button id="go" ${ok?'':'disabled'}>업로드 확정</button><span id="msg"></span></div></div>`;
-  $('#ps').onchange=e=>{S.ps=e.target.value;render()};$('#pe').onchange=e=>{S.pe=e.target.value;render()};
-  $('#go').onclick=commit;if(s.ps&&s.pe&&s.ps<=s.pe)overlap()}
+  $('#go').onclick=commit}
 
 $('#prev').onclick=async e=>{if(e.target.dataset.alink)return linkAuthor(e.target.dataset.alink,e.target);const i=e.target.dataset.link;if(!i)return;
   const sel=$(`[data-sel="${i}"]`).value;if(!sel)return alert('연결할 작품을 선택하세요.');
   let wid=sel;e.target.disabled=true;
-  if(sel==='__new'){const{data,error}=await SB.from('works').insert({title:e.target.dataset.title.replace(/^\[[^\]]*\]\s*/,'')}).select('id').single();
+  if(sel==='__new'){const{data,error}=await SB.from('works').insert({title:e.target.dataset.title.replace(/^\[[^\]]*\]\s*/,''),label:$(`[data-lbl="${i}"]`).value}).select('id').single();
     if(error){e.target.disabled=false;return alert(error.message)}wid=data.id}
   const{error}=await SB.from('work_identifiers').insert({work_id:wid,id_type:'isbn',value:i});
   if(error){e.target.disabled=false;return alert(error.message)}
@@ -365,7 +402,7 @@ async function overlap(){const{data}=await SB.rpc('preview_upload_overlap',{p_pl
 
 async function commit(){const b=$('#go');b.disabled=true;$('#msg').textContent='업로드 중…';
   const lines=S.lines.map(({isbn:i,title,author,...x})=>({...x,work_id:ISBN[i]}));
-  const{error}=await SB.rpc('commit_upload',{p_batch:{platform_code:S.p,filename:S.name,file_sha256:S.sha,period_start:S.ps,period_end:S.pe},p_lines:lines});
-  if(error){b.disabled=false;$('#msg').innerHTML=`<span class="bad">${error.code==='23505'?'이미 업로드한 동일한 파일입니다.':esc(error.message)}</span>`;return}
-  $('#prev').innerHTML=`<div class="card ok"><b>${PN[S.p]} ${lines.length}행 업로드 완료</b></div>`;S=null;fi.value='';loadFresh()}
+  const{data,error}=await SB.rpc('commit_upload_v2',{p_batch:{platform_code:S.p,filename:S.name,file_sha256:S.sha,period_start:S.ps,period_end:S.pe},p_lines:lines});
+  if(error){b.disabled=false;$('#msg').innerHTML=`<span class="bad">${esc(error.message)}</span>`;reportErr('업로드 확정',error.message);return}
+  $('#prev').innerHTML=`<div class="card ok"><b>${PN[S.p]} 신규 ${data.inserted}건 추가 · 중복 ${data.skipped}건 건너뜀${data.updated?` · ${data.updated}건 갱신`:''}</b></div>`;S=null;fi.value='';loadFresh()}
 </script></body></html>

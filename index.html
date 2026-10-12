@@ -65,7 +65,7 @@ th{font-weight:500;color:var(--mute);font-size:12px;letter-spacing:.04em}
 header .logo{height:36px;width:auto;max-width:none;flex:none;object-fit:contain}
 header>div{flex:none;max-width:100%}
 .logo{object-fit:contain}
-#nav{display:flex;justify-content:center;gap:30px;padding:14px 0 0;border-bottom:1px solid var(--line);overflow-x:auto}
+#nav{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 30px;padding:14px 0 0;border-bottom:1px solid var(--line);overflow:visible}
 #nav a{color:var(--mute);text-decoration:none;font-size:14px;padding:6px 0 10px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
 #nav a.on{color:var(--ink);border-color:var(--ink);font-weight:600}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -74,6 +74,12 @@ tbody th{font-weight:600;color:var(--ink);font-size:14px;letter-spacing:0}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}.vs{font-size:13px;white-space:nowrap}
 .pr{display:flex;gap:8px;align-items:center}.pr .pn{flex:0 0 34%}.pr .pe{flex:1}.pr button{flex:none}
 @media(max-width:560px){.pr{flex-wrap:wrap}.pr .pn,.pr .pe{flex:1 1 100%}}
+.fr{padding:14px 0;border-bottom:1px solid var(--line)}.fl{display:block;font-size:13px;font-weight:600;margin-bottom:10px}
+.chp{border-radius:999px!important;padding:7px 16px!important}.chp[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.bar{display:flex;align-items:center;gap:12px;margin:8px 0}.bl{flex:0 0 62px;text-align:center;background:var(--soft);font-weight:600;font-size:13px;padding:9px 4px}
+.bt{background:#e6e6e3;border-radius:999px;height:28px;overflow:hidden}.bf{height:100%;border-radius:999px;display:flex;align-items:center;justify-content:flex-end;padding:0 11px;color:#fff;font-size:12px;font-weight:600;min-width:36px;white-space:nowrap;transition:width .4s}
+.bn{font-size:12px;font-weight:600;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bh{text-align:center;font-weight:700;margin:26px 0 2px}.bu{text-align:right;font-size:12px;color:var(--mute)}
+#author{padding-bottom:80px}
 </style></head><body>
 <div class="wrap">
 
@@ -101,6 +107,25 @@ tbody th{font-weight:600;color:var(--ink);font-size:14px;letter-spacing:0}
     <input id="np2" type="password" placeholder="새 비밀번호 확인" autocomplete="new-password" required>
     <button>비밀번호 변경</button><button type="button" class="ghost" id="cc" hidden>취소</button><div id="ce" class="bad"></div>
   </form>
+</section>
+
+<section id="author" hidden>
+  <header><div><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"><p class="sub">야화랩 정산 사이트</p></div>
+    <div class="who"><span id="awho"></span> <button class="lnk" id="pwb2">비밀번호 변경</button> <button class="lnk out">로그아웃</button></div></header>
+  <p class="k" style="text-align:center;margin:18px 0 0;font-size:12px">정산 내역은 <b>전일(익일 반영) 판매 내역까지</b> 확인하실 수 있으며, 매일 자정 이후 전일 분이 반영됩니다.<br>본 현황은 미확정 금액이며 취소분 등으로 실정산액과 차이가 있을 수 있습니다.</p>
+  <div class="card" id="sch" style="margin-top:20px"></div>
+  <h2><small>(01)</small>정산 통계</h2><div id="stt"></div>
+  <h2><small>(02)</small>일일 정산 현황</h2>
+  <div class="card" style="text-align:left;padding-top:8px">
+    <div class="fr"><label class="fl" for="sf">정산 기간</label><div class="row" style="justify-content:flex-start"><input id="sf" type="date" style="width:auto"><span>~</span><input id="se" type="date" style="width:auto">
+      <span id="sdq" class="row" style="gap:6px"><button type="button" class="ghost" data-q="y">어제</button><button type="button" class="ghost" data-q="yy">그제</button><button type="button" class="ghost" data-q="tm">이번 달</button><button type="button" class="ghost" data-q="lm">저번 달</button></span></div>
+      <p class="k" style="margin:8px 0 0;font-size:12px">3개월 이내의 데이터만 조회할 수 있습니다.</p></div>
+    <div class="fr"><label class="fl" for="sq">작품명</label><input id="sq" type="text" placeholder="작품명을 입력하세요 (미입력 시 전체 작품)" autocomplete="off">
+      <p class="k" style="margin:8px 0 0;font-size:12px">띄어쓰기로 여러 작품을 함께 조회할 수 있고, 작품명의 일부만 입력해도 됩니다.</p></div>
+    <div class="fr" style="border:0"><span class="fl" id="pfl">플랫폼</span><div class="row" id="pchips" role="group" aria-labelledby="pfl" style="justify-content:flex-start;gap:8px"></div>
+      <p class="k" style="margin:8px 0 0;font-size:12px">여러 개를 함께 선택할 수 있습니다. 교보문고는 월 단위 합계로 제공됩니다.</p></div>
+    <div class="row" style="justify-content:flex-end"><button id="sgo">조회</button></div></div>
+  <div id="sres" style="margin-top:20px"></div>
 </section>
 
 <section id="denied" hidden>
@@ -161,11 +186,11 @@ document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b cla
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-const PN={aladin:'알라딘',yes24:'예스24',kyobo:'교보문고'},c=v=>String(v??'').trim();
+const PN={aladin:'알라딘',yes24:'예스24',kyobo:'교보문고',bookcube:'북큐브'},c=v=>String(v??'').trim();
 let S=null,WORKS=[],ISBN={},AUTHORS=[],WA={};
 
 /* ---------- 인증 ---------- */
-const view=id=>['login','accept','chpw','denied','app'].forEach(v=>$('#'+v).hidden=v!==id);
+const view=id=>['login','accept','chpw','denied','app','author'].forEach(v=>$('#'+v).hidden=v!==id);
 document.querySelectorAll('.out').forEach(b=>b.onclick=async()=>{await SB.auth.signOut();view('login')});
 $('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';
   const{data,error}=await SB.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
@@ -175,8 +200,9 @@ $('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';
 let ME=null,forced=false;
 async function enter(u){ME=u;const{data}=await SB.from('profiles').select('role,must_change_password').eq('id',u.id).maybeSingle();
   if(data?.must_change_password)return askPw(true);
+  if(data?.role==='author'){$('#awho').textContent=u.email;view('author');drawSchedule();loadStats();initSearch();return}
   if(data?.role!=='admin')return view('denied');
-  $('#who').textContent=u.email;view('app');loadRefs();loadFresh();route()}
+  $('#who').textContent=u.email;view('app');loadFresh();route();loadPeople()}
 try{const se=localStorage.getItem('yw_email');if(se){$('#em').value=se;$('#rm').checked=true}}catch{}
 
 /* ---------- 비밀번호 설정/변경 ---------- */
@@ -195,8 +221,41 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
 const PG=['home','upload','authors'];
 function route(){const r=location.hash.replace(/^#\/?/,'')||'home',id=PG.includes(r)?r:'home';
   PG.forEach(x=>$('#pg-'+x).hidden=x!==id);document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.r===id));
-  if(id==='authors')loadPeople();if(id==='home')loadHome()}
+  if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home')loadHome()}
 addEventListener('hashchange',route);
+
+/* ---------- 작가 화면 ---------- */
+const kst=()=>new Date(Date.now()+9*36e5),iso=d=>d.toISOString().slice(0,10),addD=(d,n)=>new Date(d.getTime()+n*864e5),w0=n=>Math.round(n).toLocaleString('ko-KR'),mon1=(y,m)=>new Date(Date.UTC(y,m,1));
+// 공휴일(정산일 계산용). 2026년은 전체, 2027년은 고정 공휴일만 포함 — 설·추석 등 음력 공휴일은 해마다 추가해야 합니다.
+const HOL=new Set(['2026-01-01','2026-02-16','2026-02-17','2026-02-18','2026-03-01','2026-03-02','2026-05-05','2026-05-24','2026-05-25','2026-06-03','2026-06-06','2026-08-15','2026-08-17','2026-09-24','2026-09-25','2026-09-26','2026-10-03','2026-10-05','2026-10-09','2026-12-25','2027-01-01','2027-03-01','2027-05-05','2027-06-06','2027-08-15','2027-10-03','2027-10-09','2027-12-25']);
+const fmtD=d=>`${d.getUTCMonth()+1}월 ${d.getUTCDate()}일(${'일월화수목금토'[d.getUTCDay()]})`;
+function biz(y,m,d){const x=new Date(Date.UTC(y,m,d));while([0,6].includes(x.getUTCDay())||HOL.has(iso(x)))x.setUTCDate(x.getUTCDate()-1);return x}   // 주말·공휴일이면 앞선 평일
+function drawSchedule(){const t=kst();let y=t.getUTCFullYear(),m=t.getUTCMonth(),pay=biz(y,m+1,0);if(iso(pay)<iso(t)){m++;pay=biz(y,m+1,0)}const mail=biz(y,m,25),mm=mon1(y,m).getUTCMonth()+1;
+  $('#sch').innerHTML=`<div class="k" style="font-size:12px;letter-spacing:.06em">${mm}월 정산 일정</div><div class="row" style="gap:36px;margin-top:8px"><div><div class="k">정산 메일 발송</div><div style="font-size:19px;font-weight:700">${fmtD(mail)}</div></div><div><div class="k">정산일</div><div style="font-size:19px;font-weight:700">${fmtD(pay)}</div></div></div><p class="k" style="font-size:12px;margin:12px 0 0">정산 메일은 매월 25일, 정산은 매월 말일에 진행되며 토·일요일과 공휴일에는 앞선 평일로 안내됩니다.</p>`}
+const bars=(rows,color)=>{const mx=Math.max(...rows.map(r=>r.v),1);return rows.map(r=>`<div class="bar"><div class="bl">${esc(r.l)}</div><div style="flex:1;min-width:0">${r.t!==undefined?`<div class="bn">${esc(r.t)||'&nbsp;'}</div>`:''}<div class="bt"><div class="bf" style="width:${Math.max(r.v/mx*100,0)}%;background:${color}">${w0(r.v)}</div></div></div></div>`).join('')};
+async function loadStats(){const t=kst(),m0=mon1(t.getUTCFullYear(),t.getUTCMonth()-5);
+  const[a,b]=await Promise.all([SB.rpc('author_sales_summary',{p_from:iso(addD(t,-5)),p_to:iso(addD(t,-1)),p_unit:'day'}),SB.rpc('author_sales_summary',{p_from:iso(m0),p_to:iso(t),p_unit:'month'})]);
+  if(a.error||b.error){$('#stt').innerHTML='<p class="bad" style="text-align:center">통계를 불러오지 못했습니다.</p>';return}
+  const D={},M={},T={};(a.data||[]).forEach(r=>D[r.period]=(D[r.period]||0)+Number(r.author_amount||0));
+  (b.data||[]).forEach(r=>{const k=r.period.slice(0,7),v=Number(r.author_amount||0);M[k]=(M[k]||0)+v;T[r.title]=(T[r.title]||0)+v});
+  const days=[1,2,3,4,5].map(i=>{const k=iso(addD(t,-i));return{l:k.slice(8)+'일',v:D[k]||0}}),
+    mons=[0,1,2,3,4,5].map(i=>{const x=mon1(t.getUTCFullYear(),t.getUTCMonth()-i);return{l:(x.getUTCMonth()+1)+'월',v:M[iso(x).slice(0,7)]||0}}),
+    top=Object.entries(T).sort((p,q)=>q[1]-p[1]).slice(0,5).map((x,i)=>({l:(i+1)+'위',t:x[0],v:x[1]}));while(top.length<5)top.push({l:top.length+1+'위',t:'',v:0});
+  $('#stt').innerHTML=`<div class="bh">최근 5일 정산 추이</div><div class="bu">(단위: 원)</div>${bars(days,'#e8b23c')}<div class="bh">최근 6개월 정산 추이</div><div class="bu">(단위: 원)</div>${bars(mons,'#111')}<div class="bh">상위 5개 작품 정산</div><div class="bu">(단위: 원 · 최근 6개월)</div>${bars(top,'#6f9f8a')}`}
+let PLS=[],PSEL=new Set(['all']);
+const drawChips=()=>{$('#pchips').innerHTML=[{code:'all',name:'전체'},...PLS].map(p=>`<button type="button" class="ghost chp" data-c="${p.code}" aria-pressed="${PSEL.has(p.code)}">${esc(p.name)}</button>`).join('')};
+async function initSearch(){const{data}=await SB.from('platforms').select('code,name').eq('is_active',true);PLS=(data||[]).sort((a,b)=>a.name.localeCompare(b.name,'ko'));drawChips();
+  const t=kst(),y=iso(addD(t,-1));$('#sf').max=$('#se').max=y;$('#sf').value=iso(mon1(t.getUTCFullYear(),t.getUTCMonth()))>y?y:iso(mon1(t.getUTCFullYear(),t.getUTCMonth()));$('#se').value=y}
+$('#pchips').onclick=e=>{const c=e.target.closest('[data-c]')?.dataset.c;if(!c)return;if(c==='all')PSEL=new Set(['all']);else{PSEL.delete('all');PSEL.has(c)?PSEL.delete(c):PSEL.add(c);if(!PSEL.size)PSEL=new Set(['all'])}drawChips()};
+$('#sdq').onclick=e=>{const q=e.target.dataset.q;if(!q)return;const t=kst(),y=addD(t,-1),Y=t.getUTCFullYear(),M=t.getUTCMonth();let f,g;
+  if(q==='y')f=g=y;else if(q==='yy')f=g=addD(t,-2);else if(q==='tm'){f=mon1(Y,M);g=y;if(f>g)f=g}else{f=mon1(Y,M-1);g=addD(mon1(Y,M),-1)}$('#sf').value=iso(f);$('#se').value=iso(g)};
+$('#sgo').onclick=async()=>{const f=$('#sf').value,e=$('#se').value;if(!f||!e||f>e)return alert('정산 기간을 확인해 주세요.');if((new Date(e)-new Date(f))/864e5>92)return alert('3개월 이내의 기간만 조회할 수 있습니다.');
+  $('#sres').innerHTML='<p class="k" style="text-align:center">조회 중…</p>';const ti=$('#sq').value.trim().split(/\s+/).filter(Boolean);
+  const{data,error}=await SB.rpc('author_sales_search',{p_from:f,p_to:e,p_titles:ti.length?ti:null,p_platforms:PSEL.has('all')?null:[...PSEL]});
+  if(error)return $('#sres').innerHTML=`<p class="bad" style="text-align:center">${esc(error.message)}</p>`;
+  const R=data||[],sm=k=>R.reduce((a,r)=>a+Number(r[k]||0),0);
+  $('#sres').innerHTML=`<p class="k" style="margin:0 0 8px">${f} ~ ${e} · 총 ${R.length}건${R.length>=2000?' (최대 2,000건까지 표시)':''}</p><div class="tw"><table><thead><tr><th>일자</th><th>작품</th><th>플랫폼</th><th class="r">수량</th><th class="r">판매금액</th><th class="r">정산액</th></tr></thead><tbody>${R.map(r=>`<tr><td>${r.sale_date||r.sale_month.slice(0,7)+' (월 합계)'}</td><td>${esc(r.title)}</td><td>${esc(r.platform_name)}</td><td class="r">${r.quantity}</td><td class="r">${w0(r.gross_amount)}</td><td class="r">${r.author_amount==null?'-':w0(r.author_amount)}</td></tr>`).join('')||'<tr><td colspan="6" class="k">조회된 내역이 없습니다.</td></tr>'}</tbody><tfoot><tr><td colspan="3"><b>합계</b></td><td class="r"><b>${sm('quantity')}</b></td><td class="r"><b>${w0(sm('gross_amount'))}</b></td><td class="r"><b>${w0(sm('author_amount'))}</b></td></tr></tfoot></table></div>`};
+$('#pwb2').onclick=()=>askPw(false);
 
 /* ---------- 현황 ---------- */
 let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',aladin:'알라딘',yes24:'예스24',kyobo:'교보문고'};
@@ -231,9 +290,9 @@ let PEOPLE=[];
 const cpy=async(t,b)=>{await navigator.clipboard.writeText(t);const o=b.textContent;b.textContent='복사됨';setTimeout(()=>b.textContent=o,1200)};
 async function call(body){const{data,error}=await SB.functions.invoke('admin-author',{body});
   if(error){let m=error.message;try{m=(await error.context.json()).error||m}catch{}return{error:m}}return{data}}
-let STAT={};
-async function loadPeople(){const[p,pr]=await Promise.all([SB.from('persons').select('id,name_masked,phone_masked,created_at').order('created_at',{ascending:false}),SB.from('profiles').select('person_id,must_change_password').eq('role','author')]);
-  PEOPLE=p.data||[];STAT={};(pr.data||[]).forEach(x=>{if(x.person_id)STAT[x.person_id]=x.must_change_password});await loadRefs();renderPeople()}
+let STAT={},PLOADED=false;
+async function loadPeople(){const[,p,pr]=await Promise.all([loadRefs(),SB.from('persons').select('id,name_masked,phone_masked,created_at').order('created_at',{ascending:false}),SB.from('profiles').select('person_id,must_change_password').eq('role','author')]);
+  PEOPLE=p.data||[];STAT={};(pr.data||[]).forEach(x=>{if(x.person_id)STAT[x.person_id]=x.must_change_password});PLOADED=true;renderPeople()}
 function renderPeople(){const q=$('#aq').value.trim().toLowerCase();
   const rows=PEOPLE.map(p=>({p,pens:AUTHORS.filter(a=>a.person_id===p.id)})).filter(({p,pens})=>!q||[p.name_masked,...pens.flatMap(a=>[a.pen_name,a.email])].join(' ').toLowerCase().includes(q));
   $('#alist').innerHTML=rows.map(({p,pens})=>{const st=STAT[p.id],list=pens.length?pens:[{}],n=list.length,
@@ -256,8 +315,8 @@ function showLink(link,msg,mail){const r=$('#ares');
   r.innerHTML=`<b>${msg}</b>${mailNote(mail)}<p class="k" style="margin:6px 0 12px">링크를 작가에게 직접 전달하셔도 됩니다. 링크를 열면 비밀번호를 설정하게 되며, 만료되면 다시 발급해야 합니다.</p><div class="pre" style="margin-bottom:12px">${esc(link)}</div><button class="ghost" id="cl">링크 복사</button>`;
   r.hidden=false;$('#cl').onclick=e=>cpy(link,e.target)}
 function showPii(d){const L={legal_name:'실명',phone:'전화번호',address:'주소',bank:'은행 · 계좌 · 예금주',bank_name:'은행',bank_account:'계좌번호',contact_email:'이메일'},r=$('#adet');
-  r.innerHTML=`<b>개인정보 (60초 후 자동으로 닫힙니다)</b><table style="margin-top:10px">${Object.entries(L).map(([k,t])=>`<tr><th>${t}</th><td>${esc(d[k])}</td></tr>`).join('')}</table><button class="ghost" id="cx" style="margin-top:12px">닫기</button>`;
-  r.hidden=false;const h=()=>{r.hidden=true;r.innerHTML=''};$('#cx').onclick=h;setTimeout(h,60000)}
+  r.innerHTML=`<b>개인정보</b><table style="margin-top:10px">${Object.entries(L).map(([k,t])=>`<tr><th>${t}</th><td>${esc(d[k])}</td></tr>`).join('')}</table><button class="ghost" id="cx" style="margin-top:12px">닫기</button>`;
+  r.hidden=false;const h=()=>{r.hidden=true;r.innerHTML=''};$('#cx').onclick=h}
 $('#af').onsubmit=async e=>{e.preventDefault();const g=i=>$('#'+i).value.trim(),b=$('#fs'),
   pens=[...document.querySelectorAll('#prow .pr')].map(r=>({id:r.dataset.id,pen_name:r.querySelector('.pn').value.trim(),email:r.querySelector('.pe').value.trim().toLowerCase()})),
   base={legal_name:g('f1'),phone:g('f2'),address:g('f3'),bank:g('f4'),pens};b.disabled=true;
@@ -288,9 +347,9 @@ $('#ab').onclick=async e=>{e.target.disabled=true;$('#ae2').textContent='';
 (async()=>{if(QP.get('th'))return view('accept');const{data:{session}}=await SB.auth.getSession();session?enter(session.user):view('login')})();
 
 async function loadRefs(){const[w,i,a,l]=await Promise.all([SB.from('works').select('id,title').order('title'),
-  SB.from('work_identifiers').select('work_id,value').eq('id_type','isbn'),
+  SB.from('work_identifiers').select('work_id,value,id_type,platform_code'),
   SB.from('authors').select('id,pen_name,person_id,email').order('pen_name'),SB.from('work_authors').select('work_id,author_id')]);
-  WORKS=w.data||[];ISBN={};(i.data||[]).forEach(x=>ISBN[x.value]=x.work_id);
+  WORKS=w.data||[];ISBN={};(i.data||[]).forEach(x=>{if(x.id_type==='isbn')ISBN[x.value]=x.work_id;else if(x.id_type==='title_alias')ISBN['t:'+x.value]=x.work_id});
   AUTHORS=a.data||[];WA={};(l.data||[]).forEach(x=>(WA[x.work_id]??=[]).push(x.author_id))}
 async function loadFresh(){const{data}=await SB.from('v_data_freshness').select('*').order('platform_code');
   $('#fresh').innerHTML=(data||[]).map(r=>`<tr><td>${esc(r.platform_name)}</td><td>${r.granularity==='monthly'?'월 집계':'일별'}</td>
@@ -321,6 +380,7 @@ function dt(v){let y,mo,d,h=0,mi=0,s=0;
 function detect(rows){for(let i=0;i<Math.min(rows.length,10);i++){const h=rows[i].map(c);
   if(h.includes('판매/취소일시')&&h.includes('ItemId'))return['aladin',i];
   if(h.includes('출판사정산액')&&h.includes('판매서점'))return['yes24',i];
+  if(h.includes('정산대상금액')&&h.includes('판매유형')&&h.includes('판매처'))return['bookcube',i];
   if(h.includes('판매기간')&&h.includes('판매금액'))return['kyobo',i]}return[null,0]}
 
 function parse(rows,p,hi){
@@ -329,6 +389,10 @@ function parse(rows,p,hi){
     if(!r.some(x=>c(x)!==''))return;
     const raw={};h.forEach((k,i)=>{const v=c(r[i]);if(k&&v!=='')raw[k]=v});
     try{
+      if(p==='bookcube'){const t=c(g(r,'제목')).replace(/\s+/g,' ');if(['합계','총계','계'].includes(t))return;if(!t)throw '제목 없음';
+        const q=num(g(r,'부수')),gr=num(g(r,'판매액')),nt=num(g(r,'정산액'));if(q==null||gr==null||nt==null)throw '부수 · 판매액 · 정산액 중 빈 값이 있습니다';const rf=q<0||gr<0||nt<0;
+        L.push({isbn:'t:'+t,title:t,author:c(g(r,'저자')),granularity:'transaction',line_type:rf?'refund':'sale',agg:true,channel:c(g(r,'판매처')),sale_method:c(g(r,'판매유형')),
+          quantity:q,list_price:num(g(r,'정가')),sale_price:q?Math.round(Math.abs(gr)/Math.abs(q)):null,gross_amount:gr,net_amount:nt,raw});return}
       if(p==='kyobo'){const per=c(g(r,'판매기간'));
         if(per==='합계'){total=num(g(r,'판매금액'));return}
         if(!/^\d{4}-\d{2}$/.test(per))throw `판매기간 형식 오류: ${per}`;
@@ -348,7 +412,7 @@ function parse(rows,p,hi){
         sale_month:when.month,original_sold_at:orig,quantity:q,list_price:num(list),sale_price:sp,gross_amount:q*sp,net_amount:q*Math.abs(nt),raw});
     }catch(e){E.push(`${hi+n+2}행: ${e}`)}});
   if(p==='kyobo'&&total!=null){const s=L.reduce((a,l)=>a+l.gross_amount,0);if(s!==total)E.push(`합계 불일치: 행 합 ${won(s)} ≠ 파일의 합계 ${won(total)}`)}
-  L.forEach((l,i)=>{if(!/^\d{13}$/.test(l.isbn))E.push(`ISBN 인식 실패: "${l.isbn}" (${l.title})`)});
+  L.forEach((l,i)=>{if(!/^\d{13}$/.test(l.isbn)&&!/^t:./.test(l.isbn))E.push(`ISBN 인식 실패: "${l.isbn}" (${l.title})`)});
   return{L,E,total}}
 
 /* ---------- 업로드 화면 ---------- */
@@ -362,7 +426,9 @@ async function handle(f){
   try{const buf=await f.arrayBuffer(),sha=hex(await crypto.subtle.digest('SHA-256',buf));
     const rows=/\.csv$/i.test(f.name)?parseCSV(decode(buf)):(()=>{const wb=XLSX.read(buf,{type:'array'});return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''})})();
     const[p,hi]=detect(rows);if(!p)return $('#prev').innerHTML='<div class="card bad">알라딘 · 예스24 · 교보문고 양식으로 인식되지 않았습니다. 파일을 확인해 주세요.</div>';
-    const{L,E}=parse(rows,p,hi),lines=await withKeys(L,p),D=lines.map(l=>l.sale_date||l.sale_month).sort();
+    const{L,E}=parse(rows,p,hi);
+    if(p==='bookcube'){S={p,name:f.name,sha,raw:L,lines:[],errs:E,ps:'',pe:'',dup:0,bc:{mode:'day',val:iso(addD(kst(),-1))}};return await applyBc()}
+    const lines=await withKeys(L,p),D=lines.map(l=>l.sale_date||l.sale_month).sort();
     S={p,name:f.name,sha,lines,errs:E,ps:D[0],pe:D[D.length-1],dup:0};
     if(!E.length&&lines.length){const{data}=await SB.rpc('preview_upload_keys',{p_platform:p,p_keys:lines.map(l=>l.row_key)});S.dup=Number(data||0)}
     render()}
@@ -371,11 +437,18 @@ async function handle(f){
 const h256=async t=>hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)));
 async function withKeys(L,p){const seen={},out=[],agg={};   // 행 지문: 건별은 "같은 내용의 n번째 행", 월 집계는 (작품·월·채널·방식)
   for(const l of L){
-    if(l.granularity==='monthly'){const k=[p,l.isbn,l.sale_month,l.channel,l.sale_method].join('|');
-      if(agg[k]){agg[k].quantity+=l.quantity;agg[k].gross_amount+=l.gross_amount}else{agg[k]={...l,_k:k};out.push(agg[k])}}
+    if(l.granularity==='monthly'||l.agg){const k=l.granularity==='monthly'?[p,l.isbn,l.sale_month,l.channel,l.sale_method].join('|'):[p,l.isbn,l.sale_date,l.channel||'',l.sale_method||'',l.line_type].join('|');
+      if(agg[k]){const a=agg[k];a.quantity+=l.quantity;a.gross_amount+=l.gross_amount;if(l.net_amount!=null)a.net_amount=(a.net_amount||0)+l.net_amount}else{agg[k]={...l,_k:k};out.push(agg[k])}}
     else{const b=[p,l.isbn,l.line_type,l.sold_at,l.channel||'',l.sale_method||'',l.sale_price,l.net_amount,l.quantity].join('|');seen[b]=(seen[b]||0)+1;out.push({...l,_k:b+'|'+seen[b]})}}
   for(const l of out){l.row_key=await h256(l._k);delete l._k}return out}
-const unmatched=()=>{const m={};S.lines.forEach(l=>{if(/^\d{13}$/.test(l.isbn)&&!ISBN[l.isbn])m[l.isbn]??=l.title});return m};
+const unmatched=()=>{const m={};S.lines.forEach(l=>{if((/^\d{13}$/.test(l.isbn)||/^t:./.test(l.isbn))&&!ISBN[l.isbn])m[l.isbn]??=l.title});return m};
+async function applyBc(){const b=S.bc,v=b.val;
+  S.errs=S.errs.filter(x=>!x.startsWith('적용'));if(!v)S.errs.push('적용 일자를 선택하세요.');
+  const L=S.raw.map(l=>b.mode==='day'?{...l,granularity:'transaction',sold_at:v+'T00:00:00+09:00',sale_date:v,sale_month:v.slice(0,7)+'-01'}:{...l,granularity:'monthly',sale_date:null,sale_month:v+'-01'});
+  S.lines=v?await withKeys(L,'bookcube'):[];const D=S.lines.map(l=>l.sale_date||l.sale_month).sort();S.ps=D[0]||'';S.pe=D[D.length-1]||'';S.dup=0;
+  if(!S.errs.length&&S.lines.length){const{data}=await SB.rpc('preview_upload_keys',{p_platform:'bookcube',p_keys:S.lines.map(l=>l.row_key)});S.dup=Number(data||0)}render()}
+function bcCard(){if(S.p!=='bookcube')return '';const b=S.bc;
+  return `<div class="card"><b>적용 기간 지정</b><p class="k" style="margin:4px 0 12px">북큐브 파일에는 날짜가 없어서, 이 파일이 어느 날짜(또는 월)의 정산인지 지정해야 합니다.</p><div class="row"><select id="bm" aria-label="적용 단위"><option value="day" ${b.mode==='day'?'selected':''}>일 단위</option><option value="month" ${b.mode==='month'?'selected':''}>월 단위</option></select><input id="bv" aria-label="적용 일자" type="${b.mode==='day'?'date':'month'}" value="${b.val}"${b.mode==='day'?` max="${iso(addD(kst(),-1))}"`:''}></div></div>`}
 const inRange=()=>S.lines.every(l=>S.p==='kyobo'?(l.sale_month>=S.ps.slice(0,7)+'-01'&&l.sale_month<=S.pe.slice(0,7)+'-01'):(l.sale_date>=S.ps&&l.sale_date<=S.pe));
 
 function render(){
@@ -390,13 +463,14 @@ function render(){
     <p class="k" style="margin:10px 0 0">${net==null?'교보문고는 정산액이 파일에 없어 정산율로 계산됩니다.':`CP 정산액 합계 ${won(net)}`}</p></div>
   ${s.errs.length?`<div class="card bad"><b>오류 ${s.errs.length}건 — 수정 후 다시 올려주세요</b><br>${s.errs.slice(0,8).map(esc).join('<br>')}${s.errs.length>8?'<br>…':''}</div>`:''}
   ${Object.keys(U).length?`<div class="card"><b>미등록 작품 ${Object.keys(U).length}건</b><p class="k" style="margin:4px 0 12px">ISBN으로 작품을 연결해야 업로드할 수 있습니다. 한 번 연결하면 이후 파일에서는 자동 인식됩니다.</p>
-    ${Object.entries(U).map(([i,t])=>`<div class="row" style="margin-bottom:8px"><span style="flex:1 1 200px;min-width:0;overflow-wrap:anywhere">${esc(t)}<br><span class="k">${i}</span></span>
-    <select data-sel="${i}"><option value="">작품 선택…</option><option value="__new">+ 새 작품으로 등록</option>${WORKS.map(w=>`<option value="${w.id}">${esc(w.title)}</option>`).join('')}</select>
+    ${Object.entries(U).map(([i,t])=>`<div class="row" style="margin-bottom:8px"><span style="flex:1 1 200px;min-width:0;overflow-wrap:anywhere">${esc(t)}<br><span class="k">${i.startsWith('t:')?'제목으로 매칭':i}</span></span>
+    <select data-sel="${i}"><option value="">작품 선택…</option><option value="__new">+ 새 작품으로 등록</option>${WORKS.map(w=>`<option value="${w.id}" ${w.title===t.replace(/^\[[^\]]*\]\s*/,'')?'selected':''}>${esc(w.title)}</option>`).join('')}</select>
     <select data-lbl="${i}"><option>야화랩</option><option>트루비</option></select><button class="ghost" data-link="${i}" data-title="${esc(t)}">연결</button></div>`).join('')}</div>`:''}
-  ${authCard()}
+  ${bcCard()}${authCard()}
   <div class="card"><p style="margin:0">신규 <b>${s.lines.length-s.dup}건</b>${s.p==='kyobo'?(s.dup?` · 기존 ${s.dup}건은 새 값으로 갱신됩니다`:''):` · 중복 <b>${s.dup}건</b>은 건너뜁니다`}</p>
     <p class="k" style="margin:6px 0 0">이미 올린 행은 다시 추가되지 않고, 새 행만 저장됩니다.</p>
     <div class="row" style="margin-top:14px"><button id="go" ${ok?'':'disabled'}>업로드 확정</button><span id="msg"></span></div></div>`;
+  if(s.p==='bookcube'){$('#bm').onchange=e=>{S.bc.mode=e.target.value;S.bc.val=e.target.value==='day'?iso(addD(kst(),-1)):iso(addD(kst(),-1)).slice(0,7);applyBc()};$('#bv').onchange=e=>{S.bc.val=e.target.value;applyBc()}}
   $('#go').onclick=commit}
 
 $('#prev').onclick=async e=>{if(e.target.dataset.alink)return linkAuthor(e.target.dataset.alink,e.target);const i=e.target.dataset.link;if(!i)return;
@@ -404,7 +478,7 @@ $('#prev').onclick=async e=>{if(e.target.dataset.alink)return linkAuthor(e.targe
   let wid=sel;e.target.disabled=true;
   if(sel==='__new'){const{data,error}=await SB.from('works').insert({title:e.target.dataset.title.replace(/^\[[^\]]*\]\s*/,''),label:$(`[data-lbl="${i}"]`).value}).select('id').single();
     if(error){e.target.disabled=false;return alert(error.message)}wid=data.id}
-  const{error}=await SB.from('work_identifiers').insert({work_id:wid,id_type:'isbn',value:i});
+  const{error}=await SB.from('work_identifiers').insert(i.startsWith('t:')?{work_id:wid,id_type:'title_alias',platform_code:'bookcube',value:i.slice(2)}:{work_id:wid,id_type:'isbn',value:i});
   if(error){e.target.disabled=false;return alert(error.message)}
   await loadRefs();render()};
 
@@ -425,7 +499,7 @@ async function overlap(){const{data}=await SB.rpc('preview_upload_overlap',{p_pl
   if(el)el.innerHTML=o&&o.existing_rows>0?`<span class="bad">주의: 같은 기간의 기존 데이터 ${o.existing_rows}건(${won(o.existing_gross)})이 삭제되고 이 파일로 교체됩니다.</span>`:'같은 기간의 기존 데이터가 없어 새로 추가됩니다.'}
 
 async function commit(){const b=$('#go');b.disabled=true;$('#msg').textContent='업로드 중…';
-  const lines=S.lines.map(({isbn:i,title,author,...x})=>({...x,work_id:ISBN[i]}));
+  const lines=S.lines.map(({isbn:i,title,author,agg,...x})=>({...x,is_agg:!!agg,work_id:ISBN[i]}));
   const{data,error}=await SB.rpc('commit_upload_v2',{p_batch:{platform_code:S.p,filename:S.name,file_sha256:S.sha,period_start:S.ps,period_end:S.pe},p_lines:lines});
   if(error){b.disabled=false;$('#msg').innerHTML=`<span class="bad">${esc(error.message)}</span>`;reportErr('업로드 확정',error.message);return}
   $('#prev').innerHTML=`<div class="card ok"><b>${PN[S.p]} 신규 ${data.inserted}건 추가 · 중복 ${data.skipped}건 건너뜀${data.updated?` · ${data.updated}건 갱신`:''}</b></div>`;S=null;fi.value='';loadFresh()}

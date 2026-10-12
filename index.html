@@ -47,12 +47,12 @@ button.ghost:hover:not(:disabled){border-color:var(--ink)}
 .drop:hover,.drop.on{border-color:var(--ink);background:#fff}
 .card{border:1px solid var(--line);padding:24px;margin-top:16px;text-align:center;background:#fff}
 .row{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
-.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tw{overflow:visible}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th,td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
 th{font-weight:500;color:var(--mute);font-size:12px;letter-spacing:.04em}
 .r,th.r{text-align:right}.card th,.card td{text-align:left}.card .r{text-align:right}
-.tw td,.tw th{white-space:nowrap}.tw td:first-child{white-space:normal;min-width:130px}
+
 .k{color:var(--mute);font-size:13px}.bad{color:var(--bad)}.ok{color:var(--ok)}
 .pre{font-family:ui-monospace,Menlo,monospace;background:var(--soft);padding:9px 14px;letter-spacing:.05em;word-break:break-all}
 @media(max-width:560px){
@@ -80,6 +80,11 @@ tbody th{font-weight:600;color:var(--ink);font-size:14px;letter-spacing:0}
 .bt{background:#e6e6e3;border-radius:999px;height:28px;overflow:hidden}.bf{height:100%;border-radius:999px;display:flex;align-items:center;justify-content:flex-end;padding:0 11px;color:#fff;font-size:12px;font-weight:600;min-width:36px;white-space:nowrap;transition:width .4s}
 .bn{font-size:12px;font-weight:600;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bh{text-align:center;font-weight:700;margin:26px 0 2px}.bu{text-align:right;font-size:12px;color:var(--mute)}
 #author{padding-bottom:80px}
+.lay{position:fixed;inset:0;background:rgba(17,17,17,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.lp{position:relative;background:#fff;width:100%;max-width:780px;max-height:90vh;max-height:90dvh;overflow:auto;padding:28px 26px 24px}
+.lx{position:absolute;top:10px;right:10px}html.lock{overflow:hidden}.clk{cursor:pointer}
+td button.ghost{padding:4px 10px;margin:2px 2px 2px 0}.lp h3{font-size:19px}.lp table{margin-top:4px}
+@media(max-width:700px){.hm{display:none}.lp{padding:24px 16px 18px}}
 </style></head><body>
 <div class="wrap">
 
@@ -142,13 +147,22 @@ tbody th{font-weight:600;color:var(--ink);font-size:14px;letter-spacing:0}
   <div class="pg" id="pg-home">
   <h2><small>(01)</small>정산 현황</h2>
   <div class="row"><input id="dm" type="month" style="max-width:200px"></div>
-  <div class="row" id="lc" style="margin-top:16px;gap:12px"></div>
+  <div class="row" id="lv" style="margin-top:16px"></div>
+  <div class="row" id="lc" style="margin-top:14px;gap:12px"></div>
   <div class="card"><b>주간 정산액 (최근 8주)</b><div id="wk" style="margin-top:14px"></div></div>
+  <div class="card" id="tw" style="text-align:left"></div>
   <div class="row" id="pc" style="margin-top:22px"></div>
-  <div class="tw" style="margin-top:12px"><table><thead><tr><th>작품</th><th>레이블</th><th>플랫폼</th><th class="r">수량</th><th class="r">판매금액</th><th class="r">정산액</th></tr></thead><tbody id="dt"></tbody><tfoot id="dtf"></tfoot></table></div>
+  <div class="tw" style="margin-top:12px"><table><thead><tr><th>작품</th><th class="hm">레이블</th><th>플랫폼</th><th class="r">수량</th><th class="r hm">판매금액</th><th class="r">정산액</th></tr></thead><tbody id="dt"></tbody><tfoot id="dtf"></tfoot></table></div>
   <p class="k" id="dn" style="margin-top:8px"></p>
-  <h2><small>(02)</small>데이터 현황</h2>
+  <h2><small>(02)</small>작품별 판매 상세</h2>
+  <p class="k" style="text-align:center;margin:-6px 0 12px">작품을 누르면 일별 판매 내역을 보고 계약 비율을 설정할 수 있습니다.</p>
+  <div class="tw"><table><caption class="sr-only">작품별 판매 현황</caption><thead><tr><th>작품</th><th class="hm">레이블</th><th class="r">수량</th><th class="r">정산액</th><th class="r hm">계약 비율</th></tr></thead><tbody id="wl"></tbody></table></div>
+  <h2><small>(03)</small>데이터 현황</h2>
   <div class="tw"><table><thead><tr><th>플랫폼</th><th>단위</th><th>마지막 데이터</th><th>마지막 업로드</th></tr></thead><tbody id="fresh"></tbody></table></div>
+  <div class="card" style="text-align:left;margin-top:24px"><b>업로드 이력 · 정산 데이터 관리</b>
+    <p class="k" style="margin:4px 0 10px">잘못 올린 파일은 이력에서 되돌릴 수 있습니다.</p>
+    <div class="tw"><table><caption class="sr-only">업로드 이력</caption><thead><tr><th>일시</th><th>플랫폼</th><th class="hm">파일</th><th class="r">건수</th><th></th></tr></thead><tbody id="ul"></tbody></table></div>
+    <div class="row" style="justify-content:flex-start;margin-top:16px"><select id="rs" style="width:auto" aria-label="초기화 범위"><option value="">전체 플랫폼</option><option value="aladin">알라딘</option><option value="bookcube">북큐브</option><option value="kyobo">교보문고</option><option value="yes24">예스24</option></select><button class="ghost" id="rb" style="border-color:var(--bad);color:var(--bad)">정산 데이터 초기화</button></div></div>
 
   </div>
   <div class="pg" id="pg-upload" hidden>
@@ -168,17 +182,19 @@ tbody th{font-weight:600;color:var(--ink);font-size:14px;letter-spacing:0}
     <input id="f2" type="tel" placeholder="전화번호" autocomplete="off" required>
     <input id="f3" type="text" placeholder="주소" autocomplete="off" required>
     <input id="f4" type="text" placeholder="은행명 계좌번호 예금주 (예: 국민은행 123-456-789012 홍길동)" autocomplete="off" required>
+    <input id="fl" type="email" placeholder="로그인 이메일 (수정하면 다음 로그인부터 적용)" autocomplete="off" hidden>
     <div id="prow" role="group" aria-label="필명과 이메일" style="display:flex;flex-direction:column;gap:10px"></div>
     <p class="k" style="margin:0">첫 번째 줄의 이메일이 로그인 계정이 됩니다. 필명마다 이메일이 다르면 줄을 추가하세요.</p>
     <button type="button" class="ghost" id="padd" style="align-self:flex-start">+ 필명 추가</button>
     <label class="chk" id="fmw"><input id="fm" type="checkbox" checked> 등록 후 안내 메일 바로 발송</label>
     <button id="fs">등록하고 설정 링크 만들기</button><button type="button" class="ghost" id="fc">취소</button></form></div>
   <div class="card" id="ares" hidden></div><div class="card" id="adet" hidden></div>
-  <div class="tw" style="margin-top:20px"><table><caption class="sr-only">작가 목록: 같은 작가의 이름·연락처·인증 상태는 합쳐서 표시하고, 필명별로 이메일과 작품을 나누어 표시합니다.</caption><thead><tr><th scope="col">이름</th><th scope="col">연락처</th><th scope="col">인증</th><th scope="col">이메일</th><th scope="col">필명</th><th scope="col">작품</th><th scope="col">관리</th></tr></thead><tbody id="alist"></tbody></table></div>
+  <div class="tw" style="margin-top:20px"><table><caption class="sr-only">작가 목록: 같은 작가의 이름·연락처·인증 상태는 합쳐서 표시하고, 필명별로 이메일과 작품을 나누어 표시합니다.</caption><thead><tr><th scope="col">이름</th><th scope="col">연락처</th><th scope="col" class="hm">주소</th><th scope="col">인증</th><th scope="col">이메일</th><th scope="col">필명</th><th scope="col" class="hm">작품</th><th scope="col">관리</th></tr></thead><tbody id="alist"></tbody></table></div>
   </div>
 </section>
 
 </div>
+<div id="lay" class="lay" hidden><div class="lp" role="dialog" aria-modal="true" aria-labelledby="lt"><button class="ghost lx" id="lxb">닫기</button><div id="lbody"></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -221,7 +237,7 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
 const PG=['home','upload','authors'];
 function route(){const r=location.hash.replace(/^#\/?/,'')||'home',id=PG.includes(r)?r:'home';
   PG.forEach(x=>$('#pg-'+x).hidden=x!==id);document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.r===id));
-  if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home')loadHome()}
+  if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}}
 addEventListener('hashchange',route);
 
 /* ---------- 작가 화면 ---------- */
@@ -254,29 +270,79 @@ $('#sgo').onclick=async()=>{const f=$('#sf').value,e=$('#se').value;if(!f||!e||f
   const{data,error}=await SB.rpc('author_sales_search',{p_from:f,p_to:e,p_titles:ti.length?ti:null,p_platforms:PSEL.has('all')?null:[...PSEL]});
   if(error)return $('#sres').innerHTML=`<p class="bad" style="text-align:center">${esc(error.message)}</p>`;
   const R=data||[],sm=k=>R.reduce((a,r)=>a+Number(r[k]||0),0);
-  $('#sres').innerHTML=`<p class="k" style="margin:0 0 8px">${f} ~ ${e} · 총 ${R.length}건${R.length>=2000?' (최대 2,000건까지 표시)':''}</p><div class="tw"><table><thead><tr><th>일자</th><th>작품</th><th>플랫폼</th><th class="r">수량</th><th class="r">판매금액</th><th class="r">정산액</th></tr></thead><tbody>${R.map(r=>`<tr><td>${r.sale_date||r.sale_month.slice(0,7)+' (월 합계)'}</td><td>${esc(r.title)}</td><td>${esc(r.platform_name)}</td><td class="r">${r.quantity}</td><td class="r">${w0(r.gross_amount)}</td><td class="r">${r.author_amount==null?'-':w0(r.author_amount)}</td></tr>`).join('')||'<tr><td colspan="6" class="k">조회된 내역이 없습니다.</td></tr>'}</tbody><tfoot><tr><td colspan="3"><b>합계</b></td><td class="r"><b>${sm('quantity')}</b></td><td class="r"><b>${w0(sm('gross_amount'))}</b></td><td class="r"><b>${w0(sm('author_amount'))}</b></td></tr></tfoot></table></div>`};
+  $('#sres').innerHTML=`<p class="k" style="margin:0 0 8px">${f} ~ ${e} · 총 ${R.length}건${R.length>=2000?' (최대 2,000건까지 표시)':''}</p><div class="tw"><table><thead><tr><th>일자</th><th>작품</th><th>플랫폼</th><th class="r">수량</th><th class="r hm">판매금액</th><th class="r">정산액</th></tr></thead><tbody>${R.map(r=>`<tr><td>${r.sale_date||r.sale_month.slice(0,7)+' (월 합계)'}</td><td>${esc(r.title)}</td><td>${esc(r.platform_name)}</td><td class="r">${r.quantity}</td><td class="r hm">${w0(r.gross_amount)}</td><td class="r">${r.author_amount==null?'-':w0(r.author_amount)}</td></tr>`).join('')||'<tr><td colspan="6" class="k">조회된 내역이 없습니다.</td></tr>'}</tbody><tfoot><tr><td colspan="3"><b>합계</b></td><td class="r"><b>${sm('quantity')}</b></td><td class="r hm"><b>${w0(sm('gross_amount'))}</b></td><td class="r"><b>${w0(sm('author_amount'))}</b></td></tr></tfoot></table></div>`};
 $('#pwb2').onclick=()=>askPw(false);
 
 /* ---------- 현황 ---------- */
 let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',aladin:'알라딘',yes24:'예스24',kyobo:'교보문고'};
 const man=n=>n>=1e4?(n/1e4).toFixed(1)+'만':Math.round(n).toLocaleString('ko-KR'),sum=(a,k)=>a.reduce((t,r)=>t+Number(r[k]),0);
-async function loadHome(){const m=$('#dm');if(!m.value)m.value=new Date(Date.now()+9*36e5).toISOString().slice(0,7);
-  const[w,d]=await Promise.all([SB.rpc('admin_weekly',{p_weeks:8}),SB.rpc('admin_detail',{p_month:m.value+'-01'})]);
-  if(w.error||d.error){reportErr('현황 조회',(w.error||d.error).message);return}DD=d.data||[];drawWeekly(w.data||[]);drawDetail()}
-function drawWeekly(R){const W=[...new Set(R.map(r=>r.week_start))].sort(),by={};R.forEach(r=>{(by[r.week_start]??={})[r.label]=Number(r.net)});
+let WR=[],DY=[],CR={},LV='야화랩';const vis=l=>LV==='야화랩'||l==='트루비';
+async function loadHome(){const m=$('#dm');if(!m.value)m.value=kst().toISOString().slice(0,7);const t=kst(),mon=iso(addD(t,-((t.getUTCDay()+6)%7)));
+  const[w,d,y,c]=await Promise.all([SB.rpc('admin_weekly',{p_weeks:8}),SB.rpc('admin_detail',{p_month:m.value+'-01'}),SB.rpc('admin_daily',{p_from:mon,p_to:iso(t)}),SB.from('contracts').select('work_id,author_rate').is('platform_code',null).is('effective_to',null)]);
+  const er=w.error||d.error||y.error;if(er){reportErr('현황 조회',er.message);return}
+  DD=d.data||[];WR=w.data||[];DY=y.data||[];CR={};(c.data||[]).forEach(x=>CR[x.work_id]=Number(x.author_rate));drawWeekly();drawWeek();drawDetail()}
+function drawWeekly(){const R=WR.filter(r=>vis(r.label)),W=[...new Set(R.map(r=>r.week_start))].sort(),by={};R.forEach(r=>{(by[r.week_start]??={})[r.label]=Number(r.net)});
   if(!W.length){$('#wk').innerHTML='<p class="k" style="margin:0">표시할 주간 데이터가 없습니다.</p>';return}
   const tot=w=>Object.values(by[w]).reduce((a,b)=>a+b,0),max=Math.max(...W.map(tot),1);
   $('#wk').innerHTML=`<div style="display:flex;align-items:flex-end;gap:8px;height:190px">${W.map(w=>{const t=tot(w);return `<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;height:100%" title="${w} 주 · ${won(t)}"><div class="k" style="text-align:center;font-size:11px;margin-bottom:3px">${t?man(t):''}</div><div style="height:${Math.max(t/max*150,t?2:0)}px;display:flex;flex-direction:column-reverse">${Object.keys(COL).filter(l=>by[w][l]).map(l=>`<div style="height:${by[w][l]/t*100}%;background:${COL[l]}" title="${l} ${won(by[w][l])}"></div>`).join('')}</div></div>`}).join('')}</div>
   <div style="display:flex;gap:8px;margin-top:6px">${W.map(w=>`<div class="k" style="flex:1;min-width:0;text-align:center;font-size:11px">${w.slice(5).replace('-','/')}</div>`).join('')}</div>
-  <div class="row k" style="margin-top:12px;font-size:12px">${Object.entries(COL).map(([l,c])=>`<span><i style="display:inline-block;width:10px;height:10px;background:${c};margin-right:5px"></i>${l}</span>`).join('')}</div>
+  <div class="row k" style="margin-top:12px;font-size:12px">${Object.entries(COL).filter(([l])=>vis(l)).map(([l,c])=>`<span><i style="display:inline-block;width:10px;height:10px;background:${c};margin-right:5px"></i>${l}</span>`).join('')}</div>
   <p class="k" style="font-size:12px;margin:8px 0 0">각 주(월요일 시작)의 정산액이며, 월 집계인 교보문고는 날짜가 없어 제외됩니다. 아래 표에는 포함됩니다.</p>`}
-function drawDetail(){const rows=DD.filter(r=>DP==='all'||r.platform_code===DP),LB={};rows.forEach(r=>LB[r.label]=(LB[r.label]||0)+Number(r.net));
-  $('#lc').innerHTML=['야화랩','트루비',...(LB['미지정']?['미지정']:[])].map(l=>`<div class="card" style="flex:1 1 200px;margin:0"><div class="k">${l} 정산액</div><div style="font-size:22px;font-weight:700">${won(LB[l]||0)}</div></div>`).join('');
-  $('#pc').innerHTML=Object.entries(PL).map(([k,t])=>`<button class="${k===DP?'':'ghost'}" data-p="${k}">${t} · ${won(sum(k==='all'?DD:DD.filter(r=>r.platform_code===k),'net'))}</button>`).join('');
-  $('#dt').innerHTML=rows.map(r=>`<tr><td>${esc(r.title)}</td><td>${r.label==='미지정'?`<select data-wl="${r.work_id}"><option value="">레이블 지정…</option><option>야화랩</option><option>트루비</option></select>`:r.label}</td><td>${PN[r.platform_code]}</td><td class="r">${r.quantity}</td><td class="r">${won(r.gross)}</td><td class="r">${won(r.net)}</td></tr>`).join('')||'<tr><td colspan="6" class="k">이 달의 데이터가 없습니다.</td></tr>';
-  $('#dtf').innerHTML=`<tr><td colspan="3"><b>합계</b></td><td class="r"><b>${sum(rows,'quantity')}</b></td><td class="r"><b>${won(sum(rows,'gross'))}</b></td><td class="r"><b>${won(sum(rows,'net'))}</b></td></tr>`;
-  const miss=sum(rows,'missing');$('#dn').textContent=miss?`정산율이 설정되지 않아 금액이 계산되지 않은 ${miss}건이 있습니다. (교보문고는 정산율 설정 필요)`:''}
+function drawWeek(){const t=kst(),mon=addD(t,-((t.getUTCDay()+6)%7)),today=iso(t),days=[0,1,2,3,4,5,6].map(i=>{const d=iso(addD(mon,i));return{l:'월화수목금토일'[i],f:d>today,v:DY.filter(r=>r.sale_date===d&&vis(r.label)).reduce((a,r)=>a+Number(r.net),0)}});
+  const tot=days.reduce((a,x)=>a+x.v,0),lw=WR.filter(r=>r.week_start===iso(addD(mon,-7))&&vis(r.label)).reduce((a,r)=>a+Number(r.net),0),mx=Math.max(...days.map(x=>x.v),1);
+  $('#tw').innerHTML=`<div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="k">이번 주 정산액 (월~오늘)</div><div style="font-size:22px;font-weight:700">${won(tot)}</div></div><div class="k" style="text-align:right">지난주 전체<br><b style="color:var(--ink)">${won(lw)}</b></div></div>
+  <div style="display:flex;gap:8px;align-items:flex-end;height:120px;margin-top:14px">${days.map(x=>`<div style="flex:1;min-width:0;text-align:center"><div class="k" style="font-size:11px">${x.f?'':man(x.v)}</div><div style="height:${x.f?0:Math.max(x.v/mx*70,x.v?2:0)}px;background:var(--ink);margin:2px 0"></div><div class="k" style="font-size:12px">${x.l}</div></div>`).join('')}</div>
+  <p class="k" style="font-size:12px;margin:8px 0 0">전일 분까지 업로드된 데이터 기준입니다.</p>`}
+function drawDetail(){const base=DD.filter(r=>vis(r.label)),rows=base.filter(r=>DP==='all'||r.platform_code===DP),LB={};rows.forEach(r=>LB[r.label]=(LB[r.label]||0)+Number(r.net));
+  const tot=sum(rows,'net'),card=(t,v,s)=>`<div class="card" style="flex:1 1 200px;margin:0"><div class="k">${t}</div><div style="font-size:22px;font-weight:700">${won(v)}</div>${s?`<div class="k" style="font-size:12px">${s}</div>`:''}</div>`;
+  $('#lv').innerHTML=['야화랩','트루비'].map(l=>`<button class="${l===LV?'':'ghost'}" data-lv="${l}">${l==='야화랩'?'야화랩 (전체)':'트루비 (임프린트)'}</button>`).join('');
+  $('#lc').innerHTML=LV==='야화랩'?card('야화랩 전체 정산액',tot,'모든 임프린트 포함')+card('야화랩 직접 출간',LB['야화랩']||0)+card('트루비 (임프린트)',LB['트루비']||0)+(rows.some(r=>r.label==='미지정')?card('레이블 미지정',LB['미지정']||0,'작품 상세에서 지정하세요'):''):card('트루비 정산액',tot,'임프린트');
+  $('#pc').innerHTML=Object.entries(PL).map(([k,t])=>`<button class="${k===DP?'':'ghost'}" data-p="${k}">${t} · ${won(sum(k==='all'?base:base.filter(r=>r.platform_code===k),'net'))}</button>`).join('');
+  $('#dt').innerHTML=rows.map(r=>`<tr><td>${esc(r.title)}</td><td class="hm">${r.label==='미지정'?`<select data-wl="${r.work_id}"><option value="">지정…</option><option>야화랩</option><option>트루비</option></select>`:r.label}</td><td>${PN[r.platform_code]}</td><td class="r">${r.quantity}</td><td class="r hm">${won(r.gross)}</td><td class="r">${won(r.net)}</td></tr>`).join('')||'<tr><td colspan="6" class="k">이 달의 데이터가 없습니다.</td></tr>';
+  $('#dtf').innerHTML=`<tr><td colspan="3"><b>합계</b></td><td class="r"><b>${sum(rows,'quantity')}</b></td><td class="r hm"><b>${won(sum(rows,'gross'))}</b></td><td class="r"><b>${won(sum(rows,'net'))}</b></td></tr>`;
+  const miss=sum(rows,'missing');$('#dn').textContent=miss?`정산율이 설정되지 않아 금액이 계산되지 않은 ${miss}건이 있습니다. (교보문고는 정산율 설정 필요)`:'';
+  const W={};base.forEach(r=>{const o=W[r.work_id]??={t:r.title,l:r.label,q:0,n:0};o.q+=Number(r.quantity);o.n+=Number(r.net)});
+  $('#wl').innerHTML=Object.entries(W).sort((a,b)=>b[1].n-a[1].n).map(([id,o])=>`<tr><td><button class="lnk" data-w="${id}">${esc(o.t)}</button></td><td class="hm">${o.l}</td><td class="r">${o.q}</td><td class="r">${won(o.n)}</td><td class="r hm">${CR[id]!==undefined?Math.round(CR[id]*1000)/10+'%':'<span class="bad">미설정</span>'}</td></tr>`).join('')||'<tr><td colspan="5" class="k">이 달의 데이터가 없습니다.</td></tr>'}
 $('#dm').onchange=loadHome;
+$('#lv').onclick=e=>{const b=e.target.closest('[data-lv]');if(b){LV=b.dataset.lv;drawWeekly();drawWeek();drawDetail()}};
+$('#wl').onclick=e=>{const b=e.target.closest('[data-w]');if(b)openWork(b.dataset.w)};
+
+/* ---------- 레이어(상세 창) · 확인 창 ---------- */
+function openLay(h){$('#lbody').innerHTML=h;$('#lay').hidden=false;document.documentElement.classList.add('lock')}
+function closeLay(){$('#lay').hidden=true;document.documentElement.classList.remove('lock')}
+$('#lxb').onclick=closeLay;$('#lay').onclick=e=>{if(e.target.id==='lay')closeLay()};addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#lay').hidden)closeLay()});
+function confirmLay({title,body,phrase,ok,onOk}){openLay(`<h3 id="lt" style="margin:0 0 10px">${title}</h3><div style="margin-bottom:16px">${body}</div>${phrase?`<input id="cph" type="text" autocomplete="off" placeholder="“${phrase}”를 입력하세요" style="margin-bottom:16px">`:''}<div class="row" style="justify-content:flex-end"><button class="ghost" id="cno">취소</button><button id="cok" ${phrase?'disabled':''} style="background:var(--bad);border-color:var(--bad)">${ok}</button></div>`);
+  if(phrase)$('#cph').oninput=e=>{$('#cok').disabled=e.target.value.trim()!==phrase};$('#cno').onclick=closeLay;$('#cok').onclick=async()=>{$('#cok').disabled=true;await onOk()}}
+
+/* ---------- 작품 상세 (일별 판매 · 레이블 · 계약 비율) ---------- */
+async function openWork(id){const w=WORKS.find(x=>x.id===id)||{title:'',label:null},mo=$('#dm').value,cr=CR[id];openLay('<p class="k">불러오는 중…</p>');
+  const{data,error}=await SB.rpc('admin_work_daily',{p_work:id,p_month:mo+'-01'});if(error)return openLay(`<p class="bad">${esc(error.message)}</p>`);
+  const pens=(WA[id]||[]).map(a=>(AUTHORS.find(x=>x.id===a)||{}).pen_name).filter(Boolean).join(', ')||'<span class="bad">연결된 작가 없음</span>',R=data||[],t=kst();
+  openLay(`<h3 id="lt" style="margin:0 0 4px">${esc(w.title)}</h3><p class="k" style="margin:0 0 16px">${mo} · 작가: ${pens}</p>
+  <div class="row" style="justify-content:flex-start;gap:10px"><label class="k" for="wlb">레이블</label><select id="wlb" style="width:auto"><option value="">미지정</option><option ${w.label==='야화랩'?'selected':''}>야화랩</option><option ${w.label==='트루비'?'selected':''}>트루비</option></select>
+  <label class="k" for="cr">작가 계약 비율(%)</label><input id="cr" type="number" min="0" max="100" step="0.1" style="width:90px" value="${cr!==undefined?Math.round(cr*1000)/10:''}"><label class="k" for="cf">시행일</label><input id="cf" type="date" style="width:auto" value="${iso(mon1(t.getUTCFullYear(),t.getUTCMonth()))}"><button id="wsv">저장</button></div>
+  <div style="margin-top:18px"><table><caption class="sr-only">일별 판매 상세</caption><thead><tr><th>일자</th><th>플랫폼</th><th class="r">수량</th><th class="r hm">판매금액</th><th class="r">정산액</th></tr></thead><tbody>${R.map(r=>`<tr><td>${r.sale_date||r.sale_month.slice(0,7)+' (월 합계)'}</td><td>${PN[r.platform_code]}</td><td class="r">${r.quantity}</td><td class="r hm">${won(r.gross)}</td><td class="r">${won(r.net)}</td></tr>`).join('')||'<tr><td colspan="5" class="k">이 달의 판매 내역이 없습니다.</td></tr>'}</tbody><tfoot><tr><td colspan="2"><b>합계</b></td><td class="r"><b>${sum(R,'quantity')}</b></td><td class="r hm"><b>${won(sum(R,'gross'))}</b></td><td class="r"><b>${won(sum(R,'net'))}</b></td></tr></tfoot></table></div>`);
+  $('#wsv').onclick=()=>saveWork(id)}
+async function saveWork(id){const lb=$('#wlb').value||null,cv=$('#cr').value,from=$('#cf').value;
+  if(cv!==''){const pct=Number(cv);if(!(pct>=0&&pct<=100)||!from)return alert('계약 비율(0~100)과 시행일을 확인해 주세요.')}
+  const{error:e1}=await SB.from('works').update({label:lb}).eq('id',id);if(e1)return alert(e1.message);
+  if(cv!==''){const{data:cur}=await SB.from('contracts').select('id,effective_from').eq('work_id',id).is('platform_code',null).is('effective_to',null);
+    for(const c of cur||[]){if(c.effective_from>=from)await SB.from('contracts').delete().eq('id',c.id);else await SB.from('contracts').update({effective_to:iso(addD(new Date(from),-1))}).eq('id',c.id)}
+    const{error}=await SB.from('contracts').insert({work_id:id,author_rate:Number(cv)/100,effective_from:from});if(error)return alert('계약 저장 실패: '+error.message)}
+  closeLay();await loadRefs();loadHome()}
+
+/* ---------- 업로드 이력 · 정산 데이터 초기화 ---------- */
+async function loadUploads(){const{data}=await SB.from('upload_batches').select('id,platform_code,filename,row_count,created_at').order('created_at',{ascending:false}).limit(30);
+  $('#ul').innerHTML=(data||[]).map(b=>`<tr><td>${new Date(b.created_at).toLocaleString('ko-KR')}</td><td>${PN[b.platform_code]||b.platform_code}</td><td class="hm">${esc(b.filename||'')}</td><td class="r">${b.row_count}</td><td><button class="ghost" data-ub="${b.id}" data-n="${b.row_count}">되돌리기</button></td></tr>`).join('')||'<tr><td colspan="5" class="k">업로드 이력이 없습니다.</td></tr>'}
+$('#ul').onclick=e=>{const b=e.target.closest('[data-ub]');if(!b)return;const id=b.dataset.ub;
+  confirmLay({title:'업로드 되돌리기',body:`<p style="margin:0">이 업로드로 추가·갱신된 판매 데이터 <b>${b.dataset.n}건</b>을 삭제합니다.<br>이전 업로드에 있던 중복 행은 영향을 받지 않습니다.</p>`,ok:'되돌리기',onOk:async()=>{
+    const a=await SB.from('sales_lines').delete().eq('batch_id',id);if(a.error){alert(a.error.message);return closeLay()}
+    const d=await SB.from('upload_batches').delete().eq('id',id);closeLay();if(d.error)alert(d.error.message);loadFresh();loadUploads();loadHome()}})};
+$('#rb').onclick=async()=>{const pf=$('#rs').value,label=pf?PN[pf]:'전체 플랫폼';let q=SB.from('sales_lines').select('id',{count:'exact',head:true});if(pf)q=q.eq('platform_code',pf);const{count}=await q;
+  confirmLay({title:'정산 데이터 초기화',body:`<p style="margin:0"><b>${label}</b>의 판매 데이터 <b>${count??0}건</b>과 업로드 이력이 모두 삭제됩니다.<br><span class="bad">삭제한 데이터는 복구할 수 없습니다.</span> 필요하면 원본 파일을 다시 업로드해야 하며, 작가 · 작품 · 계약 정보는 그대로 유지됩니다.</p>`,phrase:'초기화',ok:'초기화 실행',onOk:async()=>{
+    if(!confirm(`정말로 ${label}의 판매 데이터 ${count??0}건을 삭제할까요?\\n이 작업은 되돌릴 수 없습니다.`))return closeLay();
+    const{data,error}=await call({action:'reset_sales',confirm:'초기화',platform:pf||null});closeLay();if(error)return alert(error);
+    alert(`판매 데이터 ${data.deleted}건을 삭제했습니다.`);loadFresh();loadUploads();loadHome()}})};
 $('#pc').onclick=e=>{const b=e.target.closest('button');if(b){DP=b.dataset.p;drawDetail()}};
 $('#dt').onchange=async e=>{const t=e.target.closest('select[data-wl]');if(!t||!t.value)return;const{error}=await SB.from('works').update({label:t.value}).eq('id',t.dataset.wl);if(error)return alert(error.message);loadHome()};
 
@@ -292,20 +358,22 @@ async function call(body){const{data,error}=await SB.functions.invoke('admin-aut
   if(error){let m=error.message;try{m=(await error.context.json()).error||m}catch{}return{error:m}}return{data}}
 let STAT={},PLOADED=false;
 async function loadPeople(){const[,p,pr]=await Promise.all([loadRefs(),SB.from('persons').select('id,name_masked,phone_masked,created_at').order('created_at',{ascending:false}),SB.from('profiles').select('person_id,must_change_password').eq('role','author')]);
-  PEOPLE=p.data||[];STAT={};(pr.data||[]).forEach(x=>{if(x.person_id)STAT[x.person_id]=x.must_change_password});PLOADED=true;renderPeople()}
+  PEOPLE=p.data||[];STAT={};(pr.data||[]).forEach(x=>{if(x.person_id)STAT[x.person_id]=x.must_change_password});PLOADED=true;renderPeople();loadDec()}
+let DEC={};
 function renderPeople(){const q=$('#aq').value.trim().toLowerCase();
-  const rows=PEOPLE.map(p=>({p,pens:AUTHORS.filter(a=>a.person_id===p.id)})).filter(({p,pens})=>!q||[p.name_masked,...pens.flatMap(a=>[a.pen_name,a.email])].join(' ').toLowerCase().includes(q));
-  $('#alist').innerHTML=rows.map(({p,pens})=>{const st=STAT[p.id],list=pens.length?pens:[{}],n=list.length,
+  const rows=PEOPLE.map(p=>({p,d:DEC[p.id]||{},pens:AUTHORS.filter(a=>a.person_id===p.id)})).filter(({p,d,pens})=>!q||[d.legal_name||p.name_masked,d.phone,d.address,...pens.flatMap(a=>[a.pen_name,a.email])].join(' ').toLowerCase().includes(q));
+  $('#alist').innerHTML=rows.map(({p,d,pens})=>{const st=STAT[p.id],list=pens.length?pens:[{}],n=list.length,
     stat=st===undefined?'<span class="vs k">계정 없음</span>':st?'<span class="vs bad"><i class="dot" style="background:var(--bad)"></i>인증 전</span>':'<span class="vs ok"><i class="dot" style="background:var(--ok)"></i>인증 완료</span>',
-    acts=['view:정보','edit:수정','link:링크 재발급','del:삭제'].map(x=>{const[k,t]=x.split(':');return `<button class="ghost" data-pa="${k}" data-id="${p.id}">${t}</button>`}).join(' ');
+    acts=['edit:수정','link:링크 재발급','del:삭제'].map(x=>{const[k,t]=x.split(':');return `<button class="ghost" data-pa="${k}" data-id="${p.id}">${t}</button>`}).join('');
     return list.map((a,i)=>{const ws=WORKS.filter(w=>(WA[w.id]||[]).includes(a.id)).map(w=>esc(w.title)).join('<br>')||'<span class="k">-</span>';
-      return `<tr class="${i?'':'first'}">${i?'':`<th scope="row" rowspan="${n}">${esc(p.name_masked)}</th><td rowspan="${n}">${esc(p.phone_masked||'-')}</td><td rowspan="${n}">${stat}</td>`}<td>${esc(a.email||'-')}</td><td>${esc(a.pen_name||'-')}</td><td>${ws}</td>${i?'':`<td rowspan="${n}" style="white-space:nowrap">${acts}</td>`}</tr>`}).join('')}).join('')||'<tr><td colspan="7" class="k">등록된 작가가 없습니다.</td></tr>'}
+      return `<tr class="${i?'':'first'}">${i?'':`<th scope="row" rowspan="${n}"><button class="lnk" data-pa="view" data-id="${p.id}">${esc(d.legal_name||p.name_masked)}</button></th><td rowspan="${n}">${esc(d.phone||p.phone_masked||'-')}</td><td class="hm" rowspan="${n}">${esc(d.address||'-')}</td><td rowspan="${n}">${stat}</td>`}<td>${esc(a.email||'-')}</td><td>${esc(a.pen_name||'-')}</td><td class="hm">${ws}</td>${i?'':`<td rowspan="${n}">${acts}</td>`}</tr>`}).join('')}).join('')||'<tr><td colspan="8" class="k">등록된 작가가 없습니다.</td></tr>'}
+async function loadDec(){const{data}=await call({action:'list_people'});if(data){DEC=data.people||{};renderPeople()}}
 $('#aq').oninput=renderPeople;
 let EDIT=null;
 const penRow=(p={})=>`<div class="pr"${p.id?` data-id="${p.id}"`:''}><input class="pn" type="text" placeholder="필명" aria-label="필명" value="${esc(p.pen_name||'')}" required><input class="pe" type="email" placeholder="이메일" aria-label="필명별 이메일" value="${esc(p.email||'')}" required><button type="button" class="ghost" data-rm aria-label="이 줄 삭제">삭제</button></div>`;
-async function openForm(id){EDIT=id;$('#af').reset();$('#fmw').hidden=!!id;$('#fs').textContent=id?'저장':'등록하고 설정 링크 만들기';let pens=[{}];
+async function openForm(id){EDIT=id;$('#af').reset();$('#fmw').hidden=!!id;$('#fl').hidden=!id;$('#fs').textContent=id?'저장':'등록하고 설정 링크 만들기';let pens=[{}];
   if(id){const{data,error}=await call({action:'get_person',person_id:id});if(error)return alert(error);const d=data.pii;
-    $('#f1').value=d.legal_name||'';$('#f2').value=d.phone||'';$('#f3').value=d.address||'';$('#f4').value=d.bank||[d.bank_name,d.bank_account].filter(Boolean).join(' ');pens=data.pens.length?data.pens:[{}]}
+    $('#f1').value=d.legal_name||'';$('#f2').value=d.phone||'';$('#f3').value=d.address||'';$('#f4').value=d.bank||[d.bank_name,d.bank_account].filter(Boolean).join(' ');pens=data.pens.length?data.pens:[{}];$('#fl').value=data.login_email||''}
   $('#prow').innerHTML=pens.map(penRow).join('');$('#afw').hidden=false;$('#afw').scrollIntoView({behavior:'smooth',block:'center'})}
 $('#anew').onclick=()=>openForm(null);$('#fc').onclick=()=>{$('#afw').hidden=true};
 $('#padd').onclick=()=>$('#prow').insertAdjacentHTML('beforeend',penRow());
@@ -314,13 +382,12 @@ const mailNote=m=>!m?'':m.ok?'<p class="ok" style="margin:6px 0 0">안내 메일
 function showLink(link,msg,mail){const r=$('#ares');
   r.innerHTML=`<b>${msg}</b>${mailNote(mail)}<p class="k" style="margin:6px 0 12px">링크를 작가에게 직접 전달하셔도 됩니다. 링크를 열면 비밀번호를 설정하게 되며, 만료되면 다시 발급해야 합니다.</p><div class="pre" style="margin-bottom:12px">${esc(link)}</div><button class="ghost" id="cl">링크 복사</button>`;
   r.hidden=false;$('#cl').onclick=e=>cpy(link,e.target)}
-function showPii(d){const L={legal_name:'실명',phone:'전화번호',address:'주소',bank:'은행 · 계좌 · 예금주',bank_name:'은행',bank_account:'계좌번호',contact_email:'이메일'},r=$('#adet');
-  r.innerHTML=`<b>개인정보</b><table style="margin-top:10px">${Object.entries(L).map(([k,t])=>`<tr><th>${t}</th><td>${esc(d[k])}</td></tr>`).join('')}</table><button class="ghost" id="cx" style="margin-top:12px">닫기</button>`;
-  r.hidden=false;const h=()=>{r.hidden=true;r.innerHTML=''};$('#cx').onclick=h}
+function showPii(d){const L=[['legal_name','실명'],['phone','연락처'],['address','주소'],['bank','은행 · 계좌 · 예금주'],['login_email','로그인 이메일']];
+  openLay(`<h3 id="lt" style="margin:0 0 14px">작가 상세</h3><table>${L.map(([k,t])=>`<tr><th scope="row" style="width:32%">${t}</th><td>${esc(d[k]||'-')}</td></tr>`).join('')}</table>${d.pens&&d.pens.length?`<h4 style="margin:22px 0 6px">필명 · 이메일 · 작품</h4><table><thead><tr><th>필명</th><th>이메일</th><th>작품</th></tr></thead><tbody>${d.pens.map(p=>`<tr><td>${esc(p.pen_name)}</td><td>${esc(p.email||'-')}</td><td>${WORKS.filter(w=>(WA[w.id]||[]).includes(p.id)).map(w=>esc(w.title)).join('<br>')||'-'}</td></tr>`).join('')}</tbody></table>`:''}`)}
 $('#af').onsubmit=async e=>{e.preventDefault();const g=i=>$('#'+i).value.trim(),b=$('#fs'),
   pens=[...document.querySelectorAll('#prow .pr')].map(r=>({id:r.dataset.id,pen_name:r.querySelector('.pn').value.trim(),email:r.querySelector('.pe').value.trim().toLowerCase()})),
   base={legal_name:g('f1'),phone:g('f2'),address:g('f3'),bank:g('f4'),pens};b.disabled=true;
-  const{data,error}=await call(EDIT?{action:'update_person',person_id:EDIT,...base}:{action:'create_person',send_email:$('#fm').checked,...base});
+  const{data,error}=await call(EDIT?{action:'update_person',person_id:EDIT,login_email:g('fl'),...base}:{action:'create_person',send_email:$('#fm').checked,...base});
   b.disabled=false;if(error)return alert(error);
   if(data.duplicate){$('#ares').innerHTML=`<b class="bad">이미 등록된 작가입니다 (${esc(data.name_masked)})</b><p class="k" style="margin:6px 0 0">실명과 전화번호가 같은 사람이 있습니다. 목록에서 '수정'으로 필명을 추가하세요.</p>`;$('#ares').hidden=false;return}
   $('#afw').hidden=true;
@@ -331,8 +398,8 @@ $('#alist').onclick=async e=>{const b=e.target.closest('button');if(!b)return;co
   if(a==='edit')return openForm(id);
   if(a==='del'){if(prompt('정말 삭제할까요?\n작가 계정, 개인정보, 필명과 작품 연결이 모두 삭제됩니다.\n삭제하려면 "삭제"를 입력하세요.')!=='삭제')return;b.disabled=true;
     const{error}=await call({action:'delete_person',person_id:id});b.disabled=false;if(error)return alert(error);$('#ares').innerHTML='<b>작가를 삭제했습니다.</b>';$('#ares').hidden=false;return loadPeople()}
-  b.disabled=true;const sm=a==='link'&&confirm('이메일로도 발송할까요?\n(취소하면 링크만 표시됩니다)');b.disabled=true;const{data,error}=await call(a==='view'?{action:'reveal',person_id:id}:{action:'reissue_link',person_id:id,send_email:sm});b.disabled=false;
-  if(error)return alert(error);a==='view'?showPii(data):showLink(data.link,'비밀번호 설정 링크를 다시 만들었습니다.',data.mail)};
+  b.disabled=true;const sm=a==='link'&&confirm('이메일로도 발송할까요?\n(취소하면 링크만 표시됩니다)');b.disabled=true;const{data,error}=await call(a==='view'?{action:'get_person',person_id:id}:{action:'reissue_link',person_id:id,send_email:sm});b.disabled=false;
+  if(error)return alert(error);a==='view'?showPii({...data.pii,login_email:data.login_email,pens:data.pens}):showLink(data.link,'비밀번호 설정 링크를 다시 만들었습니다.',data.mail)};
 
 $('#mp').onclick=async e=>{e.target.disabled=true;const{data,error}=await call({action:'preview_mail'});e.target.disabled=false;if(error)return alert(error);
   const r=$('#mprev');r.innerHTML=`<b>${esc(data.subject)}</b><div class="row" style="margin-top:10px"><button class="ghost" data-w="100%">PC 폭</button><button class="ghost" data-w="360px">모바일 폭 (360px)</button></div><iframe id="mif" sandbox="" style="display:block;width:100%;max-width:100%;height:600px;border:1px solid var(--line);margin:12px auto 0"></iframe><button class="ghost" id="mx" style="margin-top:12px">닫기</button>`;
@@ -346,7 +413,7 @@ $('#ab').onclick=async e=>{e.target.disabled=true;$('#ae2').textContent='';
   history.replaceState(null,'',location.pathname+location.hash);enter(data.user)};
 (async()=>{if(QP.get('th'))return view('accept');const{data:{session}}=await SB.auth.getSession();session?enter(session.user):view('login')})();
 
-async function loadRefs(){const[w,i,a,l]=await Promise.all([SB.from('works').select('id,title').order('title'),
+async function loadRefs(){const[w,i,a,l]=await Promise.all([SB.from('works').select('id,title,label').order('title'),
   SB.from('work_identifiers').select('work_id,value,id_type,platform_code'),
   SB.from('authors').select('id,pen_name,person_id,email').order('pen_name'),SB.from('work_authors').select('work_id,author_id')]);
   WORKS=w.data||[];ISBN={};(i.data||[]).forEach(x=>{if(x.id_type==='isbn')ISBN[x.value]=x.work_id;else if(x.id_type==='title_alias')ISBN['t:'+x.value]=x.work_id});
@@ -502,5 +569,5 @@ async function commit(){const b=$('#go');b.disabled=true;$('#msg').textContent='
   const lines=S.lines.map(({isbn:i,title,author,agg,...x})=>({...x,is_agg:!!agg,work_id:ISBN[i]}));
   const{data,error}=await SB.rpc('commit_upload_v2',{p_batch:{platform_code:S.p,filename:S.name,file_sha256:S.sha,period_start:S.ps,period_end:S.pe},p_lines:lines});
   if(error){b.disabled=false;$('#msg').innerHTML=`<span class="bad">${esc(error.message)}</span>`;reportErr('업로드 확정',error.message);return}
-  $('#prev').innerHTML=`<div class="card ok"><b>${PN[S.p]} 신규 ${data.inserted}건 추가 · 중복 ${data.skipped}건 건너뜀${data.updated?` · ${data.updated}건 갱신`:''}</b></div>`;S=null;fi.value='';loadFresh()}
+  $('#prev').innerHTML=`<div class="card ok"><b>${PN[S.p]} 신규 ${data.inserted}건 추가 · 중복 ${data.skipped}건 건너뜀${data.updated?` · ${data.updated}건 갱신`:''}</b></div>`;S=null;fi.value='';loadFresh();loadUploads()}
 </script></body></html>

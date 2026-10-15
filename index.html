@@ -277,7 +277,7 @@ document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b cla
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-const PN={aladin:'알라딘',yes24:'예스24',kyobo:'교보문고',bookcube:'북큐브',ridi:'리디'},c=v=>String(v??'').trim();
+const monVal=sel=>{const e=$(sel);if(!/^\d{4}-\d{2}$/.test(e.value))e.value=kst().toISOString().slice(0,7);return e.value}; /* 월 입력이 비어 있으면(미방문·삭제·미지원 브라우저) 이번 달로 보정 */ const PN={aladin:'알라딘',yes24:'예스24',kyobo:'교보문고',bookcube:'북큐브',ridi:'리디'},c=v=>String(v??'').trim();
 let S=null,WORKS=[],ISBN={},AUTHORS=[],WA={};
 
 /* ---------- 인증 ---------- */
@@ -377,7 +377,7 @@ setTimeout(syncX,0);
 let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',aladin:'알라딘',yes24:'예스24',kyobo:'교보문고',ridi:'리디'};
 const man=n=>n>=1e4?(n/1e4).toFixed(1)+'만':Math.round(n).toLocaleString('ko-KR'),sum=(a,k)=>a.reduce((t,r)=>t+Number(r[k]),0);
 let WR=[],DY=[],CT=[],LV='야화랩',SALES=[];const vis=l=>LV==='야화랩'||l==='트루비';
-async function loadHome(){const m=$('#dm');if(!m.value)m.value=kst().toISOString().slice(0,7);const t=kst(),mon=iso(addD(t,-((t.getUTCDay()+6)%7)));
+async function loadHome(){const m=$('#dm');monVal('#dm');const t=kst(),mon=iso(addD(t,-((t.getUTCDay()+6)%7)));
   const[w,d,y,sr,c]=await Promise.all([SB.rpc('admin_weekly',{p_weeks:8}),SB.rpc('admin_detail',{p_month:m.value+'-01'}),SB.rpc('admin_daily',{p_from:mon,p_to:iso(t)}),SB.rpc('admin_sales_rows',{p_month:m.value+'-01'}),SB.from('contracts').select('id,work_id,platform_code,author_rate,effective_from,effective_to,kind,note')]);
   const er=w.error||d.error||y.error;if(er){reportErr('현황 조회',er.message);return}
   DD=d.data||[];WR=w.data||[];DY=y.data||[];SALES=sr.data||[];CT=c.data||[];drawWeekly();drawWeek();drawDetail();drawRenew()}
@@ -427,7 +427,7 @@ const pct=r=>Math.round(Number(r)*1000)/10+'%',KD={base:'기본',special:'특약
 function rateTxt(id){const t=iso(kst()),L=CT.filter(c=>c.work_id===id&&c.effective_from<=t&&(!c.effective_to||c.effective_to>=t));if(!L.length)return '<span class="bad">미설정</span>';
   const b=L.find(c=>c.kind==='base'&&!c.platform_code)||L[0];return pct(b.author_rate)+(L.length>1?' <span class="k">(특약·개별 있음)</span>':'')}
 let CE=null;
-async function openWork(id){const w=WORKS.find(x=>x.id===id)||{title:'',label:null},mo=$('#dm').value;openLay('<p class="k">불러오는 중…</p>');
+async function openWork(id){const w=WORKS.find(x=>x.id===id)||{title:'',label:null},mo=monVal('#dm');openLay('<p class="k">불러오는 중…</p>');
   const[{data,error},{data:ct},{data:fs}]=await Promise.all([SB.rpc('admin_work_daily',{p_work:id,p_month:mo+'-01'}),SB.from('contracts').select('id,work_id,platform_code,author_rate,effective_from,effective_to,kind,note').eq('work_id',id).order('effective_from'),SB.from('sales_lines').select('sale_date,sale_month').eq('work_id',id).order('sale_month').limit(1)]);
   if(error)return openLay(`<p class="bad">${esc(error.message)}</p>`);CT=CT.filter(c=>c.work_id!==id).concat(ct||[]);CE=null;
   const pens=(WA[id]||[]).map(a=>(AUTHORS.find(x=>x.id===a)||{}).pen_name).filter(Boolean).join(', ')||'<span class="bad">연결된 작가 없음</span>',R=data||[],mine=CT.filter(c=>c.work_id===id).sort((a,b)=>a.kind.localeCompare(b.kind)||a.effective_from.localeCompare(b.effective_from));
@@ -482,7 +482,7 @@ function openPen(aid){const a=AUTHORS.find(x=>x.id===aid)||{},ws=WORKS.filter(w=
 /* ---------- 월 정산서 (정산서_작가별_템플릿.xlsx 양식) ---------- */
 let ST=[];const ORD=['aladin','kyobo','yes24','bookcube','ridi'],fl=n=>Math.floor(n),won1=n=>w0(n)+'원';
 let SS={};
-async function loadSettle(){const m=$('#sm');if(!m.value)m.value=kst().toISOString().slice(0,7);$('#sl').innerHTML='<tr><td colspan="7" class="k em">불러오는 중…</td></tr>';
+async function loadSettle(){const m=$('#sm');monVal('#sm');$('#sl').innerHTML='<tr><td colspan="7" class="k em">불러오는 중…</td></tr>';
   const[a,b]=await Promise.all([SB.rpc('admin_statement',{p_month:m.value+'-01'}),SB.from('settlements').select('id,person_id,status,author_total,payable_amount,confirmed_at,sent_at').eq('period_month',m.value+'-01')]);
   if(a.error){reportErr('정산서 조회',a.error.message);return $('#sl').innerHTML=`<tr><td colspan="7" class="bad em">${esc(a.error.message)}</td></tr>`}
   ST=a.data||[];SS={};(b.data||[]).forEach(x=>SS[x.person_id]=x);if(!PLOADED)await loadPeople();drawSettle()}
@@ -504,12 +504,12 @@ $('#sx').oninput=()=>{if(ST.length)drawSettle()};
 $('#sxe').onclick=()=>{const on=$('#sxw').hidden;$('#sxw').hidden=!on;$('#sxv').hidden=on;$('#sxe').textContent=on?'적용':'수정';if(!on){const v=Number($('#sx').value);if(!(v>=0&&v<=100)){$('#sx').value='3.3'}$('#sxv').textContent=Number($('#sx').value)+'%';drawSettle()}};
 $('#sl').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.sp)openStatement(b.dataset.sp);if(b.dataset.sc)confirmSt([b.dataset.sc]);if(b.dataset.su)unconfirmSt(b.dataset.su);if(b.dataset.sm)mailSt(b.dataset.sm)};
 $('#sca').onclick=()=>confirmSt(buildSt().map(p=>p.id));
-function mailSt(pid){const p=buildSt().find(x=>x.id===pid),x=SS[pid],m=$('#sm').value+'-01';if(!p||!x||x.status==='draft')return alert('확정된 정산서만 메일을 보낼 수 있습니다.');
+function mailSt(pid){const p=buildSt().find(x=>x.id===pid),x=SS[pid],m=monVal('#sm')+'-01';if(!p||!x||x.status==='draft')return alert('확정된 정산서만 메일을 보낼 수 있습니다.');
   if(Number(x.author_total)!==p.A||Number(x.payable_amount)!==p.pay)return alert('확정 후 금액이 변경되었습니다. 먼저 재확정한 뒤 메일을 발송해 주세요.');
   const sent=x.status==='sent';
   confirmLay({title:sent?'정산 메일 재발송':'정산 메일 발송',danger:false,body:`<p style="margin:0"><b>${esc([...p.pens].join(', '))}</b> 작가님께 ${m.slice(0,7)} 정산서 확정 안내 메일을 ${sent?'다시 ':''}발송합니다.<br>정산서 금액은 메일에 포함되지 않고, 로그인 후 확인하도록 안내합니다.${sent?`<br><span class="bad">${(x.sent_at||'').slice(0,10)}에 이미 발송했습니다.</span>`:''}</p>`,ok:sent?'재발송':'발송',onOk:async()=>{
     const{data,error}=await call({action:'send_statement_mail',person_id:pid,month:m});closeLay();if(error)return alert(error);alert(`${data.to} 로 발송했습니다.`);loadSettle()}})}
-function confirmSt(ids){const L=buildSt().filter(p=>ids.includes(p.id)),m=$('#sm').value+'-01',bad=L.filter(p=>p.nr);
+function confirmSt(ids){const L=buildSt().filter(p=>ids.includes(p.id)),m=monVal('#sm')+'-01',bad=L.filter(p=>p.nr);
   if(!L.length)return alert('확정할 정산서가 없습니다.');
   if(bad.length)return alert(`계약 비율이 설정되지 않은 판매가 있어 확정할 수 없습니다.\\n${bad.map(p=>[...p.pens][0]+' ('+p.nr+'건)').join(', ')}\\n작품 상세에서 계약 비율을 먼저 입력하세요.`);
   const over=L.some(p=>SS[p.id]&&SS[p.id].status!=='draft');
@@ -518,9 +518,9 @@ function confirmSt(ids){const L=buildSt().filter(p=>ids.includes(p.id)),m=$('#sm
       const r=x?await SB.from('settlements').update(row).eq('id',x.id):await SB.from('settlements').insert(row);if(r.error){alert('확정 실패: '+r.error.message);break}}
     closeLay();loadSettle()}})}
 function unconfirmSt(pid){const x=SS[pid];confirmLay({title:'확정 취소',body:'<p style="margin:0">작가 화면에서 이 정산서가 보이지 않게 됩니다. 확정한 내용은 유지되지 않고 미확정 상태로 돌아갑니다.</p>',ok:'확정 취소',onOk:async()=>{const r=await SB.from('settlements').update({status:'draft',confirmed_at:null,snapshot:null}).eq('id',x.id);closeLay();if(r.error)alert(r.error.message);loadSettle()}})}
-function stRows(p){const m=$('#sm').value;let n=0;const det=[];
+function stRows(p){const m=monVal('#sm');let n=0;const det=[];
   p.W.forEach(w=>{n++;ORD.forEach((c,i)=>{const x=w.pl[c]||{q:0,lp:w.pl[Object.keys(w.pl)[0]]?.lp||0,g:0,n:0};det.push([i?'':n,i?'':w.t,i?'':(w.rd||'').replace(/-/g,'.'),PN[c],x.q,x.lp,x.g,x.n])})});return det}
-const mkSnap=p=>({month:$('#sm').value,tax_rate:Number($('#sx').value||0),pens:[...p.pens],totals:{gross:p.gross,net:p.net,A:p.A,ded:p.ded,tax:p.tax,pay:p.pay},
+const mkSnap=p=>({month:monVal('#sm'),tax_rate:Number($('#sx').value||0),pens:[...p.pens],totals:{gross:p.gross,net:p.net,A:p.A,ded:p.ded,tax:p.tax,pay:p.pay},
   works:p.W.map(w=>({t:w.t,gross:w.gross,net:w.net,a:w.a,ded:w.ded,rate:w.rate})),detail:stRows(p),nr:p.nr});
 const stHtml=S=>{const[Y,M]=S.month.split('-'),T=S.totals;
   return `<h3 id="lt" style="margin:0 0 14px">${Y}년 ${+M}월 정산서</h3>

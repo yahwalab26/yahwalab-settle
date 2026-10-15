@@ -544,19 +544,31 @@ $('#sx').oninput=()=>{if(ST.length)drawSettle()};
 $('#sxe').onclick=()=>{const on=$('#sxw').hidden;$('#sxw').hidden=!on;$('#sxv').hidden=on;$('#sxe').textContent=on?'적용':'수정';if(!on){const v=Number($('#sx').value);if(!(v>=0&&v<=100)){$('#sx').value='3.3'}$('#sxv').textContent=Number($('#sx').value)+'%';drawSettle()}};
 $('#sl').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.sp)openStatement(b.dataset.sp);if(b.dataset.sc)confirmSt([b.dataset.sc]);if(b.dataset.su)unconfirmSt(b.dataset.su);if(b.dataset.sm)mailSt(b.dataset.sm)};
 $('#sca').onclick=()=>confirmSt(buildSt().map(p=>p.id));
+/* ---------- 정산서 PDF 생성(브라우저): 정산서를 이미지로 그려 A4 PDF로 만든 뒤 메일에 첨부 ---------- */
+const loadLib=(u,g)=>window[g]?Promise.resolve():new Promise((res,rej)=>{const e=document.createElement('script');e.src=u;e.onload=res;e.onerror=()=>rej('PDF 라이브러리를 불러오지 못했습니다.');document.head.appendChild(e)});
+async function makePdf(S){await loadLib('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js','html2canvas');await loadLib('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','jspdf');
+  const box=document.createElement('div');box.style.cssText='position:fixed;left:-10000px;top:0;width:760px;padding:24px;background:#fff;color:#111';
+  box.innerHTML=stHtml(S).replace(/ id="lt"/,'').replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(x=>x!=='hm').join(' ')+'"');document.body.appendChild(box);
+  try{const cv=await html2canvas(box,{scale:2,backgroundColor:'#fff'}),pdf=new jspdf.jsPDF({unit:'mm',format:'a4'}),W=190,ph=Math.floor(cv.width*277/W);
+    for(let y=0,n=0;y<cv.height;y+=ph,n++){const hh=Math.min(ph,cv.height-y),c=document.createElement('canvas');c.width=cv.width;c.height=hh;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,hh);g.drawImage(cv,0,y,cv.width,hh,0,0,cv.width,hh);if(n)pdf.addPage();pdf.addImage(c.toDataURL('image/jpeg',.92),'JPEG',10,10,W,hh*W/cv.width)}
+    return pdf.output('datauristring').split(',')[1]}finally{box.remove()}}
+async function mailPdf(pid,m,S){const pdf=await makePdf(S);return call({action:'send_statement_mail',person_id:pid,month:m,pdf,filename:fname(S)+'.pdf'})}
 function mailSt(pid){const p=buildSt().find(x=>x.id===pid),x=SS[pid],m=monVal('#sm')+'-01';if(!p||!x||x.status==='draft')return alert('확정된 정산서만 메일을 보낼 수 있습니다.');
   if(Number(x.author_total)!==p.A||Number(x.payable_amount)!==p.pay)return alert('확정 후 금액이 변경되었습니다. 먼저 재확정한 뒤 메일을 발송해 주세요.');
   const sent=x.status==='sent';
-  confirmLay({title:sent?'정산 메일 재발송':'정산 메일 발송',danger:false,body:`<p style="margin:0"><b>${esc([...p.pens].join(', '))}</b> 작가님께 ${m.slice(0,7)} 정산서 확정 안내 메일을 ${sent?'다시 ':''}발송합니다.<br>정산서 금액은 메일에 포함되지 않고, 로그인 후 확인하도록 안내합니다.${sent?`<br><span class="bad">${(x.sent_at||'').slice(0,10)}에 이미 발송했습니다.</span>`:''}</p>`,ok:sent?'재발송':'발송',onOk:async()=>{
-    const{data,error}=await call({action:'send_statement_mail',person_id:pid,month:m});closeLay();if(error)return alert(error);alert(`${data.to} 로 발송했습니다.`);loadSettle()}})}
+  confirmLay({title:sent?'정산 메일 재발송':'정산 메일 발송',danger:false,body:`<p style="margin:0"><b>${esc([...p.pens].join(', '))}</b> 작가님께 ${m.slice(0,7)} 정산서 확정 안내 메일을 ${sent?'다시 ':''}발송합니다.<br>정산서 PDF를 첨부해 발송합니다(PDF에는 정산 금액이 포함됩니다).${sent?`<br><span class="bad">${(x.sent_at||'').slice(0,10)}에 이미 발송했습니다.</span>`:''}</p>`,ok:sent?'재발송':'발송',onOk:async()=>{
+    openLay('<p class="k">정산서 PDF 생성·메일 발송 중…</p>');let r;try{const{data:sn,error:se}=await SB.from('settlements').select('snapshot').eq('id',x.id).single();if(se||!sn?.snapshot)throw '확정된 정산서를 불러오지 못했습니다.';r=await mailPdf(pid,m,sn.snapshot)}catch(e){closeLay();return alert(String(e.message||e))}
+    closeLay();if(r.error)return alert(r.error);alert(`${r.data.to} 로 발송했습니다.`);loadSettle()}})}
 function confirmSt(ids){const L=buildSt().filter(p=>ids.includes(p.id)),m=monVal('#sm')+'-01',bad=L.filter(p=>p.nr);
   if(!L.length)return alert('확정할 정산서가 없습니다.');
   if(bad.length)return alert(`계약 비율이 설정되지 않은 판매가 있어 확정할 수 없습니다.\\n${bad.map(p=>[...p.pens][0]+' ('+p.nr+'건)').join(', ')}\\n작품 상세에서 계약 비율을 먼저 입력하세요.`);
   const over=L.some(p=>SS[p.id]&&SS[p.id].status!=='draft');
-  confirmLay({title:'정산서 확정',danger:false,body:`<p style="margin:0">${m.slice(0,7)} 정산서 <b>${L.length}명</b>을 확정하고, 작가가 본인 정산서를 열람할 수 있게 합니다.<br>원천징수율 <b>${$('#sx').value}%</b> 기준으로 저장됩니다.${over?'<br><span class="bad">이미 확정된 정산서는 현재 값으로 덮어씁니다.</span>':''}</p>`,ok:'확정',onOk:async()=>{
-    for(const p of L){const row={person_id:p.id,period_month:m,status:'confirmed',gross_total:p.gross,net_total:p.net,author_total:p.A,deduction:p.ded,tax_amount:p.tax,payable_amount:p.pay,tax_rate:Number($('#sx').value),snapshot:mkSnap(p),confirmed_at:new Date().toISOString()},x=SS[p.id];
-      const r=x?await SB.from('settlements').update(row).eq('id',x.id):await SB.from('settlements').insert(row);if(r.error){alert('확정 실패: '+r.error.message);break}}
-    closeLay();loadSettle()}})}
+  confirmLay({title:'정산서 확정',danger:false,body:`<p style="margin:0">${m.slice(0,7)} 정산서 <b>${L.length}명</b>을 확정하고, 작가가 본인 정산서를 열람할 수 있게 합니다.<br><b>정산서 PDF가 작가 메일로 함께 발송됩니다</b>(이미 메일을 보낸 정산서는 자동 발송하지 않습니다).<br>원천징수율 <b>${$('#sx').value}%</b> 기준으로 저장됩니다.${over?'<br><span class="bad">이미 확정된 정산서는 현재 값으로 덮어씁니다.</span>':''}</p>`,ok:'확정',onOk:async()=>{
+    const todo=[];for(const p of L){const row={person_id:p.id,period_month:m,status:'confirmed',gross_total:p.gross,net_total:p.net,author_total:p.A,deduction:p.ded,tax_amount:p.tax,payable_amount:p.pay,tax_rate:Number($('#sx').value),snapshot:mkSnap(p),confirmed_at:new Date().toISOString()},x=SS[p.id];
+      const r=x?await SB.from('settlements').update(row).eq('id',x.id):await SB.from('settlements').insert(row);if(r.error){alert('확정 실패: '+r.error.message);break}if(!x||x.status!=='sent')todo.push([p,row.snapshot])}
+    closeLay();if(todo.length){openLay('<p class="k" id="mpg"></p>');const ok=[],fail=[];for(let i=0;i<todo.length;i++){const[p,S]=todo[i],nm=[...p.pens][0];$('#mpg').textContent=`정산서 PDF 생성·메일 발송 중… (${i+1}/${todo.length})`;try{const r=await mailPdf(p.id,m,S);if(r.error)throw r.error;ok.push(nm)}catch(e){fail.push(nm+' — '+String(e.message||e))}}
+      closeLay();alert(`확정 완료. 메일 발송 ${ok.length}명${fail.length?`\n발송 실패 ${fail.length}명 (확정은 유지됨, 정산 화면에서 '메일 발송'으로 다시 보내세요)\n${fail.join('\n')}`:''}`)}
+    loadSettle()}})}
 function unconfirmSt(pid){const x=SS[pid];confirmLay({title:'확정 취소',body:'<p style="margin:0">작가 화면에서 이 정산서가 보이지 않게 됩니다. 확정한 내용은 유지되지 않고 미확정 상태로 돌아갑니다.</p>',ok:'확정 취소',onOk:async()=>{const r=await SB.from('settlements').update({status:'draft',confirmed_at:null,snapshot:null}).eq('id',x.id);closeLay();if(r.error)alert(r.error.message);loadSettle()}})}
 function stRows(p){const m=monVal('#sm');let n=0;const det=[];
   p.W.forEach(w=>{n++;ORD.forEach((c,i)=>{const x=w.pl[c]||{q:0,lp:w.pl[Object.keys(w.pl)[0]]?.lp||0,g:0,n:0};det.push([i?'':n,i?'':w.t,i?'':(w.rd||'').replace(/-/g,'.'),PN[c],x.q,x.lp,x.g,x.n])})});return det}

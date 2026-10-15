@@ -144,6 +144,11 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 /* 작가 정산: 플랫폼 칩 — 글자 길이에 맞추고 여유 공백만, 한 줄에 들어가는 만큼 자동 배치(모바일 3개 안팎) */
 #pchips .chp{flex:0 0 auto;padding:0 12px!important}
 @media(max-width:700px){#pchips{gap:6px!important}#pchips .chp{padding:0 10px!important}}
+/* 헤더: 이메일 한 줄 → 그 아래 줄에 비밀번호 변경 · 로그아웃 (가운데 정렬) */
+.who{flex-direction:column;gap:6px}
+.who .wb{display:flex;align-items:center;justify-content:center;gap:16px}
+/* 현황 (03) 데이터 현황 안의 업로드 영역 */
+#pg-home .drop{padding:28px 20px;margin:0 0 14px}
 </style></head><body>
 <div class="wrap">
 
@@ -175,7 +180,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 
 <section id="author" hidden>
   <header><div><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"><p class="sub">야화랩 정산 사이트</p></div>
-    <div class="who"><span id="awho"></span> <button class="lnk" id="pwb2">비밀번호 변경</button> <button class="lnk out">로그아웃</button></div></header>
+    <div class="who"><span id="awho"></span><span class="wb"><button class="lnk" id="pwb2">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
   <div class="card" id="sch" style="margin-top:20px"></div>
   <p class="k" style="text-align:center;margin:20px 0 8px;font-size:12px;line-height:1.9">정산 내역은 익일 00시부터 01시 사이에 데이터가 반영되므로, <b>전일 판매 내역까지만</b> 확인할 수 있습니다.<br>(※ 본 정산 현황은 미확정 금액입니다. 취소분 등으로 인하여 실제 정산액과 차이가 있을 수 있습니다.)</p>
   <h2><small>(01)</small>월별 정산서</h2>
@@ -203,8 +208,8 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 
 <section id="app" hidden>
   <header><div><a href="#/home" id="homelink" aria-label="현황으로 이동" title="현황으로 이동"><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"></a><p class="sub">야화랩 정산 사이트</p></div>
-    <div class="who"><span id="who"></span> <button class="lnk" id="pwb">비밀번호 변경</button> <button class="lnk out">로그아웃</button></div></header>
-  <nav id="nav"><a href="#/home" data-r="home">현황</a><a href="#/upload" data-r="upload">업로드</a><a href="#/settle" data-r="settle">정산</a><a href="#/authors" data-r="authors">작가</a><a href="#/proof" data-r="proof">교정고 점검</a><a href="#/mail" data-r="mail">메일 작성</a></nav>
+    <div class="who"><span id="who"></span><span class="wb"><button class="lnk" id="pwb">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
+  <nav id="nav"><a href="#/home" data-r="home">현황</a><a href="#/settle" data-r="settle">정산</a><a href="#/authors" data-r="authors">작가</a><a href="#/proof" data-r="proof">교정고 점검</a><a href="#/mail" data-r="mail">메일 작성</a></nav>
 
   <div class="pg" id="pg-home">
   <h2><small>(01)</small>정산 현황</h2>
@@ -221,18 +226,14 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <p class="k" style="text-align:center;margin:-6px 0 12px">작품을 누르면 일별 판매 내역을 보고 계약 비율을 설정할 수 있습니다.</p>
   <div class="tw"><table><caption class="sr-only">작품별 판매 현황</caption><thead><tr><th>작품</th><th class="hm">레이블</th><th class="r">수량</th><th class="r">정산액</th><th class="r hm">계약 비율</th><th class="hm">계약 만료일</th></tr></thead><tbody id="wl"></tbody></table></div>
   <h2><small>(03)</small>데이터 현황</h2>
+  <label class="drop" id="dz"><b>판매 파일 선택</b>엑셀/CSV 파일을 선택하세요. 여러 파일을 한 번에 선택하면 차례로 미리보기 후 등록합니다.<br><span class="k">알라딘 · 예스24 · 교보문고는 파일 형태로 자동 인식됩니다</span>
+    <input id="file" type="file" accept=".xlsx,.xls,.csv" multiple hidden></label>
+  <div id="prev"></div>
   <div class="tw"><table><thead><tr><th>플랫폼</th><th>마지막 데이터</th><th>마지막 업로드</th></tr></thead><tbody id="fresh"></tbody></table></div>
   <div class="card" style="text-align:left;margin-top:24px"><b>업로드 이력 · 정산 데이터 관리</b>
     <p class="k" style="margin:4px 0 10px">잘못 올린 파일은 이력에서 되돌릴 수 있습니다.</p>
     <div class="tw"><table><caption class="sr-only">업로드 이력</caption><thead><tr><th>일시</th><th>플랫폼</th><th class="hm">파일</th><th class="r">건수</th><th class="cc">되돌리기</th></tr></thead><tbody id="ul"></tbody></table></div>
     <div class="row" style="justify-content:flex-start;margin-top:16px"><select id="rs" style="width:auto" aria-label="초기화 범위"><option value="">전체 플랫폼</option><option value="aladin">알라딘</option><option value="bookcube">북큐브</option><option value="kyobo">교보문고</option><option value="yes24">예스24</option></select><button class="ghost" id="rb" style="border-color:var(--bad);color:var(--bad)">정산 데이터 초기화</button></div></div>
-
-  </div>
-  <div class="pg" id="pg-upload" hidden>
-  <h2><small>(01)</small>판매 데이터 업로드</h2>
-  <label class="drop" id="dz"><b>판매 파일 선택</b>엑셀/CSV 파일을 선택하세요. 여러 파일을 한 번에 선택하면 차례로 미리보기 후 등록합니다.<br><span class="k">알라딘 · 예스24 · 교보문고는 파일 형태로 자동 인식됩니다</span>
-    <input id="file" type="file" accept=".xlsx,.xls,.csv" multiple hidden></label>
-  <div id="prev"></div>
 
   </div>
   <div class="pg" id="pg-settle" hidden>
@@ -311,7 +312,7 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
 
 /* ---------- 메뉴(nav) ---------- */
 $('#homelink').onclick=e=>{if(location.hash===''||location.hash==='#/home'){e.preventDefault();loadHome();scrollTo(0,0)}};
-const PG=['home','upload','authors','settle','proof','mail'];
+const PG=['home','authors','settle','proof','mail'];
 function route(){const r=location.hash.replace(/^#\/?/,'')||'home',id=PG.includes(r)?r:'home';
   PG.forEach(x=>$('#pg-'+x).hidden=x!==id);document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.r===id));
   document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle()}

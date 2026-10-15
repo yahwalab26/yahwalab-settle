@@ -186,8 +186,9 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <p class="k" style="text-align:center;margin:20px 0 8px;font-size:12px;line-height:1.9">정산 내역은 익일 00시부터 01시 사이에 데이터가 반영되므로, <b>전일 판매 내역까지만</b> 확인할 수 있습니다.<br>(※ 본 정산 현황은 미확정 금액입니다. 취소분 등으로 인하여 실제 정산액과 차이가 있을 수 있습니다.)</p>
   <h2><small>(01)</small>월별 정산서</h2>
   <div class="tw"><table class="vm"><caption class="sr-only">확정된 월별 정산서</caption><thead><tr><th>정산 기준월</th><th class="r">작가 정산액</th><th class="r">실 지급액</th><th></th></tr></thead><tbody id="mys"></tbody></table></div>
-  <h2><small>(02)</small>정산 통계</h2><div id="stt"></div>
-  <h2><small>(03)</small>일일 정산 현황</h2>
+  <h2><small>(02)</small>계약 정산 비율</h2><div id="rtl"></div>
+  <h2><small>(03)</small>정산 통계</h2><div id="stt"></div>
+  <h2><small>(04)</small>일일 정산 현황</h2>
   <div class="card" style="text-align:left;padding-top:8px">
     <div class="fr"><label class="fl" for="sf">정산 기간</label><div class="row" style="justify-content:flex-start"><input id="sf" type="date" style="width:auto"><span>~</span><input id="se" type="date" style="width:auto">
       <span id="sdq" class="row" style="gap:6px"><button type="button" class="ghost" data-q="y">어제</button><button type="button" class="ghost" data-q="yy">그제</button><button type="button" class="ghost" data-q="tm">이번 달</button><button type="button" class="ghost" data-q="lm">저번 달</button></span></div>
@@ -292,7 +293,7 @@ let ME=null,forced=false;
 async function enter(u){ME=u;const{data}=await SB.from('profiles').select('role,must_change_password').eq('id',u.id).maybeSingle();
   if(data?.must_change_password)return askPw(true);
   if(data?.role==='author'&&stale()){await SB.auth.signOut();view('login');$('#le').textContent='1시간 이상 사용이 없어 자동 로그아웃되었습니다. 다시 로그인해 주세요.';return}
-  if(data?.role==='author'){$('#awho').textContent=u.email;view('author');drawSchedule();loadStats();initSearch();loadMyStatements();startIdle();return}
+  if(data?.role==='author'){$('#awho').textContent=u.email;view('author');drawSchedule();loadRates();loadStats();initSearch();loadMyStatements();startIdle();return}
   stopIdle();
   if(data?.role!=='admin')return view('denied');
   $('#who').textContent=u.email;view('app');loadFresh();route();loadPeople()}
@@ -331,6 +332,15 @@ const fmtD=d=>`${d.getUTCMonth()+1}월 ${d.getUTCDate()}일(${'일월화수목�
 function biz(y,m,d){const x=new Date(Date.UTC(y,m,d));while([0,6].includes(x.getUTCDay())||HOL.has(iso(x)))x.setUTCDate(x.getUTCDate()-1);return x}   // 주말·공휴일이면 앞선 평일
 function drawSchedule(){const t=kst();let y=t.getUTCFullYear(),m=t.getUTCMonth(),pay=biz(y,m+1,0);if(iso(pay)<iso(t)){m++;pay=biz(y,m+1,0)}const mail=biz(y,m,25),mm=mon1(y,m).getUTCMonth()+1;
   $('#sch').innerHTML=`<div class="k" style="font-size:12px;letter-spacing:.06em">${mm}월 정산 일정</div><div class="row" style="gap:36px;margin-top:8px"><div><div class="k">정산 메일 발송</div><div style="font-size:19px;font-weight:700">${fmtD(mail)}</div></div><div><div class="k">정산일</div><div style="font-size:19px;font-weight:700">${fmtD(pay)}</div></div></div><p class="k" style="font-size:12px;margin:14px 0 0;text-align:center">※ 공휴일인 경우 영업일 기준으로 처리</p>`}
+/* ---------- 계약 정산 비율(작품별·플랫폼별·기간별 목록) ---------- */
+async function loadRates(){const el=$('#rtl');if(!el)return;
+  const{data,error}=await SB.rpc('author_contract_rates');
+  if(error){el.innerHTML='<p class="bad" style="text-align:center">계약 비율을 불러오지 못했습니다.</p>';return}
+  const R=data||[];if(!R.length){el.innerHTML='<p class="k" style="text-align:center">등록된 계약 비율이 없습니다. 궁금한 점은 운영자에게 문의해 주세요.</p>';return}
+  const today=iso(kst()),G=new Map();R.forEach(r=>{const k=r.work_id+'|'+r.author_id;if(!G.has(k))G.set(k,[]);G.get(k).push(r)});
+  el.innerHTML='<p class="k" style="margin:0 0 4px;font-size:12px;line-height:1.8">같은 기간에 여러 조건이 있으면 <b>특약 → 플랫폼 개별 → 기본(전체)</b> 순서로 적용됩니다.<br>작가 비율은 플랫폼 정산액(수익액)에 곱해 예상 정산액을 계산합니다.</p>'+
+  [...G.values()].map(L=>{const f=L[0],sh=Number(f.share_ratio);
+    return `<div class="card" style="text-align:left;margin-top:12px;padding-top:14px"><div style="font-weight:700;font-size:15px">${esc(f.title)}</div><div class="k" style="font-size:12px;margin:2px 0 8px">${esc(f.pen_name)}${sh<1?` · 공동 작가 지분 ${pct(sh)}`:''}</div><div class="tw"><table class="vm"><caption class="sr-only">${esc(f.title)} 계약 비율</caption><thead><tr><th>구분</th><th>플랫폼</th><th>적용 기간</th><th class="r">작가 비율</th></tr></thead><tbody>${L.map(r=>{const on=r.effective_from<=today&&(!r.effective_to||r.effective_to>=today);return `<tr><td>${KD[r.kind]||esc(r.kind)}</td><td>${r.platform_code?esc(r.platform_name||r.platform_code):'전체'}</td><td>${r.effective_from} ~ ${r.effective_to||'계속'}${on?'<div class="ok" style="font-size:11.5px;font-weight:700">적용 중</div>':''}</td><td class="r"><b>${pct(r.author_rate)}</b></td></tr>`}).join('')}</tbody></table></div></div>`}).join('')}
 const bars=(rows,color)=>{const mx=Math.max(...rows.map(r=>r.v),1);return rows.map(r=>`<div class="bar"><div class="bl">${esc(r.l)}</div><div style="flex:1;min-width:0">${r.t!==undefined?`<div class="bn">${esc(r.t)||'&nbsp;'}</div>`:''}<div class="bt"><div class="bf" style="width:${Math.max(r.v/mx*100,0)}%;background:${color}">${w0(r.v)}</div></div></div></div>`).join('')};
 async function loadStats(){const t=kst(),m0=mon1(t.getUTCFullYear(),t.getUTCMonth()-5);
   const[a,b]=await Promise.all([SB.rpc('author_sales_summary',{p_from:iso(addD(t,-5)),p_to:iso(addD(t,-1)),p_unit:'day'}),SB.rpc('author_sales_summary',{p_from:iso(m0),p_to:iso(t),p_unit:'month'})]);

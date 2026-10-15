@@ -201,6 +201,22 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <p class="k" style="text-align:center;margin:40px 0 8px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.8">🔒 작가님의 모든 정보는 개인정보 보호를 위해 암호화되어 저장됩니다.<br>운영자를 포함한 누구도 원문 비밀번호를 확인할 수 없으니 안심하고 이용해 주세요.</p>
 </section>
 
+<section id="mfa" hidden>
+  <h1 id="mt">2단계 인증</h1><p class="k" id="ms"></p>
+  <div class="login" style="margin:28px auto 0">
+    <div id="mq" hidden style="text-align:center">
+      <img id="mqi" alt="인증 앱에 등록할 QR 코드" style="width:180px;height:180px;background:#fff;padding:8px;border-radius:8px">
+      <p class="k" style="margin:10px 0 4px;font-size:12px">QR이 안 되면 아래 키를 인증 앱에 직접 입력하세요.</p>
+      <code id="mk" style="display:block;word-break:break-all;font-size:13px;user-select:all"></code>
+    </div>
+    <form id="mf" style="display:flex;flex-direction:column;gap:6px;margin-top:14px">
+      <input id="mc" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="6자리 코드" autocomplete="one-time-code" required style="text-align:center;letter-spacing:6px;font-size:18px">
+      <button id="mb">확인</button><div id="me" class="bad"></div>
+    </form>
+    <button type="button" class="ghost out">로그아웃</button>
+  </div>
+</section>
+
 <section id="denied" hidden>
   <h1>접근 권한이 없습니다</h1>
   <p class="k">이 화면은 관리자 전용입니다. 작가용 화면은 준비 중입니다.</p>
@@ -283,7 +299,7 @@ const monVal=sel=>{const e=$(sel);if(!/^\d{4}-\d{2}$/.test(e.value))e.value=kst(
 let S=null,WORKS=[],ISBN={},AUTHORS=[],WA={};
 
 /* ---------- 인증 ---------- */
-const view=id=>['login','accept','chpw','denied','app','author'].forEach(v=>$('#'+v).hidden=v!==id);
+const view=id=>['login','accept','chpw','mfa','denied','app','author'].forEach(v=>$('#'+v).hidden=v!==id);
 document.querySelectorAll('.out').forEach(b=>b.onclick=async()=>{stopIdle();dropEmbeds();await SB.auth.signOut();view('login')});
 $('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';
   const{data,error}=await SB.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
@@ -291,12 +307,38 @@ $('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';
   try{$('#rm').checked?localStorage.setItem('yw_email',$('#em').value.trim()):localStorage.removeItem('yw_email')}catch{}
   stamp();enter(data.user)};
 let ME=null,forced=false;
+/* ---------- 관리자 2단계 인증(TOTP) ---------- */
+let MFA_FID=null;
+async function mfaGate(){ /* true=통과, false=코드 입력/등록 화면을 띄움 */
+  const{data:a,error}=await SB.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(error){await SB.auth.signOut();view('login');$('#le').textContent='2단계 인증 상태를 확인하지 못했습니다. 다시 로그인해 주세요.';return false}
+  if(a.currentLevel==='aal2')return true;
+  const{data:l,error:le}=await SB.auth.mfa.listFactors();
+  if(le){await SB.auth.signOut();view('login');$('#le').textContent='2단계 인증 정보를 불러오지 못했습니다. 다시 로그인해 주세요.';return false}
+  const ok=(l?.totp||[]).find(f=>f.status==='verified');
+  $('#mf').reset();$('#me').textContent='';
+  if(ok){MFA_FID=ok.id;$('#mq').hidden=true;$('#mt').textContent='2단계 인증';
+    $('#ms').textContent='인증 앱에 표시된 6자리 코드를 입력하세요.';view('mfa');$('#mc').focus();return false}
+  /* 등록: 이전에 끝내지 못한 미완료 요소는 정리하고 새로 만든다 */
+  for(const f of (l?.all||[]).filter(f=>f.factor_type==='totp'&&f.status!=='verified'))await SB.auth.mfa.unenroll({factorId:f.id});
+  const{data:en,error:ee}=await SB.auth.mfa.enroll({factorType:'totp',friendlyName:'yahwa-'+Date.now()});
+  if(ee){await SB.auth.signOut();view('login');$('#le').textContent='2단계 인증 등록을 시작하지 못했습니다: '+ee.message;return false}
+  MFA_FID=en.id;$('#mqi').src=en.totp.qr_code;$('#mk').textContent=en.totp.secret;$('#mq').hidden=false;
+  $('#mt').textContent='2단계 인증 등록';
+  $('#ms').textContent='인증 앱(Google Authenticator, Microsoft Authenticator 등)으로 QR을 스캔한 뒤, 앱에 표시된 6자리 코드를 입력하세요.';
+  view('mfa');$('#mc').focus();return false}
+$('#mf').onsubmit=async e=>{e.preventDefault();const m=$('#me'),b=$('#mb');m.textContent='';
+  const code=$('#mc').value.replace(/\s/g,'');if(!/^\d{6}$/.test(code))return m.textContent='6자리 숫자를 입력하세요.';
+  b.disabled=true;const{error}=await SB.auth.mfa.challengeAndVerify({factorId:MFA_FID,code});b.disabled=false;
+  if(error){$('#mc').value='';return m.textContent='코드가 올바르지 않거나 만료되었습니다. 앱의 새 코드를 입력하세요.'}
+  enter(ME)};
 async function enter(u){ME=u;const{data}=await SB.from('profiles').select('role,must_change_password').eq('id',u.id).maybeSingle();
   if(data?.must_change_password)return askPw(true);
   if(data?.role==='author'&&stale()){await SB.auth.signOut();view('login');$('#le').textContent='1시간 이상 사용이 없어 자동 로그아웃되었습니다. 다시 로그인해 주세요.';return}
   if(data?.role==='author'){$('#awho').textContent=u.email;view('author');drawSchedule();loadRates();loadStats();initSearch();loadMyStatements();startIdle();return}
   stopIdle();
   if(data?.role!=='admin')return view('denied');
+  if(!await mfaGate())return;
   $('#who').textContent=u.email;view('app');loadFresh();route();loadPeople()}
 try{const se=localStorage.getItem('yw_email');if(se){$('#em').value=se;$('#rm').checked=true}}catch{}
 

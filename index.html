@@ -25,6 +25,8 @@ h1{font-size:26px;line-height:1.3;margin:0 0 8px;font-weight:700;letter-spacing:
 h2{margin:60px 0 18px;text-align:center;font-size:22px;line-height:1.3;font-weight:700;letter-spacing:-.01em}
 h2 small{display:block;font-size:12px;font-weight:500;color:var(--mute);letter-spacing:.06em;margin-bottom:6px}
 #login,#chpw,#denied,#accept{min-height:100vh;min-height:calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom));display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:32px 0}
+/* 버전 표기: 관리자 화면 우측 상단. 배포 때마다 VER 값만 올린다(major.minor.patch) */
+.ver{position:fixed;top:8px;right:12px;font-size:11px;color:var(--mute);letter-spacing:.04em;z-index:5;pointer-events:none}
 header{display:flex;flex-direction:column;align-items:center;gap:6px;padding:34px 0 20px;border-bottom:1px solid var(--ink);text-align:center}
 header .logo{height:36px}header .sub{margin:6px 0 0;font-size:12px}
 .who{display:flex;align-items:center;justify-content:center;gap:4px 16px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin-top:8px}
@@ -224,6 +226,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 </section>
 
 <section id="app" hidden>
+  <div class="ver" id="ver" aria-label="사이트 버전"></div>
   <header><div><a href="#/home" id="homelink" aria-label="현황으로 이동" title="현황으로 이동"><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"></a><p class="sub">야화랩 정산 사이트</p></div>
     <div class="who"><span id="who"></span><span class="wb"><button class="lnk" id="pwb">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
   <nav id="nav"><a href="#/home" data-r="home">현황</a><a href="#/settle" data-r="settle">정산</a><a href="#/authors" data-r="authors">작가</a><a href="#/docs" data-r="docs">회사 자료</a><a href="#/proof" data-r="proof">교정고 점검</a><a href="#/mail" data-r="mail">메일 작성</a></nav>
@@ -292,6 +295,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
+const VER='v1.1.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -339,7 +343,7 @@ async function enter(u){ME=u;const{data}=await SB.from('profiles').select('role,
   stopIdle();
   if(data?.role!=='admin')return view('denied');
   if(!await mfaGate())return;
-  $('#who').textContent=u.email;view('app');loadFresh();route();loadPeople()}
+  $('#who').textContent=u.email;$('#ver').textContent=VER;view('app');loadFresh();route();loadPeople()}
 try{const se=localStorage.getItem('yw_email');if(se){$('#em').value=se;$('#rm').checked=true}}catch{}
 
 /* ---------- 비밀번호 설정/변경 ---------- */

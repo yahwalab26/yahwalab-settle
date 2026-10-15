@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<title>야화랩 메일 작성기</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#F3F3F4;--paper:#fff;--ink:#17171A;--ink2:#46474D;--mute:#6A6B73;--line:#D6D7DB;--line2:#E8E8EB;--hl:#EDEDF0;--red:#C4251B;--redbg:#FBE9E7;--onink:#fff;--focus:#2F6FDE;
+--ui:'IBM Plex Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121214;--paper:#1A1A1D;--ink:#EDEDEF;--ink2:#BDBEC4;--mute:#8F9098;--line:#34353B;--line2:#26272C;--hl:#2A2B31;--red:#FF7A6E;--redbg:#3A1F1C;--onink:#121214;--focus:#7DA8FF;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121214;--paper:#1A1A1D;--ink:#EDEDEF;--ink2:#BDBEC4;--mute:#8F9098;--line:#34353B;--line2:#26272C;--hl:#2A2B31;--red:#FF7A6E;--redbg:#3A1F1C;--onink:#121214;--focus:#7DA8FF;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.55 var(--ui);-webkit-text-size-adjust:100%}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+[hidden]{display:none!important}
+.embedded .top{display:none}
+.app{height:100%;display:flex;flex-direction:column;min-height:0}
+.top{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+.top svg{display:block}
+.top strong{font-weight:600;font-size:15px}
+.mtabs{display:none;background:var(--paper);border-bottom:1px solid var(--line)}
+.mtabs button{flex:1;min-height:42px;border:0;background:none;font-weight:500;color:var(--mute);border-bottom:2px solid transparent;cursor:pointer}
+.mtabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink)}
+.main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 380px}
+.pane{min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+.side{background:var(--paper);border-left:1px solid var(--line);display:flex;flex-direction:column}
+.form{flex:1 0 auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:0 13px;border:1px solid var(--line);border-radius:7px;background:var(--paper);cursor:pointer;font-weight:500;font-size:13px;white-space:nowrap}
+.btn:hover{background:var(--hl)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--onink)}
+.btn.primary:hover{background:var(--ink2);border-color:var(--ink2)}
+.btn.block{display:flex;width:100%}
+.btn.sm{min-height:30px;padding:0 10px;font-size:12px}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.sec{padding:14px 18px;border-bottom:1px solid var(--line2)}
+.sec h2{margin:0 0 8px;font:600 14px/1.4 var(--ui)}
+.seg2{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.sw{min-height:34px;padding:0 6px;border:0;border-right:1px solid var(--line);background:var(--paper);cursor:pointer;font-size:13px;font-weight:500;color:var(--ink2)}
+.sw:last-child{border-right:0}
+.sw.on{background:var(--ink);color:var(--onink)}
+.field{display:block;margin:0 0 12px}
+.field:last-child{margin:0}
+.field>span{display:block;margin-bottom:4px;font-size:12.5px;color:var(--ink2)}
+.field>span i{font-style:normal;color:var(--mute)}
+.field input,.field textarea{width:100%;min-height:36px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:var(--paper)}
+.field textarea{padding:8px 10px;min-height:92px;resize:vertical;line-height:1.55}
+.field input:focus,.field textarea:focus{border-color:var(--ink)}
+.dock{position:sticky;bottom:0;margin-top:auto;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));background:var(--paper);border-top:1px solid var(--ink)}
+.need{margin:0 0 8px;font-size:12.5px;color:var(--red)}
+.btnrow{display:flex;gap:8px;margin-top:8px}
+.btnrow .btn{flex:1}
+.mdock{display:none}
+.mail{max-width:720px;margin:0 auto;padding:20px 16px 96px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.sub{padding:14px 20px;border-bottom:1px solid var(--line2)}
+.lab{display:block;margin-bottom:2px;font-size:12px;color:var(--mute)}
+.sub b{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.msg{padding:18px 20px 24px;font-size:15px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all}
+.ph{display:inline;padding:0 5px;border:1px solid var(--red);border-radius:5px;background:var(--redbg);color:var(--red);font-size:13.5px;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;padding:10px 16px;border-radius:8px;background:var(--ink);color:var(--onink);font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+@media (max-width:899px){
+html,body{height:auto}
+.app{height:auto;min-height:100dvh}
+.main{display:flex;flex-direction:column}
+.pane{overflow:visible}
+.side{order:-1;border-left:0;border-bottom:1px solid var(--line)}
+.side .dock{display:none}
+.mdock{display:block;position:sticky;bottom:0;z-index:5}
+.mail{padding:16px 12px 24px}
+.field input,.field textarea{font-size:16px}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app" data-view="input">
+<header class="top"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2"/><path d="m4 7 8 6 8-6"/></svg><strong>야화랩 메일 작성기</strong></header>
+
+<main class="main">
+<section class="pane editor" aria-label="미리보기"><div class="mail"><div class="card"><div class="sub"><span class="lab">제목</span><b id="subj"></b></div><div class="msg" id="body"></div></div></div></section>
+<aside class="pane side" aria-label="입력">
+<div class="form">
+<div class="sec"><h2>메일 종류</h2><div class="seg2" id="types" role="group" aria-label="메일 종류"></div></div>
+<div class="sec" id="fields">
+<label class="field" data-for="all"><span>작가명 <i>(비우면 ‘작가님’)</i></span><input id="author" autocomplete="off"></label>
+<label class="field" data-for="reject accept proof"><span>작품명</span><input id="title" autocomplete="off"></label>
+<label class="field" data-for="accept"><span>작품 호평 코멘트 <i>(선택)</i></span><textarea id="comment"></textarea></label>
+<label class="field" data-for="proof"><span>교정 차수 <i>(숫자만, 비우면 생략)</i></span><input id="round" inputmode="numeric" autocomplete="off" placeholder="예: 1"></label>
+<label class="field" data-for="proof"><span>간단한 리뷰 <i>(선택)</i></span><textarea id="review"></textarea></label>
+<label class="field" data-for="proof"><span>기한</span><input id="deadline" type="date"></label>
+</div>
+</div>
+<div class="dock" data-dock></div>
+</aside>
+</main>
+<div class="dock mdock" data-dock></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script>
+var TYPES=[["receipt","접수"],["reject","반려"],["accept","합격"],["proof","교정고"]];
+var cur="receipt",view="input",lastMiss=[];
+var $=function(s){return document.querySelector(s)};
+var ID={"작가명":"author","작품명":"title","작품 호평 코멘트":"comment","기한":"deadline"};
+var DOCK='<p class="need" hidden></p><button class="btn primary block" data-act="ca">제목과 본문 전체 복사</button><div class="btnrow"><button class="btn sm" data-act="cs">제목 복사</button><button class="btn sm" data-act="cb">본문 복사</button><button class="btn sm" data-act="clear">입력 비우기</button></div>';
+document.querySelectorAll("[data-dock]").forEach(function(d){d.innerHTML=DOCK});
+
+function josa(w,a,b){var c=w.trim().slice(-1).charCodeAt(0);if(c>=0xAC00&&c<=0xD7A3)return((c-0xAC00)%28)?a:b;return a+"("+b+")"}
+function ph(name){return "\u0001"+name+"\u0002"}
+function fmtDate(v){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v);if(!m)return"";var d=new Date(+m[1],m[2]-1,+m[3]);return(+m[2])+"월 "+(+m[3])+"일("+"일월화수목금토"[d.getDay()]+")"}
+
+function build(){
+  var miss=[];
+  function need(v,name){if(v)return v;if(miss.indexOf(name)<0)miss.push(name);return ph(name)}
+  var author=$("#author").value.trim(),title=$("#title").value.trim();
+  var greet=author?"안녕하세요, "+author+" 작가님.":"안녕하세요, 작가님.";
+  var s,b;
+  if(cur==="receipt"){
+    s="[야화랩] 투고 작품 접수 안내드립니다.";
+    b=greet+"\n\n야화랩에 소중한 원고를 투고해 주셔서 감사합니다.\n\n보내주신 원고는 편집부에서 꼼꼼히 검토한 후, 영업일 기준 5일 이내에 결과를 회신드리겠습니다.\n합격 여부와 관계없이 모든 투고 건에 회신드리고 있으니 참고 부탁드립니다.\n\n짧지만 선명한 이야기부터 오래도록 기억에 남는 작품까지, 작가님의 이야기를 독자에게 전할 수 있도록 좋은 작품을 기다리고 있습니다.\n\n조금만 기다려주시면 감사하겠습니다.\n편안한 하루 보내세요.\n\n감사합니다.\n\n야화랩 편집부 드림";
+  }else if(cur==="reject"){
+    s="[야화랩] 투고 작품 검토 결과 안내드립니다.";
+    var l1=title?"먼저 소중한 원고 <"+title+">"+josa(title,"을","를")+" 투고해 주셔서 감사드립니다.":"먼저 소중한 원고를 투고해 주셔서 감사드립니다.";
+    b=greet+"\n야화랩 편집부입니다.\n\n"+l1+"\n편집부에서 작품을 꼼꼼히 검토하였으나, 아쉽게도 이번에는 야화랩과 함께하기 어렵게 되었습니다.\n\n이번 검토는 야화랩의 출간 방향과의 적합성을 기준으로 이루어졌습니다.\n좋은 소식을 전해드리지 못해 죄송한 마음입니다.\n다른 작품으로 다시 만나 뵐 수 있기를 바라며, 앞으로의 창작 활동도 응원하겠습니다.\n\n감사합니다.\n야화랩 편집부 드림";
+  }else if(cur==="accept"){
+    s="[야화랩] 투고 작품 검토 결과 및 계약 제안 안내드립니다.";
+    var l2=title?"먼저 <"+title+">"+josa(title,"을","를")+" 투고해 주셔서 감사드립니다.":"먼저 원고를 투고해 주셔서 감사드립니다.";
+    var cm=$("#comment").value.trim();
+    var bar="────────────────────────";
+    b=greet+"\n야화랩 편집부입니다.\n\n"+l2+"\n"+(cm?cm+"\n":"")+"\n편집부 검토 결과, 작가님의 작품을 야화랩에서 전자책으로 출간하고 싶어 계약을 제안드립니다.\n아래에 주요 계약 조건을 안내드립니다.\n\n"+bar+"\n계약 형태: 전자책 계약\n계약 비율: 작가님 80 : 야화랩 20\n유통처: 리디북스, 교보문고, 알라딘, YES24, 북큐브\n(유통사는 단계적으로 확대 중입니다.)\n"+bar+"\n\n회신해 주시면 가계약서를 전달드리겠습니다.\n또한 계약과 관련해 궁금하신 점이 있으시면 편하게 문의해 주세요.\n\n작가님과 좋은 인연을 이어가기를 기대합니다.\n\n감사합니다.\n야화랩 편집부 드림";
+  }else{
+    var t=need(title,"작품명"),d=need(fmtDate($("#deadline").value),"기한");
+    var r=$("#round").value.replace(/\D/g,""),n=r?r+"차 ":"",rv=$("#review").value.trim();
+    s="[야화랩] <"+t+"> "+n+"교정고 전달드립니다.";
+    b=greet+"\n야화랩 박규애입니다.\n\n<"+t+"> "+n+"교정고 전달드립니다.\n\n몇 가지 확인이 필요한 사항은 (@의견)으로 함께 남겨두었습니다. 그 외 자세한 교정 관련 사항은 가이드 파일을 참고 부탁드립니다.\n교정과 관련해 궁금하신 점이 있으시면 언제든 편하게 문의해 주세요.\n\n"+(rv?rv+"\n\n":"")+"<"+t+"> "+n+"수정고는 "+d+"까지 전달 가능하실까요?\n일정상 시간이 더 필요하시다면 편하게 말씀해 주세요.\n\n감사합니다.\n\n박규애 드림.";
+  }
+  return{s:s,b:b,miss:miss};
+}
+
+function fill(el,text){
+  el.textContent="";
+  text.split(/\u0001([^\u0002]+)\u0002/).forEach(function(part,i){
+    if(i%2===0){if(part)el.appendChild(document.createTextNode(part));return}
+    var c=document.createElement("button");
+    c.className="ph";c.type="button";c.textContent="{"+part+"}";
+    c.addEventListener("click",function(){var f=$("#"+ID[part]);if(f){f.focus();if(f.scrollIntoView)f.scrollIntoView({block:"center"})}});
+    el.appendChild(c);
+  });
+}
+
+function render(){
+  var m=build();lastMiss=m.miss;
+  fill($("#subj"),m.s);fill($("#body"),m.b);
+  document.querySelectorAll("[data-dock]").forEach(function(d){
+    var n=d.querySelector(".need");
+    n.hidden=!m.miss.length;
+    n.textContent=m.miss.length?"입력이 필요합니다: "+m.miss.join(", "):"";
+    d.querySelectorAll("[data-act]").forEach(function(b){if(b.dataset.act!=="clear")b.disabled=m.miss.length>0});
+  });
+  document.querySelectorAll("#fields .field").forEach(function(f){
+    var k=f.dataset["for"];f.hidden=!(k==="all"||k.split(" ").indexOf(cur)>-1);
+  });
+  document.querySelectorAll("#types .sw").forEach(function(b){b.classList.toggle("on",b.dataset.k===cur);b.setAttribute("aria-pressed",b.dataset.k===cur)});
+}
+var tt;
+function toast(msg){var t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(function(){t.hidden=true},2200)}
+function copy(text,msg){
+  function ok(){toast(msg)}
+  function fb(){var ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){toast("복사하지 못했습니다. 직접 선택해 복사해 주세요.")}document.body.removeChild(ta)}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,fb);else fb();
+}
+
+TYPES.forEach(function(t){
+  var b=document.createElement("button");b.className="sw";b.type="button";b.textContent=t[1];b.dataset.k=t[0];
+  b.addEventListener("click",function(){cur=t[0];render()});$("#types").appendChild(b);
+});
+["author","title","comment","round","review","deadline"].forEach(function(id){$("#"+id).addEventListener("input",render)});
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-act]");if(!b||b.disabled)return;
+  var m=build(),a=b.dataset.act;
+  if(a==="cs")copy(m.s,"제목을 복사했습니다.");
+  else if(a==="cb")copy(m.b,"본문을 복사했습니다.");
+  else if(a==="ca")copy(m.s+"\n\n"+m.b,"제목과 본문을 복사했습니다.");
+  else if(a==="clear"){["author","title","comment","round","review","deadline"].forEach(function(id){$("#"+id).value=""});render()}
+});
+render();
+</script>
+<script>
+/* 관리자 사이트 안(iframe)에서 쓰일 때: 헤더 숨김·밝은 화면 고정, 작업 중임을 알려 자동 로그아웃이 작업 도중에 걸리지 않게 함 */
+(function(){if(window.parent===window)return;
+document.documentElement.classList.add('embedded');document.documentElement.setAttribute('data-theme','light');
+let t=0;['keydown','pointerdown','input','scroll','wheel'].forEach(function(ev){addEventListener(ev,function(){const n=Date.now();if(n-t>5000){t=n;try{parent.postMessage({t:'yw-act'},location.origin)}catch(e){}}},{passive:true,capture:true})})})();
+</script>
+</body>
+</html>

@@ -138,9 +138,9 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 /* 칩 버튼: 고정 폭(112px)을 풀고 '글자 + 여유'로. 보이지 않는 ✓ 자리가 글자를 오른쪽으로 밀던 것도 제거 */
 .chp{width:auto!important;min-width:0!important;padding:0 12px!important}
 .chp::before,.chp[aria-pressed=true]::before{content:none!important;display:none!important;margin:0!important}
-/* 정산 현황: 야화랩 (전체) · 트루비 (임프린트) — 가로세로 가운데, 좌우 패딩 8px (기존 3px + 5px) */
+/* 정산 현황: 야화랩 (전체) · 트루비 (임프린트) — 가로세로 가운데, 좌우 패딩 12px (위아래 여백과 동일) */
 #lv{display:flex;align-items:center;justify-content:center}
-#lv .chp{padding:0 8px!important}
+#lv .chp{padding:0 12px!important}
 /* 작가 정산: 플랫폼 칩 — 글자 길이에 맞추고 여유 공백만, 한 줄에 들어가는 만큼 자동 배치(모바일 3개 안팎) */
 #pchips .chp{flex:0 0 auto;padding:0 12px!important}
 @media(max-width:700px){#pchips{gap:6px!important}#pchips .chp{padding:0 10px!important}}
@@ -177,7 +177,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <header><div><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"><p class="sub">야화랩 정산 사이트</p></div>
     <div class="who"><span id="awho"></span> <button class="lnk" id="pwb2">비밀번호 변경</button> <button class="lnk out">로그아웃</button></div></header>
   <div class="card" id="sch" style="margin-top:20px"></div>
-  <p class="k" style="text-align:center;margin:20px 0 8px;font-size:12px;line-height:1.9">정산 내역은 익일 자정 데이터 반영으로 <b>전일 판매 내역까지</b> 확인 가능합니다.<br>※ 본 현황은 미확정 금액이며 취소분 등이 발생 시 실 정산액과 차이가 있을 수 있습니다.<br>※ 회원 수정 및 기능 제안은 담당자에게 전달 부탁드립니다.</p>
+  <p class="k" style="text-align:center;margin:20px 0 8px;font-size:12px;line-height:1.9">정산 내역은 익일 00시부터 01시 사이에 데이터가 반영되므로, <b>전일 판매 내역까지만</b> 확인할 수 있습니다.<br>(※ 본 정산 현황은 미확정 금액입니다. 취소분 등으로 인하여 실제 정산액과 차이가 있을 수 있습니다.)</p>
   <h2><small>(01)</small>월별 정산서</h2>
   <div class="tw"><table class="vm"><caption class="sr-only">확정된 월별 정산서</caption><thead><tr><th>정산 기준월</th><th class="r">작가 정산액</th><th class="r">실 지급액</th><th></th></tr></thead><tbody id="mys"></tbody></table></div>
   <h2><small>(02)</small>정산 통계</h2><div id="stt"></div>
@@ -192,7 +192,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
       <p class="k" style="margin:8px 0 0;font-size:12px">여러 개를 함께 선택할 수 있습니다. 교보문고는 월 단위 합계로 제공됩니다.</p></div>
     <div class="row" style="justify-content:flex-end"><button id="sgo">조회</button></div></div>
   <div id="sres" style="margin-top:20px"></div>
-  <p class="k" style="text-align:center;margin:40px 0 8px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.8">🔒 회원님의 비밀번호는 개인정보 보호를 위해 암호화되어 저장됩니다.<br>운영자를 포함한 누구도 원문 비밀번호를 확인할 수 없으니 안심하고 이용해 주세요.</p>
+  <p class="k" style="text-align:center;margin:40px 0 8px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.8">🔒 작가님의 모든 정보는 개인정보 보호를 위해 암호화되어 저장됩니다.<br>운영자를 포함한 누구도 원문 비밀번호를 확인할 수 없으니 안심하고 이용해 주세요.<br>🔒 ID 및 패스워드 분실 시 담당자(<a href="mailto:admin@yahwalab.xyz" style="color:inherit">admin@yahwalab.xyz</a>)에게 연락 부탁드립니다.</p>
 </section>
 
 <section id="denied" hidden>

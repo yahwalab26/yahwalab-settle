@@ -160,6 +160,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
     <label class="chk"><input id="rm" type="checkbox"> 아이디 저장</label>
     <button>로그인</button><div id="le" class="bad"></div>
   </form>
+  <p class="k" style="max-width:340px;margin:18px auto 0;text-align:center;font-size:12px;line-height:1.8">🔒 ID 및 패스워드 분실 시 담당자(<a href="mailto:admin@yahwalab.xyz" style="color:inherit">admin@yahwalab.xyz</a>)에게 연락 부탁드립니다.</p>
   <p class="foot">YAHWA LAB · 여성향 웹소설 전문 콘텐츠 레이블</p>
 </section>
 
@@ -185,19 +186,19 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <p class="k" style="text-align:center;margin:20px 0 8px;font-size:12px;line-height:1.9">정산 내역은 익일 00시부터 01시 사이에 데이터가 반영되므로, <b>전일 판매 내역까지만</b> 확인할 수 있습니다.<br>(※ 본 정산 현황은 미확정 금액입니다. 취소분 등으로 인하여 실제 정산액과 차이가 있을 수 있습니다.)</p>
   <h2><small>(01)</small>월별 정산서</h2>
   <div class="tw"><table class="vm"><caption class="sr-only">확정된 월별 정산서</caption><thead><tr><th>정산 기준월</th><th class="r">작가 정산액</th><th class="r">실 지급액</th><th></th></tr></thead><tbody id="mys"></tbody></table></div>
-  <h2><small>(02)</small>정산 통계</h2><div id="stt"></div>
-  <h2><small>(03)</small>일일 정산 현황</h2>
+  <h2><small>(02)</small>계약 정산 비율</h2><div id="rtl"></div>
+  <h2><small>(03)</small>정산 통계</h2><div id="stt"></div>
+  <h2><small>(04)</small>일일 정산 현황</h2>
   <div class="card" style="text-align:left;padding-top:8px">
     <div class="fr"><label class="fl" for="sf">정산 기간</label><div class="row" style="justify-content:flex-start"><input id="sf" type="date" style="width:auto"><span>~</span><input id="se" type="date" style="width:auto">
       <span id="sdq" class="row" style="gap:6px"><button type="button" class="ghost" data-q="y">어제</button><button type="button" class="ghost" data-q="yy">그제</button><button type="button" class="ghost" data-q="tm">이번 달</button><button type="button" class="ghost" data-q="lm">저번 달</button></span></div>
       <p class="k" style="margin:8px 0 0;font-size:12px">3개월 이내의 데이터만 조회할 수 있습니다.</p></div>
     <div class="fr"><label class="fl" for="sq">작품명</label><input id="sq" type="text" placeholder="작품명을 입력하세요 (미입력 시 전체 작품)" autocomplete="off">
       <p class="k" style="margin:8px 0 0;font-size:12px">띄어쓰기로 여러 작품을 함께 조회할 수 있고, 작품명의 일부만 입력해도 됩니다.</p></div>
-    <div class="fr" style="border:0"><span class="fl" id="pfl">플랫폼</span><div class="row" id="pchips" role="group" aria-labelledby="pfl" style="justify-content:flex-start;gap:8px"></div>
-      <p class="k" style="margin:8px 0 0;font-size:12px">여러 개를 함께 선택할 수 있습니다. 교보문고는 월 단위 합계로 제공됩니다.</p></div>
+    <div class="fr" style="border:0"><span class="fl" id="pfl">플랫폼</span><div class="row" id="pchips" role="group" aria-labelledby="pfl" style="justify-content:flex-start;gap:8px"></div></div>
     <div class="row" style="justify-content:flex-end"><button id="sgo">조회</button></div></div>
   <div id="sres" style="margin-top:20px"></div>
-  <p class="k" style="text-align:center;margin:40px 0 8px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.8">🔒 작가님의 모든 정보는 개인정보 보호를 위해 암호화되어 저장됩니다.<br>운영자를 포함한 누구도 원문 비밀번호를 확인할 수 없으니 안심하고 이용해 주세요.<br>🔒 ID 및 패스워드 분실 시 담당자(<a href="mailto:admin@yahwalab.xyz" style="color:inherit">admin@yahwalab.xyz</a>)에게 연락 부탁드립니다.</p>
+  <p class="k" style="text-align:center;margin:40px 0 8px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.8">🔒 작가님의 모든 정보는 개인정보 보호를 위해 암호화되어 저장됩니다.<br>운영자를 포함한 누구도 원문 비밀번호를 확인할 수 없으니 안심하고 이용해 주세요.</p>
 </section>
 
 <section id="denied" hidden>
@@ -209,7 +210,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <section id="app" hidden>
   <header><div><a href="#/home" id="homelink" aria-label="현황으로 이동" title="현황으로 이동"><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"></a><p class="sub">야화랩 정산 사이트</p></div>
     <div class="who"><span id="who"></span><span class="wb"><button class="lnk" id="pwb">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
-  <nav id="nav"><a href="#/home" data-r="home">현황</a><a href="#/settle" data-r="settle">정산</a><a href="#/authors" data-r="authors">작가</a><a href="#/proof" data-r="proof">교정고 점검</a><a href="#/mail" data-r="mail">메일 작성</a></nav>
+  <nav id="nav"><a href="#/home" data-r="home">현황</a><a href="#/settle" data-r="settle">정산</a><a href="#/authors" data-r="authors">작가</a><a href="#/docs" data-r="docs">회사 자료</a><a href="#/proof" data-r="proof">교정고 점검</a><a href="#/mail" data-r="mail">메일 작성</a></nav>
 
   <div class="pg" id="pg-home">
   <h2><small>(01)</small>정산 현황</h2>
@@ -233,7 +234,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <div class="card" style="text-align:left;margin-top:24px"><b>업로드 이력 · 정산 데이터 관리</b>
     <p class="k" style="margin:4px 0 10px">잘못 올린 파일은 이력에서 되돌릴 수 있습니다.</p>
     <div class="tw"><table><caption class="sr-only">업로드 이력</caption><thead><tr><th>일시</th><th>플랫폼</th><th class="hm">파일</th><th class="r">건수</th><th class="cc">되돌리기</th></tr></thead><tbody id="ul"></tbody></table></div>
-    <div class="row" style="justify-content:flex-start;margin-top:16px"><select id="rs" style="width:auto" aria-label="초기화 범위"><option value="">전체 플랫폼</option><option value="aladin">알라딘</option><option value="bookcube">북큐브</option><option value="kyobo">교보문고</option><option value="yes24">예스24</option></select><button class="ghost" id="rb" style="border-color:var(--bad);color:var(--bad)">정산 데이터 초기화</button></div></div>
+    <div class="row" style="justify-content:flex-start;margin-top:16px"><select id="rs" style="width:auto" aria-label="초기화 범위"><option value="">전체 플랫폼</option><option value="ridi">리디</option><option value="kyobo">교보문고</option><option value="aladin">알라딘</option><option value="yes24">예스24</option><option value="bookcube">북큐브</option></select><button class="ghost" id="rb" style="border-color:var(--bad);color:var(--bad)">정산 데이터 초기화</button></div></div>
 
   </div>
   <div class="pg" id="pg-settle" hidden>
@@ -264,6 +265,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <div class="card" id="ares" hidden></div><div class="card" id="adet" hidden></div>
   <div class="tw" style="margin-top:20px"><table><caption class="sr-only">작가 목록: 같은 작가의 이름·연락처·인증 상태는 합쳐서 표시하고, 필명별로 이메일과 작품을 나누어 표시합니다.</caption><thead><tr><th scope="col">이름</th><th scope="col">필명</th><th scope="col" class="hm">연락처</th><th scope="col" class="hm">이메일</th><th scope="col" class="cc">인증</th><th scope="col" class="cc">관리</th></tr></thead><tbody id="alist"></tbody></table></div>
   </div>
+  <div class="pg" id="pg-docs" hidden></div>
   <div class="pg" id="pg-proof" hidden></div>
   <div class="pg" id="pg-mail" hidden></div>
 </section>
@@ -277,7 +279,7 @@ document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b cla
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-const PN={ridi:'리디',aladin:'알라딘',yes24:'예스24',kyobo:'교보문고',bookcube:'북큐브'},c=v=>String(v??'').trim();
+const monVal=sel=>{const e=$(sel);if(!/^\d{4}-\d{2}$/.test(e.value))e.value=kst().toISOString().slice(0,7);return e.value}; /* 월 입력이 비어 있으면(미방문·삭제·미지원 브라우저) 이번 달로 보정 */ const PN={aladin:'알라딘',yes24:'예스24',kyobo:'교보문고',bookcube:'북큐브',ridi:'리디'},c=v=>String(v??'').trim();
 let S=null,WORKS=[],ISBN={},AUTHORS=[],WA={};
 
 /* ---------- 인증 ---------- */
@@ -292,7 +294,7 @@ let ME=null,forced=false;
 async function enter(u){ME=u;const{data}=await SB.from('profiles').select('role,must_change_password').eq('id',u.id).maybeSingle();
   if(data?.must_change_password)return askPw(true);
   if(data?.role==='author'&&stale()){await SB.auth.signOut();view('login');$('#le').textContent='1시간 이상 사용이 없어 자동 로그아웃되었습니다. 다시 로그인해 주세요.';return}
-  if(data?.role==='author'){$('#awho').textContent=u.email;view('author');drawSchedule();loadStats();initSearch();loadMyStatements();startIdle();return}
+  if(data?.role==='author'){$('#awho').textContent=u.email;view('author');drawSchedule();loadRates();loadStats();initSearch();loadMyStatements();startIdle();return}
   stopIdle();
   if(data?.role!=='admin')return view('denied');
   $('#who').textContent=u.email;view('app');loadFresh();route();loadPeople()}
@@ -312,11 +314,35 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
 
 /* ---------- 메뉴(nav) ---------- */
 $('#homelink').onclick=e=>{if(location.hash===''||location.hash==='#/home'){e.preventDefault();loadHome();scrollTo(0,0)}};
-const PG=['home','authors','settle','proof','mail'];
+const PG=['home','authors','settle','docs','proof','mail'];
 function route(){const r=location.hash.replace(/^#\/?/,'')||'home',id=PG.includes(r)?r:'home';
   PG.forEach(x=>$('#pg-'+x).hidden=x!==id);document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.r===id));
-  document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle()}
+  document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle();if(id==='docs')loadDocs()}
 addEventListener('hashchange',route);
+/* ---------- 회사 자료: 플랫폼 계약(플랫폼당 현재본 1건 + 교체 이력) · 기타 자료. 관리자 전용 ---------- */
+let DOCS=[],DCURL=null,DPLAT='';
+const dFmt=t=>t?String(t).slice(0,10):'';
+async function loadDocs(){const el=$('#pg-docs');if(!el)return;
+  const{data,error}=await SB.from('company_documents').select('id,category,platform_code,title,memo,mime,size_bytes,is_current,created_at,replaced_at').order('created_at',{ascending:false});
+  if(error){el.innerHTML='<p class="bad">회사 자료를 불러오지 못했습니다. '+esc(error.message)+'</p>';return}
+  DOCS=data||[];drawDocs()}
+function drawDocs(){const P=['ridi','kyobo','aladin','yes24','bookcube'],pc=DOCS.filter(d=>d.category==='platform_contract'),cur=c=>pc.find(d=>d.platform_code===c&&d.is_current),hn=c=>pc.filter(d=>d.platform_code===c&&!d.is_current).length,oth=DOCS.filter(d=>d.category==='other');
+  $('#pg-docs').innerHTML=`<h2><small>(01)</small>플랫폼 계약</h2><div class="tw"><table class="vm"><caption class="sr-only">플랫폼별 계약서</caption><thead><tr><th>플랫폼</th><th>상태</th><th></th></tr></thead><tbody>${P.map(c=>{const d=cur(c),n=hn(c);return `<tr><td>${PN[c]}</td><td>${d?`<b>등록됨</b><div class="k" style="font-size:11.5px">${dFmt(d.created_at)}${d.memo?' · '+esc(d.memo):''}</div>`:'<span class="bad">미등록</span>'}${n?`<div><button class="lnk" data-dh="${c}">교체 이력 ${n}건</button></div>`:''}</td><td class="r">${d?`<button class="ghost" data-dv="${d.id}">보기</button> <button class="ghost" data-dp="${c}">교체</button> <button class="ghost" data-dd="${d.id}">삭제</button>`:`<button class="ghost" data-dp="${c}">등록</button>`}</td></tr>`}).join('')}</tbody></table></div>
+  <input type="file" id="dcf" accept="application/pdf" hidden><p id="dcm" class="k" style="min-height:18px"></p>
+  <h2><small>(02)</small>기타 회사 자료</h2>
+  <div class="card" style="text-align:left"><div class="row"><input id="dct" placeholder="제목 (예: 사업자등록증)" maxlength="80" style="flex:1;min-width:160px"><input id="dcn" placeholder="메모 (선택)" maxlength="200" style="flex:1;min-width:160px"></div><div class="row" style="margin-top:10px"><input type="file" id="dcx" accept="application/pdf,image/jpeg,image/png,image/webp"><button class="ghost" id="dcs">올리기</button></div></div>
+  <div class="tw" style="margin-top:12px"><table class="vm"><caption class="sr-only">기타 회사 자료</caption><thead><tr><th>제목</th><th class="hm">등록일</th><th></th></tr></thead><tbody>${oth.length?oth.map(d=>`<tr><td>${esc(d.title)}${d.memo?`<div class="k" style="font-size:11.5px">${esc(d.memo)}</div>`:''}</td><td class="hm">${dFmt(d.created_at)}</td><td class="r"><button class="ghost" data-dv="${d.id}">보기</button> <button class="ghost" data-dd="${d.id}">삭제</button></td></tr>`).join(''):'<tr><td colspan="3" class="k" style="text-align:center">등록된 자료가 없습니다.</td></tr>'}</tbody></table></div>`}
+async function viewDoc(id){openLay('<p class="k">불러오는 중…</p>');const{data,error}=await call({action:'company_doc_get',id});if(error)return openLay(`<p class="bad">${esc(error)}</p>`);
+  const bytes=Uint8Array.from(atob(data.data),c=>c.charCodeAt(0));if(DCURL)URL.revokeObjectURL(DCURL);DCURL=URL.createObjectURL(new Blob([bytes],{type:data.mime}));
+  openLay(`<div class="row" style="justify-content:flex-end;margin-bottom:12px"><a href="${DCURL}" target="_blank" rel="noopener" class="k" style="text-decoration:underline">새 창에서 열기</a></div><h3 id="lt" style="margin:0 0 10px">${esc(data.title||'자료')}</h3>${data.mime==='application/pdf'?`<iframe src="${DCURL}" title="${esc(data.title||'자료')}" style="width:100%;height:70vh;border:1px solid var(--line)"></iframe>`:`<img src="${DCURL}" alt="${esc(data.title||'자료')}" style="max-width:100%;display:block;margin:0 auto;border:1px solid var(--line)">`}`)}
+async function docUp(body,f,msg){const m=$('#dcm');m.className='k';m.textContent=msg;try{const q=await prepFile(f),{error}=await call({action:'company_doc_upload',mime:q.mime,data:q.data,...body});if(error)throw error;await loadDocs();const m2=$('#dcm');m2.className='ok';m2.textContent='저장했습니다.'}catch(e){const m3=$('#dcm');m3.className='bad';m3.textContent=String(e.message||e)}}
+$('#pg-docs').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.dv)return viewDoc(d.dv);
+  if(d.dh){const L=DOCS.filter(x=>x.category==='platform_contract'&&x.platform_code===d.dh&&!x.is_current);openLay(`<h3 id="lt" style="margin:0 0 12px">${PN[d.dh]} 계약서 교체 이력</h3><div class="tw"><table class="vm"><thead><tr><th>등록일</th><th>교체일</th><th></th></tr></thead><tbody>${L.map(x=>`<tr><td>${dFmt(x.created_at)}</td><td>${dFmt(x.replaced_at)}</td><td class="r"><button class="ghost" data-hv="${x.id}">보기</button></td></tr>`).join('')}</tbody></table></div>`);$('#lbody').onclick=ev=>{const v=ev.target.closest('[data-hv]');if(v)viewDoc(v.dataset.hv)};return}
+  if(d.dp){const had=DOCS.some(x=>x.category==='platform_contract'&&x.platform_code===d.dp&&x.is_current);if(had&&!confirm(PN[d.dp]+' 계약서를 교체할까요?\n이전 파일은 교체 이력으로 남습니다.'))return;DPLAT=d.dp;const fi=$('#dcf');fi.value='';fi.click();return}
+  if(d.dd){if(!confirm('이 자료를 삭제할까요?\n삭제하면 복구할 수 없습니다.'))return;const{error}=await call({action:'company_doc_delete',id:d.dd});if(error)return alert(error);return loadDocs()}
+  if(b.id==='dcs'){const t=$('#dct').value.trim(),f=$('#dcx').files[0];if(!t)return alert('제목을 입력해 주세요.');if(!f)return alert('파일을 선택해 주세요.');return docUp({category:'other',title:t,memo:$('#dcn').value.trim()},f,'올리는 중…')}};
+$('#pg-docs').onchange=e=>{if(e.target.id!=='dcf')return;const f=e.target.files[0];if(!f||!DPLAT)return;if(f.type!=='application/pdf'){const m=$('#dcm');m.className='bad';m.textContent='플랫폼 계약서는 PDF만 올릴 수 있습니다.';return}docUp({category:'platform_contract',platform_code:DPLAT,title:PN[DPLAT]+' 계약서'},f,'올리는 중…')};
 /* ---------- 교정고 점검·메일 작성(별도 페이지를 탭 안에 끼워 넣음) ---------- */
 const EF={};
 function openEmbed(id,src,title){if(EF[id])return;const f=document.createElement('iframe');f.className='ef';f.title=title;f.src=src;EF[id]=f;$('#pg-'+id).append(f)}   // 한 번 열면 탭을 옮겨도 작업이 유지됨
@@ -331,6 +357,18 @@ const fmtD=d=>`${d.getUTCMonth()+1}월 ${d.getUTCDate()}일(${'일월화수목�
 function biz(y,m,d){const x=new Date(Date.UTC(y,m,d));while([0,6].includes(x.getUTCDay())||HOL.has(iso(x)))x.setUTCDate(x.getUTCDate()-1);return x}   // 주말·공휴일이면 앞선 평일
 function drawSchedule(){const t=kst();let y=t.getUTCFullYear(),m=t.getUTCMonth(),pay=biz(y,m+1,0);if(iso(pay)<iso(t)){m++;pay=biz(y,m+1,0)}const mail=biz(y,m,25),mm=mon1(y,m).getUTCMonth()+1;
   $('#sch').innerHTML=`<div class="k" style="font-size:12px;letter-spacing:.06em">${mm}월 정산 일정</div><div class="row" style="gap:36px;margin-top:8px"><div><div class="k">정산 메일 발송</div><div style="font-size:19px;font-weight:700">${fmtD(mail)}</div></div><div><div class="k">정산일</div><div style="font-size:19px;font-weight:700">${fmtD(pay)}</div></div></div><p class="k" style="font-size:12px;margin:14px 0 0;text-align:center">※ 공휴일인 경우 영업일 기준으로 처리</p>`}
+/* ---------- 계약 정산 비율: 작품 목록 → 작품을 누르면 레이어로 기간·플랫폼별 비율 확인 ---------- */
+let RT={};
+const rateOn=(r,t)=>r.effective_from<=t&&(!r.effective_to||r.effective_to>=t);
+async function loadRates(){const el=$('#rtl');if(!el)return;
+  const{data,error}=await SB.rpc('author_contract_rates');
+  if(error){el.innerHTML='<p class="bad" style="text-align:center">계약 비율을 불러오지 못했습니다.</p>';return}
+  const R=data||[];if(!R.length){el.innerHTML='<p class="k" style="text-align:center">등록된 계약 비율이 없습니다. 궁금한 점은 운영자에게 문의해 주세요.</p>';return}
+  const t=iso(kst());RT={};R.forEach(r=>{const k=r.work_id+'|'+r.author_id;(RT[k]=RT[k]||[]).push(r)});
+  el.innerHTML=`<div class="tw"><table class="vm"><caption class="sr-only">계약 작품별 현재 작가 비율</caption><thead><tr><th>작품</th><th class="r">현재 작가 비율</th></tr></thead><tbody>${Object.entries(RT).map(([k,L])=>{const on=L.filter(r=>rateOn(r,t)),b=on.find(r=>r.kind==='base'&&!r.platform_code)||on[0],x=on.some(r=>r.kind==='special'||r.platform_code);
+    return `<tr><td><button class="lnk" data-rk="${esc(k)}">${esc(L[0].title)}</button></td><td class="r">${b?`<b>${pct(b.author_rate)}</b>${x?'<div class="k" style="font-size:11.5px">특약·플랫폼별 있음</div>':''}`:'<span class="k">-</span>'}</td></tr>`}).join('')}</tbody></table></div>`}
+$('#rtl').onclick=e=>{const b=e.target.closest('[data-rk]');if(!b)return;const L=RT[b.dataset.rk];if(!L)return;const f=L[0],sh=Number(f.share_ratio),t=iso(kst());
+  openLay(`<h3 id="lt" style="margin:0 0 4px">${esc(f.title)}</h3><p class="k" style="margin:0 0 14px">${esc(f.pen_name)}${sh<1?` · 공동 작가 지분 ${pct(sh)}`:''}</p><div class="tw"><table class="vm"><caption class="sr-only">${esc(f.title)} 계약 비율</caption><thead><tr><th>구분</th><th>플랫폼</th><th>적용 기간</th><th class="r">작가 비율</th></tr></thead><tbody>${L.map(r=>`<tr><td>${KD[r.kind]||esc(r.kind)}</td><td>${r.platform_code?esc(r.platform_name||r.platform_code):'전체'}</td><td>${r.effective_from} ~ ${r.effective_to||'계속'}${rateOn(r,t)?'<div class="ok" style="font-size:11.5px;font-weight:700">적용 중</div>':''}</td><td class="r"><b>${pct(r.author_rate)}</b></td></tr>`).join('')}</tbody></table></div>`)};
 const bars=(rows,color)=>{const mx=Math.max(...rows.map(r=>r.v),1);return rows.map(r=>`<div class="bar"><div class="bl">${esc(r.l)}</div><div style="flex:1;min-width:0">${r.t!==undefined?`<div class="bn">${esc(r.t)||'&nbsp;'}</div>`:''}<div class="bt"><div class="bf" style="width:${Math.max(r.v/mx*100,0)}%;background:${color}">${w0(r.v)}</div></div></div></div>`).join('')};
 async function loadStats(){const t=kst(),m0=mon1(t.getUTCFullYear(),t.getUTCMonth()-5);
   const[a,b]=await Promise.all([SB.rpc('author_sales_summary',{p_from:iso(addD(t,-5)),p_to:iso(addD(t,-1)),p_unit:'day'}),SB.rpc('author_sales_summary',{p_from:iso(m0),p_to:iso(t),p_unit:'month'})]);
@@ -345,7 +383,7 @@ let PLS=[],PSEL=new Set(['all']);
 const drawChips=()=>{const el=$('#pchips');   // 버튼은 한 번만 만들고 선택 상태만 갱신(깜빡임·잔상 방지)
   if(el.children.length!==PLS.length+1)el.innerHTML=[{code:'all',name:'전체'},...PLS].map(p=>`<button type="button" class="chp" data-c="${p.code}" aria-pressed="false">${esc(p.name)}</button>`).join('');
   el.querySelectorAll('.chp').forEach(b=>b.setAttribute('aria-pressed',String(PSEL.has(b.dataset.c))))};
-async function initSearch(){const{data}=await SB.from('platforms').select('code,name').eq('is_active',true);PLS=(data||[]).sort((a,b)=>{const o=['리디','교보문고','알라딘','예스24','북큐브'],r=n=>{const i=o.indexOf(n);return i<0?99:i};return r(a.name)-r(b.name)||a.name.localeCompare(b.name,'ko')});drawChips();
+async function initSearch(){const{data}=await SB.from('platforms').select('code,name').eq('is_active',true);PLS=[...(data||[]),...((data||[]).some(p=>p.code==='ridi')?[]:[{code:'ridi',name:'리디'}])].sort((a,b)=>{const o=['리디','교보문고','알라딘','예스24','북큐브'],r=n=>{const i=o.indexOf(n);return i<0?99:i};return r(a.name)-r(b.name)||a.name.localeCompare(b.name,'ko')});drawChips();
   const t=kst(),y=iso(addD(t,-1));$('#sf').max=$('#se').max=y;$('#sf').value=iso(mon1(t.getUTCFullYear(),t.getUTCMonth()))>y?y:iso(mon1(t.getUTCFullYear(),t.getUTCMonth()));$('#se').value=y}
 $('#pchips').onclick=e=>{const c=e.target.closest('[data-c]')?.dataset.c;if(!c)return;if(c==='all')PSEL=new Set(['all']);else{PSEL.delete('all');PSEL.has(c)?PSEL.delete(c):PSEL.add(c);if(!PSEL.size)PSEL=new Set(['all'])}drawChips()};
 $('#sdq').onclick=e=>{const q=e.target.dataset.q;if(!q)return;const t=kst(),y=addD(t,-1),Y=t.getUTCFullYear(),M=t.getUTCMonth();let f,g;
@@ -374,10 +412,10 @@ document.querySelectorAll('.xb[data-x]').forEach(b=>b.onclick=()=>{const i=$('#'
 $('#em').addEventListener('input',e=>{if(e.isTrusted&&/^(insert(?!Replacement)|delete)/.test(e.inputType||'')){$('#pw').value='';syncX()}});   // 자동완성은 제외, 직접 입력·삭제 시에만
 setTimeout(syncX,0);
 /* ---------- 현황 ---------- */
-let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',aladin:'알라딘',yes24:'예스24',kyobo:'교보문고'};
+let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',ridi:'리디',kyobo:'교보문고',aladin:'알라딘',yes24:'예스24'};
 const man=n=>n>=1e4?(n/1e4).toFixed(1)+'만':Math.round(n).toLocaleString('ko-KR'),sum=(a,k)=>a.reduce((t,r)=>t+Number(r[k]),0);
 let WR=[],DY=[],CT=[],LV='야화랩',SALES=[];const vis=l=>LV==='야화랩'||l==='트루비';
-async function loadHome(){const m=$('#dm');if(!m.value)m.value=kst().toISOString().slice(0,7);const t=kst(),mon=iso(addD(t,-((t.getUTCDay()+6)%7)));
+async function loadHome(){const m=$('#dm');monVal('#dm');const t=kst(),mon=iso(addD(t,-((t.getUTCDay()+6)%7)));
   const[w,d,y,sr,c]=await Promise.all([SB.rpc('admin_weekly',{p_weeks:8}),SB.rpc('admin_detail',{p_month:m.value+'-01'}),SB.rpc('admin_daily',{p_from:mon,p_to:iso(t)}),SB.rpc('admin_sales_rows',{p_month:m.value+'-01'}),SB.from('contracts').select('id,work_id,platform_code,author_rate,effective_from,effective_to,kind,note')]);
   const er=w.error||d.error||y.error;if(er){reportErr('현황 조회',er.message);return}
   DD=d.data||[];WR=w.data||[];DY=y.data||[];SALES=sr.data||[];CT=c.data||[];drawWeekly();drawWeek();drawDetail();drawRenew()}
@@ -387,7 +425,7 @@ function drawWeekly(){const R=WR.filter(r=>vis(r.label)),W=[...new Set(R.map(r=>
   $('#wk').innerHTML=`<div style="display:flex;align-items:flex-end;gap:8px;height:190px">${W.map(w=>{const t=tot(w);return `<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;height:100%" title="${w} 주 · ${won(t)}"><div class="k" style="text-align:center;font-size:11px;margin-bottom:3px">${t?man(t):''}</div><div style="height:${Math.max(t/max*150,t?2:0)}px;display:flex;flex-direction:column-reverse">${Object.keys(COL).filter(l=>by[w][l]).map(l=>`<div style="height:${by[w][l]/t*100}%;background:${COL[l]}" title="${l} ${won(by[w][l])}"></div>`).join('')}</div></div>`}).join('')}</div>
   <div style="display:flex;gap:8px;margin-top:6px">${W.map(w=>`<div class="k" style="flex:1;min-width:0;text-align:center;font-size:11px">${w.slice(5).replace('-','/')}</div>`).join('')}</div>
   <div class="row k" style="margin-top:12px;font-size:12px">${Object.entries(COL).filter(([l])=>vis(l)).map(([l,c])=>`<span><i style="display:inline-block;width:10px;height:10px;background:${c};margin-right:5px"></i>${l}</span>`).join('')}</div>
-  <p class="k" style="font-size:12px;margin:8px 0 0">각 주(월요일 시작)의 정산액이며, 월 집계인 교보문고는 날짜가 없어 제외됩니다. 아래 표에는 포함됩니다.</p>`}
+  <p class="k" style="font-size:12px;margin:8px 0 0">각 주(월요일 시작)의 정산액입니다.</p>`}
 function drawWeek(){const t=kst(),mon=addD(t,-((t.getUTCDay()+6)%7)),today=iso(t),days=[0,1,2,3,4,5,6].map(i=>{const d=iso(addD(mon,i));return{l:'월화수목금토일'[i],f:d>today,v:DY.filter(r=>r.sale_date===d&&vis(r.label)).reduce((a,r)=>a+Number(r.net),0)}});
   const tot=days.reduce((a,x)=>a+x.v,0),lw=WR.filter(r=>r.week_start===iso(addD(mon,-7))&&vis(r.label)).reduce((a,r)=>a+Number(r.net),0),mx=Math.max(...days.map(x=>x.v),1);
   $('#tw').innerHTML=`<div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="k">이번 주 정산액 (월~오늘)</div><div style="font-size:22px;font-weight:700">${won(tot)}</div></div><div class="k" style="text-align:right">지난주 전체<br><b style="color:var(--ink)">${won(lw)}</b></div></div>
@@ -427,7 +465,7 @@ const pct=r=>Math.round(Number(r)*1000)/10+'%',KD={base:'기본',special:'특약
 function rateTxt(id){const t=iso(kst()),L=CT.filter(c=>c.work_id===id&&c.effective_from<=t&&(!c.effective_to||c.effective_to>=t));if(!L.length)return '<span class="bad">미설정</span>';
   const b=L.find(c=>c.kind==='base'&&!c.platform_code)||L[0];return pct(b.author_rate)+(L.length>1?' <span class="k">(특약·개별 있음)</span>':'')}
 let CE=null;
-async function openWork(id){const w=WORKS.find(x=>x.id===id)||{title:'',label:null},mo=$('#dm').value;openLay('<p class="k">불러오는 중…</p>');
+async function openWork(id){const w=WORKS.find(x=>x.id===id)||{title:'',label:null},mo=monVal('#dm');openLay('<p class="k">불러오는 중…</p>');
   const[{data,error},{data:ct},{data:fs}]=await Promise.all([SB.rpc('admin_work_daily',{p_work:id,p_month:mo+'-01'}),SB.from('contracts').select('id,work_id,platform_code,author_rate,effective_from,effective_to,kind,note').eq('work_id',id).order('effective_from'),SB.from('sales_lines').select('sale_date,sale_month').eq('work_id',id).order('sale_month').limit(1)]);
   if(error)return openLay(`<p class="bad">${esc(error.message)}</p>`);CT=CT.filter(c=>c.work_id!==id).concat(ct||[]);CE=null;
   const pens=(WA[id]||[]).map(a=>(AUTHORS.find(x=>x.id===a)||{}).pen_name).filter(Boolean).join(', ')||'<span class="bad">연결된 작가 없음</span>',R=data||[],mine=CT.filter(c=>c.work_id===id).sort((a,b)=>a.kind.localeCompare(b.kind)||a.effective_from.localeCompare(b.effective_from));
@@ -436,7 +474,7 @@ async function openWork(id){const w=WORKS.find(x=>x.id===id)||{title:'',label:nu
   <p id="wri" class="k" style="font-size:13px;margin:8px 0 0">${(r=>r?`계약 만료일 <b>${r.date}</b> (D-${r.d}) · 자동 연장 시 갱신일 <b>${r.next}</b> · 해지 통보 마감 <b>${r.notice}</b> (${r.dn<0?'기한 경과':'D-'+r.dn})`:'계약 시작일을 입력하면 만료일(시작일+3년−1일)과 해지 통보 마감일을 알려드립니다. (3년 계약, 만료 3개월 전까지 해지 의사가 없으면 1년 자동 연장)')(renewal(w.contract_start))}</p>
   <h4 style="margin:22px 0 2px">계약 비율</h4><p class="k" style="font-size:12px;margin:0 0 8px">적용 순서: 특약 → 플랫폼 개별 → 기본(전체). ${fs&&fs[0]?`첫 판매: <b>${fs[0].sale_date||fs[0].sale_month}</b> — `:''}기본 계약의 시작일은 첫 판매일보다 앞서야 이전 판매도 계산됩니다. 작가 비율은 5% 단위(예: 70, 75, 80)로 입력하세요.</p>
   <table><caption class="sr-only">계약 비율</caption><thead><tr><th>구분</th><th>플랫폼</th><th>기간</th><th class="r">작가 비율</th><th class="hm">메모</th><th></th></tr></thead><tbody>${mine.map(c=>`<tr><td>${KD[c.kind]}</td><td>${c.platform_code?PN[c.platform_code]:'전체'}</td><td>${c.effective_from} ~ ${c.effective_to||'계속'}</td><td class="r">${pct(c.author_rate)}</td><td class="hm">${esc(c.note||'')}</td><td><button class="ghost" data-ce="${c.id}">수정</button><button class="ghost" data-cd="${c.id}">삭제</button></td></tr>`).join('')||'<tr><td colspan="6" class="k em">등록된 계약이 없습니다. 아래에서 추가하세요.</td></tr>'}</tbody></table>
-  <div class="row" style="justify-content:flex-start;gap:8px;margin-top:12px"><select id="ctk" aria-label="구분" style="width:auto"><option value="base">기본</option><option value="special">특약</option></select><select id="ctp" aria-label="플랫폼" style="width:auto"><option value="">전체 플랫폼</option><option value="aladin">알라딘</option><option value="bookcube">북큐브</option><option value="kyobo">교보문고</option><option value="yes24">예스24</option></select>
+  <div class="row" style="justify-content:flex-start;gap:8px;margin-top:12px"><select id="ctk" aria-label="구분" style="width:auto"><option value="base">기본</option><option value="special">특약</option></select><select id="ctp" aria-label="플랫폼" style="width:auto"><option value="">전체 플랫폼</option><option value="ridi">리디</option><option value="kyobo">교보문고</option><option value="aladin">알라딘</option><option value="yes24">예스24</option><option value="bookcube">북큐브</option></select>
   <input id="cts" type="date" aria-label="시작일" style="width:auto"><input id="cte" type="date" aria-label="종료일 (비우면 계속)" style="width:auto"><input id="ctv" type="text" inputmode="numeric" placeholder="작가 % (5 단위)" aria-label="작가 비율(%)" style="width:130px" autocomplete="off"><input id="ctn" type="text" placeholder="메모 (특약 내용)" style="flex:1 1 140px;min-width:120px"><button id="ctsv">추가</button><button class="ghost" id="ctx" hidden>취소</button></div>
   <p id="cmsg" class="k" style="margin:8px 0 0;font-size:13px;min-height:20px"></p>
   <h4 style="margin:24px 0 4px">계약서</h4><p class="k" style="font-size:12px;margin:0 0 6px">JPG · PNG · WEBP 이미지 또는 PDF (8MB 이하). 서버에서 암호화되어 저장되며 관리자만 볼 수 있습니다.</p>
@@ -475,15 +513,16 @@ async function viewCf(cid,wid){openLay('<p class="k">불러오는 중…</p>');c
   const bytes=Uint8Array.from(atob(data.data),c=>c.charCodeAt(0));if(CFURL)URL.revokeObjectURL(CFURL);CFURL=URL.createObjectURL(new Blob([bytes],{type:data.mime}));
   openLay(`<div class="row" style="justify-content:space-between;margin-bottom:12px"><button class="ghost" id="cfx">← 작품 상세</button><a href="${CFURL}" target="_blank" rel="noopener" class="k" style="text-decoration:underline">새 창에서 열기</a></div><h3 id="lt" style="margin:0 0 10px">${esc(data.note||'계약서')}</h3>${data.mime==='application/pdf'?`<iframe src="${CFURL}" title="계약서" style="width:100%;height:70vh;border:1px solid var(--line)"></iframe>`:`<img src="${CFURL}" alt="계약서" style="max-width:100%;display:block;margin:0 auto;border:1px solid var(--line)">`}`);
   $('#cfx').onclick=()=>openWork(wid)}
-async function openPen(aid){const a=AUTHORS.find(x=>x.id===aid)||{},ws=WORKS.filter(w=>(WA[w.id]||[]).includes(aid));
-  if(ws.length){openLay('<p class="k">불러오는 중…</p>');const ids=ws.map(w=>w.id),{data:ct}=await SB.from('contracts').select('id,work_id,platform_code,author_rate,effective_from,effective_to,kind,note').in('work_id',ids);CT=CT.filter(c=>!ids.includes(c.work_id)).concat(ct||[])}
+// 계약 비율은 현황 화면을 거치거나 작품을 열어야만 채워졌기 때문에, 작가 관리에서 바로 필명을 누르면 '미설정'으로 보였음 → 열기 전에 항상 최신 계약을 불러옴
+async function loadCT(){const{data,error}=await SB.from('contracts').select('id,work_id,platform_code,author_rate,effective_from,effective_to,kind,note');if(error)return false;CT=data||[];return true}
+async function openPen(aid){if(!await loadCT())return alert('계약 비율을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');const a=AUTHORS.find(x=>x.id===aid)||{},ws=WORKS.filter(w=>(WA[w.id]||[]).includes(aid));
   openLay(`<h3 id="lt" style="margin:0 0 4px">${esc(a.pen_name)}</h3><p class="k" style="margin:0 0 14px">${esc(a.email||'')} · 연결된 작품 ${ws.length}개</p><table><caption class="sr-only">필명의 작품 목록</caption><thead><tr><th>작품</th><th>레이블</th><th class="r">계약 비율</th></tr></thead><tbody>${ws.map(w=>`<tr><td><button class="lnk" data-ow="${w.id}">${esc(w.title)}</button></td><td>${w.label||'미지정'}</td><td class="r">${rateTxt(w.id)}</td></tr>`).join('')||'<tr><td colspan="3" class="k em">연결된 작품이 없습니다.</td></tr>'}</tbody></table>`);
   $('#lbody').onclick=e=>{const b=e.target.closest('[data-ow]');if(b)openWork(b.dataset.ow)}}
 
 /* ---------- 월 정산서 (정산서_작가별_템플릿.xlsx 양식) ---------- */
 let ST=[];const ORD=['ridi','kyobo','aladin','yes24','bookcube'],ORDN=ORD.map(c=>PN[c]),ordDet=D=>{const g=[];D.forEach(r=>{if(r[0]!==''||!g.length)g.push([]);g[g.length-1].push(r)});const rk=n=>{const i=ORDN.indexOf(n);return i<0?99:i};return g.flatMap(rows=>{const h=rows[0].slice(0,3);return rows.slice().sort((a,b)=>rk(a[3])-rk(b[3])).map((r,i)=>[i?'':h[0],i?'':h[1],i?'':h[2],...r.slice(3)])})},fl=n=>Math.floor(n),won1=n=>w0(n)+'원';
 let SS={};
-async function loadSettle(){const m=$('#sm');if(!m.value)m.value=kst().toISOString().slice(0,7);$('#sl').innerHTML='<tr><td colspan="7" class="k em">불러오는 중…</td></tr>';
+async function loadSettle(){const m=$('#sm');monVal('#sm');$('#sl').innerHTML='<tr><td colspan="7" class="k em">불러오는 중…</td></tr>';
   const[a,b]=await Promise.all([SB.rpc('admin_statement',{p_month:m.value+'-01'}),SB.from('settlements').select('id,person_id,status,author_total,payable_amount,confirmed_at,sent_at').eq('period_month',m.value+'-01')]);
   if(a.error){reportErr('정산서 조회',a.error.message);return $('#sl').innerHTML=`<tr><td colspan="7" class="bad em">${esc(a.error.message)}</td></tr>`}
   ST=a.data||[];SS={};(b.data||[]).forEach(x=>SS[x.person_id]=x);if(!PLOADED)await loadPeople();drawSettle()}
@@ -505,12 +544,12 @@ $('#sx').oninput=()=>{if(ST.length)drawSettle()};
 $('#sxe').onclick=()=>{const on=$('#sxw').hidden;$('#sxw').hidden=!on;$('#sxv').hidden=on;$('#sxe').textContent=on?'적용':'수정';if(!on){const v=Number($('#sx').value);if(!(v>=0&&v<=100)){$('#sx').value='3.3'}$('#sxv').textContent=Number($('#sx').value)+'%';drawSettle()}};
 $('#sl').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.sp)openStatement(b.dataset.sp);if(b.dataset.sc)confirmSt([b.dataset.sc]);if(b.dataset.su)unconfirmSt(b.dataset.su);if(b.dataset.sm)mailSt(b.dataset.sm)};
 $('#sca').onclick=()=>confirmSt(buildSt().map(p=>p.id));
-function mailSt(pid){const p=buildSt().find(x=>x.id===pid),x=SS[pid],m=$('#sm').value+'-01';if(!p||!x||x.status==='draft')return alert('확정된 정산서만 메일을 보낼 수 있습니다.');
+function mailSt(pid){const p=buildSt().find(x=>x.id===pid),x=SS[pid],m=monVal('#sm')+'-01';if(!p||!x||x.status==='draft')return alert('확정된 정산서만 메일을 보낼 수 있습니다.');
   if(Number(x.author_total)!==p.A||Number(x.payable_amount)!==p.pay)return alert('확정 후 금액이 변경되었습니다. 먼저 재확정한 뒤 메일을 발송해 주세요.');
   const sent=x.status==='sent';
   confirmLay({title:sent?'정산 메일 재발송':'정산 메일 발송',danger:false,body:`<p style="margin:0"><b>${esc([...p.pens].join(', '))}</b> 작가님께 ${m.slice(0,7)} 정산서 확정 안내 메일을 ${sent?'다시 ':''}발송합니다.<br>정산서 금액은 메일에 포함되지 않고, 로그인 후 확인하도록 안내합니다.${sent?`<br><span class="bad">${(x.sent_at||'').slice(0,10)}에 이미 발송했습니다.</span>`:''}</p>`,ok:sent?'재발송':'발송',onOk:async()=>{
     const{data,error}=await call({action:'send_statement_mail',person_id:pid,month:m});closeLay();if(error)return alert(error);alert(`${data.to} 로 발송했습니다.`);loadSettle()}})}
-function confirmSt(ids){const L=buildSt().filter(p=>ids.includes(p.id)),m=$('#sm').value+'-01',bad=L.filter(p=>p.nr);
+function confirmSt(ids){const L=buildSt().filter(p=>ids.includes(p.id)),m=monVal('#sm')+'-01',bad=L.filter(p=>p.nr);
   if(!L.length)return alert('확정할 정산서가 없습니다.');
   if(bad.length)return alert(`계약 비율이 설정되지 않은 판매가 있어 확정할 수 없습니다.\\n${bad.map(p=>[...p.pens][0]+' ('+p.nr+'건)').join(', ')}\\n작품 상세에서 계약 비율을 먼저 입력하세요.`);
   const over=L.some(p=>SS[p.id]&&SS[p.id].status!=='draft');
@@ -519,11 +558,16 @@ function confirmSt(ids){const L=buildSt().filter(p=>ids.includes(p.id)),m=$('#sm
       const r=x?await SB.from('settlements').update(row).eq('id',x.id):await SB.from('settlements').insert(row);if(r.error){alert('확정 실패: '+r.error.message);break}}
     closeLay();loadSettle()}})}
 function unconfirmSt(pid){const x=SS[pid];confirmLay({title:'확정 취소',body:'<p style="margin:0">작가 화면에서 이 정산서가 보이지 않게 됩니다. 확정한 내용은 유지되지 않고 미확정 상태로 돌아갑니다.</p>',ok:'확정 취소',onOk:async()=>{const r=await SB.from('settlements').update({status:'draft',confirmed_at:null,snapshot:null}).eq('id',x.id);closeLay();if(r.error)alert(r.error.message);loadSettle()}})}
-function stRows(p){const m=$('#sm').value;let n=0;const det=[];
-  p.W.forEach(w=>{n++;ORD.filter(c=>c!=='ridi'||p.W.some(v=>v.pl.ridi)).forEach((c,i)=>{const x=w.pl[c]||{q:0,lp:w.pl[Object.keys(w.pl)[0]]?.lp||0,g:0,n:0};det.push([i?'':n,i?'':w.t,i?'':(w.rd||'').replace(/-/g,'.'),PN[c],x.q,x.lp,x.g,x.n])})});return det}
-const mkSnap=p=>({month:$('#sm').value,tax_rate:Number($('#sx').value||0),pens:[...p.pens],totals:{gross:p.gross,net:p.net,A:p.A,ded:p.ded,tax:p.tax,pay:p.pay},
+function stRows(p){const m=monVal('#sm');let n=0;const det=[];
+  p.W.forEach(w=>{n++;ORD.forEach((c,i)=>{const x=w.pl[c]||{q:0,lp:w.pl[Object.keys(w.pl)[0]]?.lp||0,g:0,n:0};det.push([i?'':n,i?'':w.t,i?'':(w.rd||'').replace(/-/g,'.'),PN[c],x.q,x.lp,x.g,x.n])})});return det}
+const mkSnap=p=>({month:monVal('#sm'),tax_rate:Number($('#sx').value||0),pens:[...p.pens],totals:{gross:p.gross,net:p.net,A:p.A,ded:p.ded,tax:p.tax,pay:p.pay},
   works:p.W.map(w=>({t:w.t,gross:w.gross,net:w.net,a:w.a,ded:w.ded,rate:w.rate})),detail:stRows(p),nr:p.nr});
-const stHtml=S=>{const[Y,M]=S.month.split('-'),T=S.totals;
+// 확정 당시 플랫폼 목록이 달랐던 정산서(예: 리디 추가 전)도 모든 판매처 행이 보이도록 보정 — 표시용이며 금액은 바뀌지 않음
+function fillPl(S){const d=S.detail||[],G=[];d.forEach(r=>{if(r[0]!==''||!G.length)G.push([]);G[G.length-1].push(r)});
+  const out=[];G.forEach(g=>{const f=g[0],by={};g.forEach(r=>by[r[3]]=r);const lp=f[5]||0,names=ORD.map(c=>PN[c]),rest=g.filter(r=>!names.includes(r[3]));
+    [...names.map(n=>by[n]||['','','',n,0,lp,0,0]),...rest].forEach((r,i)=>out.push(i?['','','',r[3],r[4],r[5],r[6],r[7]]:[f[0],f[1],f[2],r[3],r[4],r[5],r[6],r[7]]))});
+  return{...S,detail:out}}
+const stHtml=S=>{S=fillPl(S);const[Y,M]=S.month.split('-'),T=S.totals;
   return `<h3 id="lt" style="margin:0 0 14px">${Y}년 ${+M}월 정산서</h3>
   <table><tbody><tr><th scope="row" style="width:34%">작가명</th><td>${esc(S.pens.join(', '))}</td></tr><tr><th scope="row">판매보고 기준</th><td>${S.month}-01 ~ ${S.month}-${String(new Date(Date.UTC(+Y,+M,0)).getUTCDate()).padStart(2,'0')}</td></tr><tr><th scope="row">총 정산액</th><td>${won1(T.net)}</td></tr><tr><th scope="row">출판사 공제액</th><td>${won1(T.ded)}</td></tr><tr><th scope="row">작가 정산액</th><td>${won1(T.A)}</td></tr><tr><th scope="row">원천징수액 (${S.tax_rate}%)</th><td>${won1(T.tax)}</td></tr><tr><th scope="row"><b>실 지급액</b></th><td><b>${won1(T.pay)}</b></td></tr></tbody></table>
   <h4 style="margin:22px 0 4px">작품별 정산</h4><table><thead><tr><th>번호</th><th>작품명</th><th class="r hm">판매금액</th><th class="r">총 정산액</th><th class="r hm">작가 비율</th><th class="r">작가 정산액</th><th class="r hm">출판사 공제액</th></tr></thead><tbody>${S.works.map((w,i)=>`<tr><td>${i+1}</td><td>${esc(w.t)}</td><td class="r hm">${w0(w.gross)}</td><td class="r">${w0(w.net)}</td><td class="r hm">${Math.round(w.rate*1000)/10}%</td><td class="r">${w0(w.a)}</td><td class="r hm">${w0(w.ded)}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="2"><b>합계</b></td><td class="r hm"><b>${w0(T.gross)}</b></td><td class="r"><b>${w0(T.net)}</b></td><td class="hm"></td><td class="r"><b>${w0(T.A)}</b></td><td class="r hm"><b>${w0(T.ded)}</b></td></tr></tfoot></table>
@@ -757,7 +801,7 @@ function inferParse(rows,hi,m,p){const h=rows[hi],L=[],E=[],g=(r,k)=>m[k]===unde
 async function startInfer(rows,name,sha){let hi=-1,best=0,map={};
   rows.slice(0,15).forEach((r,i)=>{const m=guessMap(r),sc=Object.keys(m).length;if(m.title!==undefined&&(m.gross!==undefined||m.price!==undefined||m.net!==undefined)&&sc>best){best=sc;hi=i;map=m}});
   if(hi<0){QRES.push(`${name}: 알려진 양식이 아니며 열 이름에서 제목과 금액 열을 찾지 못했습니다. 첫 줄(제목 행)을 확인해 주세요.`);return nextFile()}
-  const low=name.toLowerCase(),G={'알라딘':'aladin',aladin:'aladin','예스24':'yes24',yes24:'yes24','교보':'kyobo',kyobo:'kyobo','북큐브':'bookcube',bookcube:'bookcube'},k=Object.keys(G).find(x=>low.includes(x));
+  const low=name.toLowerCase(),G={'알라딘':'aladin',aladin:'aladin','예스24':'yes24',yes24:'yes24','교보':'kyobo',kyobo:'kyobo','북큐브':'bookcube',bookcube:'bookcube','리디':'ridi',ridi:'ridi'},k=Object.keys(G).find(x=>low.includes(x));
   S={p:k?G[k]:'',name,sha,rows,hi,map,inf:true,errs:[],lines:[],ps:'',pe:'',dup:0};await applyInfer()}
 async function applyInfer(){const s=S;if(!s.p){s.errs=['먼저 플랫폼을 선택하세요.'];s.lines=[];s.needDate=false;return render()}
   const{L,E}=inferParse(s.rows,s.hi,s.map,s.p);s.errs=E;s.needDate=L.some(l=>l.undated);
@@ -765,7 +809,7 @@ async function applyInfer(){const s=S;if(!s.p){s.errs=['먼저 플랫폼을 선�
   s.lines=E.length?[]:await withKeys(L,s.p);const D=s.lines.map(l=>l.sale_date||l.sale_month).sort();s.ps=D[0]||'';s.pe=D[D.length-1]||'';s.dup=0;if(!E.length&&s.lines.length)await markDup();render()}
 function infCard(){if(!S.inf)return '';const h=S.rows[S.hi],F={title:'제목',author:'저자',isbn:'ISBN',date:'일자',qty:'수량',gross:'판매금액',net:'정산액',list:'정가',price:'판매가',channel:'판매처',method:'판매유형',type:'취소·구분',refund:'환불일'};
   return `<div class="card" style="text-align:left"><b>양식 자동 인식</b><p class="k" style="margin:4px 0 12px">알려진 양식이 아니어서 열 이름을 보고 추정했습니다. 잘못 연결된 항목은 바꿔 주세요.</p>
-  <div class="row" style="justify-content:flex-start;gap:8px 18px"><label class="k" style="display:flex;gap:8px;align-items:center">플랫폼<select id="ip" style="width:auto"><option value="">선택…</option>${['aladin','bookcube','kyobo','yes24'].map(c=>`<option value="${c}" ${S.p===c?'selected':''}>${PN[c]}</option>`).join('')}</select></label>
+  <div class="row" style="justify-content:flex-start;gap:8px 18px"><label class="k" style="display:flex;gap:8px;align-items:center">플랫폼<select id="ip" style="width:auto"><option value="">선택…</option>${['ridi','kyobo','aladin','yes24','bookcube'].map(c=>`<option value="${c}" ${S.p===c?'selected':''}>${PN[c]}</option>`).join('')}</select></label>
   ${Object.entries(F).map(([f,t])=>`<label class="k" style="display:flex;gap:8px;align-items:center">${t}<select data-f="${f}" style="width:auto;max-width:150px"><option value="">(없음)</option>${h.map((x,i)=>`<option value="${i}" ${S.map[f]===i?'selected':''}>${esc(c(x)||'열'+(i+1))}</option>`).join('')}</select></label>`).join('')}</div>
   <p class="k" style="font-size:12px;margin:10px 0 0">정산액 열이 없으면 플랫폼 정산율로 계산합니다. 일자 열이 없으면 아래에서 적용 일자를 지정합니다.</p></div>`}
 async function applyBc(){const b=S.bc,v=b.val;

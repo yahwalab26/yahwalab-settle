@@ -412,7 +412,7 @@ document.querySelectorAll('.xb[data-x]').forEach(b=>b.onclick=()=>{const i=$('#'
 $('#em').addEventListener('input',e=>{if(e.isTrusted&&/^(insert(?!Replacement)|delete)/.test(e.inputType||'')){$('#pw').value='';syncX()}});   // 자동완성은 제외, 직접 입력·삭제 시에만
 setTimeout(syncX,0);
 /* ---------- 현황 ---------- */
-let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',ridi:'리디',kyobo:'교보문고',aladin:'알라딘',yes24:'예스24'};
+let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',ridi:'리디',kyobo:'교보문고',aladin:'알라딘',yes24:'예스24',bookcube:'북큐브'};
 const man=n=>n>=1e4?(n/1e4).toFixed(1)+'만':Math.round(n).toLocaleString('ko-KR'),sum=(a,k)=>a.reduce((t,r)=>t+Number(r[k]),0);
 let WR=[],DY=[],CT=[],LV='야화랩',SALES=[];const vis=l=>LV==='야화랩'||l==='트루비';
 async function loadHome(){const m=$('#dm');monVal('#dm');const t=kst(),mon=iso(addD(t,-((t.getUTCDay()+6)%7)));
@@ -690,7 +690,7 @@ async function loadRefs(){const[w,i,a,l]=await Promise.all([SB.from('works').sel
   WORKS=w.data||[];ISBN={};(i.data||[]).forEach(x=>{if(x.id_type==='isbn')ISBN[x.value]=x.work_id;else if(x.id_type==='title_alias')ISBN['t:'+x.value]=x.work_id});
   AUTHORS=a.data||[];WA={};(l.data||[]).forEach(x=>(WA[x.work_id]??=[]).push(x.author_id))}
 async function loadFresh(){const{data}=await SB.from('v_data_freshness').select('*').order('platform_code');
-  $('#fresh').innerHTML=(data||[]).map(r=>`<tr><td>${esc(r.platform_name)}</td>
+  $('#fresh').innerHTML=(data||[]).slice().sort((a,b)=>{const o=['ridi','kyobo','aladin','yes24','bookcube'],k=c=>{const i=o.indexOf(c);return i<0?99:i};return k(a.platform_code)-k(b.platform_code)}).map(r=>`<tr><td>${esc(r.platform_name)}</td>
   <td>${r.last_sale_date||(r.last_sale_month?r.last_sale_month.slice(0,7):'-')}</td>
   <td>${r.last_uploaded_at?new Date(r.last_uploaded_at).toLocaleString('ko-KR'):'-'}</td></tr>`).join('')}
 

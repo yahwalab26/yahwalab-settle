@@ -17,7 +17,7 @@ body{margin:0;background:#fff;color:var(--ink);font:15px/1.7 "Pretendard Variabl
 @keyframes in{from{opacity:0}to{opacity:1}}
 section{animation:in .5s ease both}
 .wrap{max-width:900px;margin:0 auto;padding:0 24px}.wrap.wide{max-width:1480px}
-#pf{display:block;width:100%;height:calc(100vh - 230px);height:calc(100dvh - 230px);min-height:560px;border:1px solid var(--line);margin-top:18px;background:#fff}#app{padding-bottom:96px}
+.ef{display:block;width:100%;height:calc(100vh - 230px);height:calc(100dvh - 230px);min-height:560px;border:1px solid var(--line);margin-top:18px;background:#fff}#app{padding-bottom:96px}
 .logo{display:block;margin:0 auto;height:52px;width:auto;max-width:70%}.wm{font-size:22px;letter-spacing:.02em}
 .sub{margin:14px 0 0;font-size:14px;font-weight:600;letter-spacing:.08em;color:var(--ink)}
 .foot{margin:56px 0 0;font-size:12px;color:var(--mute);letter-spacing:.02em}
@@ -188,7 +188,7 @@ table.sd td,table.sd th{vertical-align:middle}
 <section id="app" hidden>
   <header><div><a href="#/home" id="homelink" aria-label="현황으로 이동" title="현황으로 이동"><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"></a><p class="sub">야화랩 정산 사이트</p></div>
     <div class="who"><span id="who"></span> <button class="lnk" id="pwb">비밀번호 변경</button> <button class="lnk out">로그아웃</button></div></header>
-  <nav id="nav"><a href="#/home" data-r="home">현황</a><a href="#/upload" data-r="upload">업로드</a><a href="#/authors" data-r="authors">작가</a><a href="#/settle" data-r="settle">정산</a><a href="#/proof" data-r="proof">교정고 점검</a></nav>
+  <nav id="nav"><a href="#/home" data-r="home">현황</a><a href="#/upload" data-r="upload">업로드</a><a href="#/settle" data-r="settle">정산</a><a href="#/authors" data-r="authors">작가</a><a href="#/proof" data-r="proof">교정고 점검</a><a href="#/mail" data-r="mail">메일 작성</a></nav>
 
   <div class="pg" id="pg-home">
   <h2><small>(01)</small>정산 현황</h2>
@@ -248,6 +248,7 @@ table.sd td,table.sd th{vertical-align:middle}
   <div class="tw" style="margin-top:20px"><table><caption class="sr-only">작가 목록: 같은 작가의 이름·연락처·인증 상태는 합쳐서 표시하고, 필명별로 이메일과 작품을 나누어 표시합니다.</caption><thead><tr><th scope="col">이름</th><th scope="col">필명</th><th scope="col" class="hm">연락처</th><th scope="col" class="hm">이메일</th><th scope="col" class="cc">인증</th><th scope="col" class="cc">관리</th></tr></thead><tbody id="alist"></tbody></table></div>
   </div>
   <div class="pg" id="pg-proof" hidden></div>
+  <div class="pg" id="pg-mail" hidden></div>
 </section>
 
 </div>
@@ -264,7 +265,7 @@ let S=null,WORKS=[],ISBN={},AUTHORS=[],WA={};
 
 /* ---------- 인증 ---------- */
 const view=id=>['login','accept','chpw','denied','app','author'].forEach(v=>$('#'+v).hidden=v!==id);
-document.querySelectorAll('.out').forEach(b=>b.onclick=async()=>{stopIdle();dropProof();await SB.auth.signOut();view('login')});
+document.querySelectorAll('.out').forEach(b=>b.onclick=async()=>{stopIdle();dropEmbeds();await SB.auth.signOut();view('login')});
 $('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';
   const{data,error}=await SB.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
   if(error)return $('#le').textContent='이메일 또는 비밀번호가 올바르지 않습니다.';
@@ -294,16 +295,16 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
 
 /* ---------- 메뉴(nav) ---------- */
 $('#homelink').onclick=e=>{if(location.hash===''||location.hash==='#/home'){e.preventDefault();loadHome();scrollTo(0,0)}};
-const PG=['home','upload','authors','settle','proof'];
+const PG=['home','upload','authors','settle','proof','mail'];
 function route(){const r=location.hash.replace(/^#\/?/,'')||'home',id=PG.includes(r)?r:'home';
   PG.forEach(x=>$('#pg-'+x).hidden=x!==id);document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.r===id));
-  document.querySelector('.wrap').classList.toggle('wide',id==='proof');if(id==='proof')openProof();if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle()}
+  document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle()}
 addEventListener('hashchange',route);
-/* ---------- 교정고 점검(별도 페이지를 탭 안에 끼워 넣음) ---------- */
-let PF=null;
-function openProof(){if(PF)return;PF=document.createElement('iframe');PF.id='pf';PF.title='교정고 점검';PF.src='proofcheck.html';$('#pg-proof').append(PF)}   // 한 번 열면 탭을 옮겨도 작업이 유지됨
-function dropProof(){if(PF){PF.remove();PF=null}}   // 로그아웃·자동 로그아웃 때 원고가 메모리에 남지 않게 제거
-addEventListener('message',e=>{if(PF&&e.source===PF.contentWindow&&e.origin===location.origin&&e.data&&e.data.t==='yw-act'){LA=Date.now();if(LA-LW>10000){LW=LA;stamp()}}});   // 점검 화면에서 작업 중이면 '사용 중'으로 인정
+/* ---------- 교정고 점검·메일 작성(별도 페이지를 탭 안에 끼워 넣음) ---------- */
+const EF={};
+function openEmbed(id,src,title){if(EF[id])return;const f=document.createElement('iframe');f.className='ef';f.title=title;f.src=src;EF[id]=f;$('#pg-'+id).append(f)}   // 한 번 열면 탭을 옮겨도 작업이 유지됨
+function dropEmbeds(){Object.keys(EF).forEach(k=>{EF[k].remove();delete EF[k]})}   // 로그아웃·자동 로그아웃 때 입력한 내용이 메모리에 남지 않게 제거
+addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.t==='yw-act'&&Object.keys(EF).some(k=>EF[k].contentWindow===e.source)){LA=Date.now();if(LA-LW>10000){LW=LA;stamp()}}});   // 끼워 넣은 화면에서 작업 중이면 '사용 중'으로 인정
 
 /* ---------- 작가 화면 ---------- */
 const kst=()=>new Date(Date.now()+9*36e5),iso=d=>d.toISOString().slice(0,10),addD=(d,n)=>new Date(d.getTime()+n*864e5),w0=n=>Math.round(n).toLocaleString('ko-KR'),mon1=(y,m)=>new Date(Date.UTC(y,m,1));
@@ -345,7 +346,7 @@ const IDLE=60*60*1000;let LA=Date.now(),LW=0,IT=null;
 const stamp=()=>{try{localStorage.setItem('yw_la',String(Date.now()))}catch{}};
 const stale=()=>{try{return Date.now()-Number(localStorage.getItem('yw_la')||0)>IDLE}catch{return false}};
 ['click','keydown','touchstart','scroll','mousemove'].forEach(ev=>addEventListener(ev,()=>{LA=Date.now();if(LA-LW>10000){LW=LA;stamp()}},{passive:true,capture:true}));
-async function idleOut(msg){stopIdle();dropProof();await SB.auth.signOut();closeLay();view('login');$('#le').textContent=msg}
+async function idleOut(msg){stopIdle();dropEmbeds();await SB.auth.signOut();closeLay();view('login');$('#le').textContent=msg}
 function startIdle(){stopIdle();LA=Date.now();IT=setInterval(()=>{if(Date.now()-LA>IDLE||stale())idleOut('1시간 이상 사용이 없어 자동 로그아웃되었습니다. 다시 로그인해 주세요.')},30000)}
 function stopIdle(){clearInterval(IT);IT=null}
 

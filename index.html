@@ -355,7 +355,7 @@ let PLS=[],PSEL=new Set(['all']);
 const drawChips=()=>{const el=$('#pchips');   // 버튼은 한 번만 만들고 선택 상태만 갱신(깜빡임·잔상 방지)
   if(el.children.length!==PLS.length+1)el.innerHTML=[{code:'all',name:'전체'},...PLS].map(p=>`<button type="button" class="chp" data-c="${p.code}" aria-pressed="false">${esc(p.name)}</button>`).join('');
   el.querySelectorAll('.chp').forEach(b=>b.setAttribute('aria-pressed',String(PSEL.has(b.dataset.c))))};
-async function initSearch(){const{data}=await SB.from('platforms').select('code,name').eq('is_active',true);PLS=(data||[]).sort((a,b)=>a.name.localeCompare(b.name,'ko'));drawChips();
+async function initSearch(){const{data}=await SB.from('platforms').select('code,name').eq('is_active',true);PLS=[...(data||[]),...((data||[]).some(p=>p.code==='ridi')?[]:[{code:'ridi',name:'리디'}])].sort((a,b)=>a.name.localeCompare(b.name,'ko'));drawChips();
   const t=kst(),y=iso(addD(t,-1));$('#sf').max=$('#se').max=y;$('#sf').value=iso(mon1(t.getUTCFullYear(),t.getUTCMonth()))>y?y:iso(mon1(t.getUTCFullYear(),t.getUTCMonth()));$('#se').value=y}
 $('#pchips').onclick=e=>{const c=e.target.closest('[data-c]')?.dataset.c;if(!c)return;if(c==='all')PSEL=new Set(['all']);else{PSEL.delete('all');PSEL.has(c)?PSEL.delete(c):PSEL.add(c);if(!PSEL.size)PSEL=new Set(['all'])}drawChips()};
 $('#sdq').onclick=e=>{const q=e.target.dataset.q;if(!q)return;const t=kst(),y=addD(t,-1),Y=t.getUTCFullYear(),M=t.getUTCMonth();let f,g;
@@ -485,7 +485,9 @@ async function viewCf(cid,wid){openLay('<p class="k">불러오는 중…</p>');c
   const bytes=Uint8Array.from(atob(data.data),c=>c.charCodeAt(0));if(CFURL)URL.revokeObjectURL(CFURL);CFURL=URL.createObjectURL(new Blob([bytes],{type:data.mime}));
   openLay(`<div class="row" style="justify-content:space-between;margin-bottom:12px"><button class="ghost" id="cfx">← 작품 상세</button><a href="${CFURL}" target="_blank" rel="noopener" class="k" style="text-decoration:underline">새 창에서 열기</a></div><h3 id="lt" style="margin:0 0 10px">${esc(data.note||'계약서')}</h3>${data.mime==='application/pdf'?`<iframe src="${CFURL}" title="계약서" style="width:100%;height:70vh;border:1px solid var(--line)"></iframe>`:`<img src="${CFURL}" alt="계약서" style="max-width:100%;display:block;margin:0 auto;border:1px solid var(--line)">`}`);
   $('#cfx').onclick=()=>openWork(wid)}
-function openPen(aid){const a=AUTHORS.find(x=>x.id===aid)||{},ws=WORKS.filter(w=>(WA[w.id]||[]).includes(aid));
+// 계약 비율은 현황 화면을 거치거나 작품을 열어야만 채워졌기 때문에, 작가 관리에서 바로 필명을 누르면 '미설정'으로 보였음 → 열기 전에 항상 최신 계약을 불러옴
+async function loadCT(){const{data,error}=await SB.from('contracts').select('id,work_id,platform_code,author_rate,effective_from,effective_to,kind,note');if(error)return false;CT=data||[];return true}
+async function openPen(aid){if(!await loadCT())return alert('계약 비율을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');const a=AUTHORS.find(x=>x.id===aid)||{},ws=WORKS.filter(w=>(WA[w.id]||[]).includes(aid));
   openLay(`<h3 id="lt" style="margin:0 0 4px">${esc(a.pen_name)}</h3><p class="k" style="margin:0 0 14px">${esc(a.email||'')} · 연결된 작품 ${ws.length}개</p><table><caption class="sr-only">필명의 작품 목록</caption><thead><tr><th>작품</th><th>레이블</th><th class="r">계약 비율</th></tr></thead><tbody>${ws.map(w=>`<tr><td><button class="lnk" data-ow="${w.id}">${esc(w.title)}</button></td><td>${w.label||'미지정'}</td><td class="r">${rateTxt(w.id)}</td></tr>`).join('')||'<tr><td colspan="3" class="k em">연결된 작품이 없습니다.</td></tr>'}</tbody></table>`);
   $('#lbody').onclick=e=>{const b=e.target.closest('[data-ow]');if(b)openWork(b.dataset.ow)}}
 
@@ -532,7 +534,12 @@ function stRows(p){const m=monVal('#sm');let n=0;const det=[];
   p.W.forEach(w=>{n++;ORD.forEach((c,i)=>{const x=w.pl[c]||{q:0,lp:w.pl[Object.keys(w.pl)[0]]?.lp||0,g:0,n:0};det.push([i?'':n,i?'':w.t,i?'':(w.rd||'').replace(/-/g,'.'),PN[c],x.q,x.lp,x.g,x.n])})});return det}
 const mkSnap=p=>({month:monVal('#sm'),tax_rate:Number($('#sx').value||0),pens:[...p.pens],totals:{gross:p.gross,net:p.net,A:p.A,ded:p.ded,tax:p.tax,pay:p.pay},
   works:p.W.map(w=>({t:w.t,gross:w.gross,net:w.net,a:w.a,ded:w.ded,rate:w.rate})),detail:stRows(p),nr:p.nr});
-const stHtml=S=>{const[Y,M]=S.month.split('-'),T=S.totals;
+// 확정 당시 플랫폼 목록이 달랐던 정산서(예: 리디 추가 전)도 모든 판매처 행이 보이도록 보정 — 표시용이며 금액은 바뀌지 않음
+function fillPl(S){const d=S.detail||[],G=[];d.forEach(r=>{if(r[0]!==''||!G.length)G.push([]);G[G.length-1].push(r)});
+  const out=[];G.forEach(g=>{const f=g[0],by={};g.forEach(r=>by[r[3]]=r);const lp=f[5]||0,names=ORD.map(c=>PN[c]),rest=g.filter(r=>!names.includes(r[3]));
+    [...names.map(n=>by[n]||['','','',n,0,lp,0,0]),...rest].forEach((r,i)=>out.push(i?['','','',r[3],r[4],r[5],r[6],r[7]]:[f[0],f[1],f[2],r[3],r[4],r[5],r[6],r[7]]))});
+  return{...S,detail:out}}
+const stHtml=S=>{S=fillPl(S);const[Y,M]=S.month.split('-'),T=S.totals;
   return `<h3 id="lt" style="margin:0 0 14px">${Y}년 ${+M}월 정산서</h3>
   <table><tbody><tr><th scope="row" style="width:34%">작가명</th><td>${esc(S.pens.join(', '))}</td></tr><tr><th scope="row">판매보고 기준</th><td>${S.month}-01 ~ ${S.month}-${String(new Date(Date.UTC(+Y,+M,0)).getUTCDate()).padStart(2,'0')}</td></tr><tr><th scope="row">총 정산액</th><td>${won1(T.net)}</td></tr><tr><th scope="row">출판사 공제액</th><td>${won1(T.ded)}</td></tr><tr><th scope="row">작가 정산액</th><td>${won1(T.A)}</td></tr><tr><th scope="row">원천징수액 (${S.tax_rate}%)</th><td>${won1(T.tax)}</td></tr><tr><th scope="row"><b>실 지급액</b></th><td><b>${won1(T.pay)}</b></td></tr></tbody></table>
   <h4 style="margin:22px 0 4px">작품별 정산</h4><table><thead><tr><th>번호</th><th>작품명</th><th class="r hm">판매금액</th><th class="r">총 정산액</th><th class="r hm">작가 비율</th><th class="r">작가 정산액</th><th class="r hm">출판사 공제액</th></tr></thead><tbody>${S.works.map((w,i)=>`<tr><td>${i+1}</td><td>${esc(w.t)}</td><td class="r hm">${w0(w.gross)}</td><td class="r">${w0(w.net)}</td><td class="r hm">${Math.round(w.rate*1000)/10}%</td><td class="r">${w0(w.a)}</td><td class="r hm">${w0(w.ded)}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="2"><b>합계</b></td><td class="r hm"><b>${w0(T.gross)}</b></td><td class="r"><b>${w0(T.net)}</b></td><td class="hm"></td><td class="r"><b>${w0(T.A)}</b></td><td class="r hm"><b>${w0(T.ded)}</b></td></tr></tfoot></table>

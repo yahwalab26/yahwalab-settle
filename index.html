@@ -612,12 +612,10 @@ function confirmSt(ids){const L=buildSt().filter(p=>ids.includes(p.id)),m=monVal
   if(!L.length)return alert('확정할 정산서가 없습니다.');
   if(bad.length)return alert(`계약 비율이 설정되지 않은 판매가 있어 확정할 수 없습니다.\\n${bad.map(p=>[...p.pens][0]+' ('+p.nr+'건)').join(', ')}\\n작품 상세에서 계약 비율을 먼저 입력하세요.`);
   const over=L.some(p=>SS[p.id]&&SS[p.id].status!=='draft');
-  confirmLay({title:'정산서 확정',danger:false,body:`<p style="margin:0">${m.slice(0,7)} 정산서 <b>${L.length}명</b>을 확정하고, 작가가 본인 정산서를 열람할 수 있게 합니다.<br><b>정산서 PDF가 작가 메일로 함께 발송됩니다</b>(이미 메일을 보낸 정산서는 자동 발송하지 않습니다).<br>원천징수율 <b>${$('#sx').value}%</b> 기준으로 저장됩니다.${over?'<br><span class="bad">이미 확정된 정산서는 현재 값으로 덮어씁니다.</span>':''}</p>`,ok:'확정',onOk:async()=>{
-    const todo=[];for(const p of L){const row={person_id:p.id,period_month:m,status:'confirmed',gross_total:p.gross,net_total:p.net,author_total:p.A,deduction:p.ded,tax_amount:p.tax,payable_amount:p.pay,tax_rate:Number($('#sx').value),snapshot:mkSnap(p),confirmed_at:new Date().toISOString()},x=SS[p.id];
-      const r=x?await SB.from('settlements').update(row).eq('id',x.id):await SB.from('settlements').insert(row);if(r.error){alert('확정 실패: '+r.error.message);break}if(!x||x.status!=='sent')todo.push([p,row.snapshot])}
-    closeLay();if(todo.length){openLay('<p class="k" id="mpg"></p>');const ok=[],fail=[];for(let i=0;i<todo.length;i++){const[p,S]=todo[i],nm=[...p.pens][0];$('#mpg').textContent=`정산서 PDF 생성·메일 발송 중… (${i+1}/${todo.length})`;try{const r=await mailPdf(p.id,m,S);if(r.error)throw r.error;ok.push(nm)}catch(e){fail.push(nm+' — '+String(e.message||e))}}
-      closeLay();alert(`확정 완료. 메일 발송 ${ok.length}명${fail.length?`\n발송 실패 ${fail.length}명 (확정은 유지됨, 정산 화면에서 '메일 발송'으로 다시 보내세요)\n${fail.join('\n')}`:''}`)}
-    loadSettle()}})}
+  confirmLay({title:'정산서 확정',danger:false,body:`<p style="margin:0">${m.slice(0,7)} 정산서 <b>${L.length}명</b>을 확정하고, 작가가 본인 정산서를 열람할 수 있게 합니다.<br>확정만 하며 <b>메일은 발송되지 않습니다</b>. 정산서 메일은 정산 화면의 '메일 발송' 버튼으로 보냅니다.<br>원천징수율 <b>${$('#sx').value}%</b> 기준으로 저장됩니다.${over?'<br><span class="bad">이미 확정된 정산서는 현재 값으로 덮어씁니다.</span>':''}</p>`,ok:'확정',onOk:async()=>{
+    for(const p of L){const row={person_id:p.id,period_month:m,status:'confirmed',gross_total:p.gross,net_total:p.net,author_total:p.A,deduction:p.ded,tax_amount:p.tax,payable_amount:p.pay,tax_rate:Number($('#sx').value),snapshot:mkSnap(p),confirmed_at:new Date().toISOString()},x=SS[p.id];
+      const r=x?await SB.from('settlements').update(row).eq('id',x.id):await SB.from('settlements').insert(row);if(r.error){alert('확정 실패: '+r.error.message);break}}
+    closeLay();loadSettle()}})}
 function unconfirmSt(pid){const x=SS[pid];confirmLay({title:'확정 취소',body:'<p style="margin:0">작가 화면에서 이 정산서가 보이지 않게 됩니다. 확정한 내용은 유지되지 않고 미확정 상태로 돌아갑니다.</p>',ok:'확정 취소',onOk:async()=>{const r=await SB.from('settlements').update({status:'draft',confirmed_at:null,snapshot:null}).eq('id',x.id);closeLay();if(r.error)alert(r.error.message);loadSettle()}})}
 function stRows(p){const m=monVal('#sm');let n=0;const det=[];
   p.W.forEach(w=>{n++;ORD.forEach((c,i)=>{const x=w.pl[c]||{q:0,lp:w.pl[Object.keys(w.pl)[0]]?.lp||0,g:0,n:0};det.push([i?'':n,i?'':w.t,i?'':(w.rd||'').replace(/-/g,'.'),PN[c],x.q,x.lp,x.g,x.n])})});return det}

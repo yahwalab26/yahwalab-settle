@@ -95,7 +95,7 @@ html,body{height:auto}
 <div class="form">
 <div class="sec"><h2>메일 종류</h2><div class="seg2" id="types" role="group" aria-label="메일 종류"></div></div>
 <div class="sec" id="fields">
-<label class="field" data-for="all"><span>작가명 <i>(비우면 ‘작가님’)</i></span><input id="author" autocomplete="off"></label>
+<label class="field" data-for="all"><span>작가명</span><input id="author" autocomplete="off"></label>
 <label class="field chk" data-for="contract"><input id="inq" type="checkbox"><span>작가 문의에 답하는 메일</span></label>
 <div class="field" id="gform" data-for="contract"><span>안내 항목</span><div id="gitems"></div><div class="gadd" id="gadd"></div></div>
 <label class="field" data-for="reject accept proof contract" data-sec2><span>작품명</span><input id="title" autocomplete="off"></label>
@@ -114,7 +114,7 @@ html,body{height:auto}
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script>
-var TYPES=[["receipt","접수"],["reject","반려"],["accept","합격"],["proof","교정고"],["contract","계약 안내"]];
+var TYPES=[["receipt","접수"],["reject","반려"],["accept","합격"],["contract","계약 안내"],["proof","교정고"]];
 var cur="receipt",view="input",lastMiss=[];
 var GI=[],TOKRE=/\{(작품명|프로모션 접수 시기|출간 목표 월)\}/g;
 var PRE=[

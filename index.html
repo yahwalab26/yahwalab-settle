@@ -296,7 +296,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v1.3.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v1.4.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -577,7 +577,7 @@ async function openPen(aid){if(!await loadCT())return alert('계약 비율을 �
 let ST=[];const ORD=['ridi','kyobo','aladin','yes24','bookcube'],ORDN=ORD.map(c=>PN[c]),ordDet=D=>{const g=[];D.forEach(r=>{if(r[0]!==''||!g.length)g.push([]);g[g.length-1].push(r)});const rk=n=>{const i=ORDN.indexOf(n);return i<0?99:i};return g.flatMap(rows=>{const h=rows[0].slice(0,3);return rows.slice().sort((a,b)=>rk(a[3])-rk(b[3])).map((r,i)=>[i?'':h[0],i?'':h[1],i?'':h[2],...r.slice(3)])})},fl=n=>Math.floor(n),won1=n=>w0(n)+'원';
 let SS={};
 /* 25일 자동 발송 스위치(app_settings.auto_mail_enabled). 꺼짐이 기본값 */
-const autoTxt=()=>{$('#ams').textContent=$('#amc').checked?'켜짐 — 매월 25일(주말·공휴일이면 직전 영업일) 확정된 정산서 중 미발송 건을 보냅니다. (서버 발송 기능 연결 전에는 켜도 발송되지 않습니다)':'꺼짐 — 자동 발송하지 않습니다.'};
+const autoTxt=()=>{$('#ams').textContent=$('#amc').checked?'켜짐 — 매월 25일(주말·공휴일이면 직전 영업일) 확정된 정산서 중 미발송 건을 보냅니다.':'꺼짐 — 자동 발송하지 않습니다.'};
 async function loadAuto(){const c=$('#amc'),{data,error}=await SB.from('app_settings').select('value').eq('key','auto_mail_enabled').maybeSingle();
   if(error||!data){c.disabled=true;$('#ams').textContent=error?'설정을 불러오지 못했습니다: '+error.message:'설정 항목이 없습니다.';return}
   c.checked=data.value===true;c.disabled=false;autoTxt()}

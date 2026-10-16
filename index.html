@@ -137,6 +137,10 @@ button.lnk{height:auto!important;min-height:0!important;padding:0!important;disp
 td.cc,th.cc{text-align:center!important}
 table.vm td,table.vm th{vertical-align:middle!important}
 table.vm td{height:52px;line-height:1.3}
+button.ghost.bkg{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:0 12px!important;font-size:16px;line-height:1;letter-spacing:0}
+button.ghost.bkg:active{cursor:grabbing}
+tr.bk-drag{position:relative;z-index:3;cursor:grabbing}tr.bk-drag td{background:#fff;box-shadow:0 1px 0 var(--ink),0 -1px 0 var(--ink)}
+tr.bk-it td{box-shadow:inset 0 3px 0 var(--ink)}tr.bk-ib td{box-shadow:inset 0 -3px 0 var(--ink)}
 table.sd td,table.sd th{vertical-align:middle}
 
 /* ===== 버튼 정렬·폭 정리 ===== */
@@ -303,7 +307,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.0.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.1.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -433,12 +437,12 @@ async function loadBooks(){const el=$('#pg-books');if(!el)return;
   if(r.error){el.innerHTML='<p class="bad">작품을 불러오지 못했습니다. '+esc(r.error.message)+'</p>';return}
   BK=r.data||[];drawBooks()}
 function drawBooks(){const on=bkListed(),off=BK.filter(w=>!w.public_listed).sort((a,b)=>a.title.localeCompare(b.title,'ko'));
-  const row=(w,i)=>{const m=bkMiss(w);return `<tr><td>${esc(w.title)}<div class="k" style="font-size:11.5px">${esc(bkNames(w.id)||'필명 미연결')}${w.label?' · '+esc(w.label):''}</div></td><td>${w.public_listed?'<b class="ok">공개</b>':'<span class="k">비공개</span>'}${!w.public_listed&&m.length&&m.length<4?`<div class="k" style="font-size:11.5px">미입력: ${m.join(', ')}</div>`:''}</td><td class="r">${w.public_listed?`<button class="ghost" data-bu="${w.id}" aria-label="위로" ${i===0?'disabled':''}>▲</button><button class="ghost" data-bd="${w.id}" aria-label="아래로" ${i===on.length-1?'disabled':''}>▼</button>`:''}<button class="ghost" data-be="${w.id}">편집</button></td></tr>`};
+  const row=(w,i)=>{const m=bkMiss(w);return `<tr data-wid="${w.id}"${w.public_listed?' data-on':''}><td>${esc(w.title)}<div class="k" style="font-size:11.5px">${esc(bkNames(w.id)||'필명 미연결')}${w.label?' · '+esc(w.label):''}</div></td><td>${w.public_listed?'<b class="ok">공개</b>':'<span class="k">비공개</span>'}${!w.public_listed&&m.length&&m.length<4?`<div class="k" style="font-size:11.5px">미입력: ${m.join(', ')}</div>`:''}</td><td class="r">${w.public_listed?`<button class="ghost bkg" data-grip="${w.id}" title="끌어서 순서 변경 (키보드: ↑ ↓)" aria-label="순서 변경: ${esc(w.title)} — 끌거나 위·아래 화살표 키">⠿</button>`:''}<button class="ghost" data-be="${w.id}">편집</button></td></tr>`};
   const tbl=(rows,cap)=>`<div class="tw"><table class="vm"><caption class="sr-only">${cap}</caption><thead><tr><th>작품</th><th>상태</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="3" class="k" style="text-align:center">작품이 없습니다.</td></tr>'}</tbody></table></div>`;
   $('#pg-books').innerHTML=`<h2><small>(01)</small>작품 추가</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">판매 파일을 올리기 전에 출간작만 먼저 등록할 때 사용합니다. 정산 쪽 작품 목록에도 나타납니다.</p>
   <div class="card" style="text-align:left"><div class="row" style="justify-content:flex-start"><input id="bkat" type="text" aria-label="작품명" placeholder="작품명" maxlength="80" style="flex:1 1 200px;min-width:160px"><select id="bkaa" aria-label="필명" style="flex:1 1 160px"><option value="">필명 선택</option>${AUTHORS.map(a=>`<option value="${a.id}">${esc(a.pen_name)}</option>`).join('')}</select><button class="ghost" id="bkab">추가</button></div></div>
   <h2><small>(02)</small>비공개 작품</h2>${tbl(off.map(row).join(''),'비공개 작품')}
-  <h2><small>(03)</small>홈페이지 출간작 등록</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">공개로 저장한 작품이 홈페이지 출간작이 됩니다. 위에서부터 이 순서로 보입니다.<br>저장하면 홈페이지에 자동으로 반영을 요청하며, 반영까지 1~2분 걸립니다.</p><div class="row" style="gap:10px;margin-bottom:8px"><button class="ghost" id="bkrp">홈페이지에 다시 반영</button><span id="bkpub" class="${BKP.c}" role="status">${esc(BKP.t)}</span></div>${tbl(on.map(row).join(''),'홈페이지 출간작 등록')}
+  <h2><small>(03)</small>홈페이지 출간작 등록</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">공개로 저장한 작품이 홈페이지 출간작이 됩니다. 위에서부터 이 순서로 보이며, ⠿ 손잡이를 끌어 순서를 바꿉니다.<br>저장하면 홈페이지에 자동으로 반영을 요청하며, 반영까지 1~2분 걸립니다.</p><div class="row" style="gap:10px;margin-bottom:8px"><button class="ghost" id="bkrp">홈페이지에 다시 반영</button><span id="bkpub" class="${BKP.c}" role="status">${esc(BKP.t)}</span></div>${tbl(on.map(row).join(''),'홈페이지 출간작 등록')}
   <div id="bke"></div>`;drawBookEdit()}
 function drawBookEdit(){const el=$('#bke'),w=BK.find(x=>x.id===BKSEL);if(!el)return;if(!w){el.innerHTML='';return}
   const cv=BKCOVER?URL.createObjectURL(BKCOVER):bkCover(w.cover_path),opt=(v,cur)=>`<option ${v===cur?'selected':''}>${v}</option>`;
@@ -473,9 +477,37 @@ async function addBook(){const t=$('#bkat').value.trim(),a=$('#bkaa').value;if(!
   const{data,error}=await SB.from('works').insert({title:t,label:'트루비'}).select('id').single();if(error)return alert(error.message);
   const r=await SB.from('work_authors').insert({work_id:data.id,author_id:a,share_ratio:1});if(r.error){await SB.from('works').delete().eq('id',data.id);return alert(r.error.message)}
   BKSEL=data.id;BKCOVER=null;await loadBooks()}
+/* 출간작 순서 드래그: 손잡이(.bkg)를 끌면 행이 따라오고, 놓을 때 바뀐 행의 sort_order만 저장 */
+let BKD=null;
+const bkGrip=e=>e.target.closest&&e.target.closest('.bkg');
+async function bkDragEnd(e,cancel){const d=BKD;if(!d||e.pointerId!==d.pid)return;BKD=null;
+  d.rows.forEach(r=>r.classList.remove('bk-it','bk-ib'));d.tr.classList.remove('bk-drag');d.tr.style.transform='';
+  try{d.g.releasePointerCapture(d.pid)}catch(_){}
+  if(cancel||d.t===d.i)return;
+  const me=d.tr.dataset.wid,ids=d.rows.map(r=>r.dataset.wid).filter(x=>x!==me);ids.splice(d.t,0,me);
+  const by=Object.fromEntries(BK.map(w=>[String(w.id),w])),ch=ids.map((id,k)=>({id,o:k+1})).filter(x=>(by[x.id]||{}).sort_order!==x.o);
+  if(!ch.length)return;
+  const rs=await Promise.all(ch.map(x=>SB.from('works').update({sort_order:x.o}).eq('id',x.id))),er=rs.find(r=>r.error);
+  if(er)alert('순서를 저장하지 못했습니다. '+er.error.message);
+  await loadBooks();if(!er)bkPublish()}
+$('#pg-books').addEventListener('pointerdown',e=>{const g=bkGrip(e);if(!g||BKD||(e.pointerType==='mouse'&&e.button!==0))return;
+  const tr=g.closest('tr'),rows=[...tr.parentNode.querySelectorAll('tr[data-on]')];if(rows.length<2)return;
+  e.preventDefault();try{g.setPointerCapture(e.pointerId)}catch(_){}
+  const i=rows.indexOf(tr);
+  BKD={g,tr,rows,i,t:i,pid:e.pointerId,sy:e.clientY+scrollY,mids:rows.map(r=>{const b=r.getBoundingClientRect();return b.top+scrollY+b.height/2})};
+  tr.classList.add('bk-drag')});
+$('#pg-books').addEventListener('pointermove',e=>{const d=BKD;if(!d||e.pointerId!==d.pid)return;
+  if(e.clientY<60)scrollBy(0,-14);else if(e.clientY>innerHeight-60)scrollBy(0,14);
+  const y=e.clientY+scrollY;d.tr.style.transform=`translateY(${y-d.sy}px)`;
+  d.t=d.mids.filter((m,k)=>k!==d.i&&m<y).length;
+  const oth=d.rows.filter(r=>r!==d.tr);d.rows.forEach(r=>r.classList.remove('bk-it','bk-ib'));
+  if(d.t===0)oth[0].classList.add('bk-it');else oth[d.t-1].classList.add('bk-ib')});
+$('#pg-books').addEventListener('pointerup',e=>bkDragEnd(e,false));
+$('#pg-books').addEventListener('pointercancel',e=>bkDragEnd(e,true));
+$('#pg-books').addEventListener('keydown',async e=>{const g=bkGrip(e);if(!g||(e.key!=='ArrowUp'&&e.key!=='ArrowDown'))return;e.preventDefault();
+  const id=g.dataset.grip;await moveBook(id,e.key==='ArrowUp'?-1:1);const n=document.querySelector('.bkg[data-grip="'+id+'"]');if(n)n.focus()});
 $('#pg-books').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
   if(d.be){BKSEL=d.be;BKCOVER=null;drawBookEdit();$('#bke').scrollIntoView({behavior:'smooth',block:'nearest'});return}
-  if(d.bu)return moveBook(d.bu,-1);if(d.bd)return moveBook(d.bd,1);
   if(b.id==='bkcp')return $('#bkcx').click();
   if(b.id==='bkx'){BKSEL=null;BKCOVER=null;drawBookEdit();return}
   if(b.id==='bks')return saveBook();if(b.id==='bkab')return addBook();if(b.id==='bkrp')return bkPublish()};

@@ -297,7 +297,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v1.6.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v1.6.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -405,7 +405,7 @@ $('#pg-docs').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
 $('#pg-docs').onchange=e=>{if(e.target.id==='dcx'){const f=e.target.files[0];$('#dcfn').textContent=f?f.name:'선택한 파일이 없습니다. (PDF·JPG·PNG·WebP)';return}if(e.target.id==='lgm'){LGM=monVal('#lgm');loadLogs();return}if(e.target.id!=='dcf')return;const f=e.target.files[0];if(!f||!DPLAT)return;if(f.type!=='application/pdf'){const m=$('#dcm');m.className='bad';m.textContent='플랫폼 계약서는 PDF만 올릴 수 있습니다.';return}docUp({category:'platform_contract',platform_code:DPLAT,title:PN[DPLAT]+' 계약서'},f,'올리는 중…')};
 /* ---------- 출간작: 홈페이지(yahwalab.xyz)에 보일 작품 등록. works 컬럼을 재사용하고 표지는 covers 버킷에 저장 ---------- */
 let BK=[],BKSEL=null,BKCOVER=null; /* BKCOVER: 편집 중 새로 고른 표지(520×780 JPG로 변환된 Blob) */
-const BKG=['BL','로맨스','로맨스 판타지','GL'],BKURL=/^https:\/\/blog\.naver\.com\//;
+const BKG=['BL','로판','현로'],BKURL=/^https:\/\/blog\.naver\.com\//;
 const bkCover=p=>p?SB.storage.from('covers').getPublicUrl(p).data.publicUrl:'';
 const bkNames=id=>(WA[id]||[]).map(a=>(AUTHORS.find(x=>x.id===a)||{}).pen_name).filter(Boolean).join(', ');
 const bkMiss=w=>[!bkNames(w.id)&&'필명',!w.genre&&'장르',!w.cover_path&&'표지',!w.blog_url&&'블로그 주소'].filter(Boolean);
@@ -439,7 +439,8 @@ async function saveBook(){const w=BK.find(x=>x.id===BKSEL);if(!w)return;const m=
   if(url&&!BKURL.test(url))return say('블로그 글 주소는 https://blog.naver.com/ 으로 시작해야 합니다.','bad');
   if(pub){const miss=[!bkNames(w.id)&&'필명 연결',!genre&&'장르',!(BKCOVER||w.cover_path)&&'표지',!url&&'블로그 글 주소'].filter(Boolean);if(miss.length)return say('공개하려면 먼저 다음을 채워 주세요: '+miss.join(', '),'bad')}
   b.disabled=true;say('저장 중…');let np=null;
-  if(BKCOVER){np=w.id+'-'+Date.now()+'.jpg';const up=await SB.storage.from('covers').upload(np,BKCOVER,{contentType:'image/jpeg',cacheControl:'31536000'});if(up.error){b.disabled=false;return say('표지 업로드 실패: '+up.error.message,'bad')}}
+  if(BKCOVER){const t=kst().toISOString().replace(/\D/g,'').slice(0,14);let up;for(let n=0;n<3;n++){np='cover-'+t+(n?'-'+n:'')+'.jpg';up=await SB.storage.from('covers').upload(np,BKCOVER,{contentType:'image/jpeg',cacheControl:'31536000'});if(!up.error||!/exist|duplicate/i.test(up.error.message))break} /* cover-연월일시분초.jpg, 같은 초에 겹치면 -1, -2 */
+    if(up.error){np=null;b.disabled=false;return say('표지 업로드 실패: '+up.error.message,'bad')}}
   const patch={genre,label,release_date:rd,blog_url:url,public_listed:pub,cover_path:np||w.cover_path};
   if(pub&&!w.public_listed)patch.sort_order=Math.max(0,...bkListed().map(x=>x.sort_order||0))+1;
   if(!pub)patch.sort_order=null;

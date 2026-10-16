@@ -297,7 +297,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v1.6.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v1.7.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -410,6 +410,11 @@ const bkCover=p=>p?SB.storage.from('covers').getPublicUrl(p).data.publicUrl:'';
 const bkNames=id=>(WA[id]||[]).map(a=>(AUTHORS.find(x=>x.id===a)||{}).pen_name).filter(Boolean).join(', ');
 const bkMiss=w=>[!bkNames(w.id)&&'필명',!w.genre&&'장르',!w.cover_path&&'표지',!w.blog_url&&'블로그 주소'].filter(Boolean);
 const bkListed=()=>BK.filter(w=>w.public_listed).sort((a,b)=>(a.sort_order??1e9)-(b.sort_order??1e9)||String(a.release_date||'').localeCompare(String(b.release_date||'')));
+let BKP={t:'',c:'k'}; /* 홈페이지 반영 요청 결과 표시(화면이 다시 그려져도 유지) */
+async function bkPublish(){const put=(t,c)=>{BKP={t,c};const e=$('#bkpub');if(e){e.className=c;e.textContent=t}};
+  put('홈페이지 반영 요청 중…','k');const r=await call({action:'publish_site'});
+  if(r.error)return put('홈페이지 반영 요청 실패: '+r.error+' — 저장은 되어 있습니다. "홈페이지에 다시 반영"으로 다시 시도해 주세요.','bad');
+  put('홈페이지 반영을 요청했습니다. 1~2분 뒤 홈페이지에서 확인해 주세요.','ok')}
 async function loadBooks(){const el=$('#pg-books');if(!el)return;
   const[,r]=await Promise.all([loadRefs(),SB.from('works').select('id,title,label,release_date,public_listed,genre,cover_path,blog_url,sort_order').order('title')]);
   if(r.error){el.innerHTML='<p class="bad">출간작을 불러오지 못했습니다. '+esc(r.error.message)+'</p>';return}
@@ -417,7 +422,7 @@ async function loadBooks(){const el=$('#pg-books');if(!el)return;
 function drawBooks(){const on=bkListed(),off=BK.filter(w=>!w.public_listed).sort((a,b)=>a.title.localeCompare(b.title,'ko'));
   const row=(w,i)=>{const m=bkMiss(w);return `<tr><td>${esc(w.title)}<div class="k" style="font-size:11.5px">${esc(bkNames(w.id)||'필명 미연결')}${w.label?' · '+esc(w.label):''}</div></td><td>${w.public_listed?'<b class="ok">공개</b>':'<span class="k">비공개</span>'}${!w.public_listed&&m.length&&m.length<4?`<div class="k" style="font-size:11.5px">미입력: ${m.join(', ')}</div>`:''}</td><td class="r">${w.public_listed?`<button class="ghost" data-bu="${w.id}" aria-label="위로" ${i===0?'disabled':''}>▲</button><button class="ghost" data-bd="${w.id}" aria-label="아래로" ${i===on.length-1?'disabled':''}>▼</button>`:''}<button class="ghost" data-be="${w.id}">편집</button></td></tr>`};
   const tbl=(rows,cap)=>`<div class="tw"><table class="vm"><caption class="sr-only">${cap}</caption><thead><tr><th>작품</th><th>상태</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="3" class="k" style="text-align:center">작품이 없습니다.</td></tr>'}</tbody></table></div>`;
-  $('#pg-books').innerHTML=`<h2><small>(01)</small>홈페이지 출간작</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">공개로 저장한 작품이 홈페이지 출간작이 됩니다. 위에서부터 이 순서로 보입니다.<br>(홈페이지 자동 반영은 다음 단계에서 연결됩니다. 지금은 저장만 됩니다.)</p>${tbl(on.map(row).join(''),'공개 중인 출간작')}
+  $('#pg-books').innerHTML=`<h2><small>(01)</small>홈페이지 출간작</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">공개로 저장한 작품이 홈페이지 출간작이 됩니다. 위에서부터 이 순서로 보입니다.<br>저장하면 홈페이지에 자동으로 반영을 요청하며, 반영까지 1~2분 걸립니다.</p><div class="row" style="gap:10px;margin-bottom:8px"><button class="ghost" id="bkrp">홈페이지에 다시 반영</button><span id="bkpub" class="${BKP.c}" role="status">${esc(BKP.t)}</span></div>${tbl(on.map(row).join(''),'공개 중인 출간작')}
   <h2><small>(02)</small>비공개 작품</h2>${tbl(off.map(row).join(''),'비공개 작품')}
   <h2><small>(03)</small>작품 추가</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">판매 파일을 올리기 전에 출간작만 먼저 등록할 때 사용합니다. 정산 쪽 작품 목록에도 나타납니다.</p>
   <div class="card" style="text-align:left"><div class="row" style="justify-content:flex-start"><input id="bkat" type="text" aria-label="작품명" placeholder="작품명" maxlength="80" style="flex:1 1 200px;min-width:160px"><select id="bkaa" aria-label="필명" style="flex:1 1 160px"><option value="">필명 선택</option>${AUTHORS.map(a=>`<option value="${a.id}">${esc(a.pen_name)}</option>`).join('')}</select><button class="ghost" id="bkab">추가</button></div></div>
@@ -447,9 +452,9 @@ async function saveBook(){const w=BK.find(x=>x.id===BKSEL);if(!w)return;const m=
   const{error}=await SB.from('works').update(patch).eq('id',w.id);
   if(error){if(np)await SB.storage.from('covers').remove([np]);b.disabled=false;return say('저장 실패: '+error.message,'bad')}
   if(np&&w.cover_path)await SB.storage.from('covers').remove([w.cover_path]);
-  BKCOVER=null;await loadBooks();const m2=$('#bkm');if(m2){m2.className='ok';m2.textContent='저장했습니다.'}}
+  BKCOVER=null;await loadBooks();const m2=$('#bkm');if(m2){m2.className='ok';m2.textContent='저장했습니다.'}if(w.public_listed||pub)bkPublish()}
 async function moveBook(id,d){const on=bkListed(),i=on.findIndex(x=>x.id===id),j=i+d;if(i<0||j<0||j>=on.length)return;[on[i],on[j]]=[on[j],on[i]];
-  const rs=await Promise.all(on.map((w,k)=>SB.from('works').update({sort_order:k+1}).eq('id',w.id))),er=rs.find(r=>r.error);if(er)return alert(er.error.message);await loadBooks()}
+  const rs=await Promise.all(on.map((w,k)=>SB.from('works').update({sort_order:k+1}).eq('id',w.id))),er=rs.find(r=>r.error);if(er)return alert(er.error.message);await loadBooks();bkPublish()}
 async function addBook(){const t=$('#bkat').value.trim(),a=$('#bkaa').value;if(!t)return alert('작품명을 입력해 주세요.');if(!a)return alert('필명을 선택해 주세요.');
   if(BK.some(w=>w.title.replace(/\s/g,'')===t.replace(/\s/g,'')))return alert('같은 이름의 작품이 이미 있습니다.');
   const{data,error}=await SB.from('works').insert({title:t,label:'트루비'}).select('id').single();if(error)return alert(error.message);
@@ -460,7 +465,7 @@ $('#pg-books').onclick=async e=>{const b=e.target.closest('button');if(!b)return
   if(d.bu)return moveBook(d.bu,-1);if(d.bd)return moveBook(d.bd,1);
   if(b.id==='bkcp')return $('#bkcx').click();
   if(b.id==='bkx'){BKSEL=null;BKCOVER=null;drawBookEdit();return}
-  if(b.id==='bks')return saveBook();if(b.id==='bkab')return addBook()};
+  if(b.id==='bks')return saveBook();if(b.id==='bkab')return addBook();if(b.id==='bkrp')return bkPublish()};
 $('#pg-books').onchange=async e=>{if(e.target.id!=='bkcx')return;const f=e.target.files[0];if(!f)return;const m=$('#bkm');
   try{const r=await bkConv(f);BKCOVER=r.b;$('#bkpvw').innerHTML=`<img src="${URL.createObjectURL(r.b)}" alt="표지 미리보기" style="width:100%;height:100%;object-fit:cover;display:block">`;m.className=r.crop?'bad':'k';m.textContent=r.crop?'표지 비율이 2:3이 아니라 가장자리가 잘렸습니다. 미리보기를 확인한 뒤 저장해 주세요.':'표지를 바꿨습니다. 저장하면 반영됩니다.'}catch(x){m.className='bad';m.textContent=x.message}e.target.value=''};
 /* ---------- 교정고 점검·메일 작성(별도 페이지를 탭 안에 끼워 넣음) ---------- */

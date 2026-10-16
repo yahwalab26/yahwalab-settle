@@ -296,7 +296,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v1.6.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v1.6.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -404,7 +404,7 @@ $('#pg-docs').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
 $('#pg-docs').onchange=e=>{if(e.target.id==='dcx'){const f=e.target.files[0];$('#dcfn').textContent=f?f.name:'선택한 파일이 없습니다. (PDF·JPG·PNG·WebP)';return}if(e.target.id==='lgm'){LGM=monVal('#lgm');loadLogs();return}if(e.target.id!=='dcf')return;const f=e.target.files[0];if(!f||!DPLAT)return;if(f.type!=='application/pdf'){const m=$('#dcm');m.className='bad';m.textContent='플랫폼 계약서는 PDF만 올릴 수 있습니다.';return}docUp({category:'platform_contract',platform_code:DPLAT,title:PN[DPLAT]+' 계약서'},f,'올리는 중…')};
 /* ---------- 교정고 점검·메일 작성(별도 페이지를 탭 안에 끼워 넣음) ---------- */
 const EF={};
-function openEmbed(id,src,title){if(EF[id])return;const f=document.createElement('iframe');f.className='ef';f.title=title;f.src=src;EF[id]=f;$('#pg-'+id).append(f)}   // 한 번 열면 탭을 옮겨도 작업이 유지됨
+function openEmbed(id,src,title){if(EF[id])return;const f=document.createElement('iframe');f.className='ef';f.title=title;f.src=src+'?v='+VER;EF[id]=f;$('#pg-'+id).append(f)}   // 한 번 열면 탭을 옮겨도 작업이 유지됨
 function dropEmbeds(){Object.keys(EF).forEach(k=>{EF[k].remove();delete EF[k]})}   // 로그아웃·자동 로그아웃 때 입력한 내용이 메모리에 남지 않게 제거
 addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.t==='yw-act'&&Object.keys(EF).some(k=>EF[k].contentWindow===e.source)){LA=Date.now();if(LA-LW>10000){LW=LA;stamp()}}});   // 끼워 넣은 화면에서 작업 중이면 '사용 중'으로 인정
 

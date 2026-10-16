@@ -200,7 +200,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
     <div class="who"><span id="awho"></span><span class="wb"><button class="lnk" id="pwb2">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
   <div class="card" id="sch" style="margin-top:20px"></div>
   <h2><small>(01)</small>월별 정산서</h2>
-  <div class="tw"><table class="vm"><caption class="sr-only">확정된 월별 정산서</caption><thead><tr><th>정산 기준월</th><th class="r">작가 정산액</th><th class="r">실 지급액</th><th></th></tr></thead><tbody id="mys"></tbody></table></div>
+  <div class="tw"><table class="vm"><caption class="sr-only">확정된 월별 정산서</caption><thead><tr><th>정산 기준월</th><th class="r">작가 정산액</th><th class="r">실 지급액</th><th class="cc hm">발송일</th><th></th></tr></thead><tbody id="mys"></tbody></table></div>
   <h2><small>(02)</small>계약 정산 비율</h2><div id="rtl"></div>
   <h2><small>(03)</small>정산 통계</h2><div id="stt"></div>
   <h2><small>(04)</small>일일 정산 현황</h2>
@@ -312,7 +312,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.1.5'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.1.6'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -781,8 +781,8 @@ function openStatement(pid){const p=buildSt().find(x=>x.id===pid);if(!p)return;c
 const fname=S=>`야화랩_${String(S.month).replace('-','')}_${(S.pens[0]||'작가').replace(/[\\/:*?"<>|]/g,'')}`;
 function printSt(S){const old=document.title;document.title=fname(S);const back=()=>{document.title=old;removeEventListener('afterprint',back)};addEventListener('afterprint',back);print()}
 let MY={};
-async function loadMyStatements(){const{data,error}=await SB.from('settlements').select('id,period_month,payable_amount,author_total,snapshot').in('status',['confirmed','sent']).order('period_month',{ascending:false});MY={};(data||[]).forEach(x=>MY[x.id]=x);
-  $('#mys').innerHTML=error?`<tr><td colspan="4" class="bad em">정산서를 불러오지 못했습니다.</td></tr>`:(data||[]).map(x=>`<tr><td>${x.period_month.slice(0,7)}</td><td class="r">${won1(x.author_total)}</td><td class="r">${won1(x.payable_amount)}</td><td class="r"><button class="ghost" data-my="${x.id}">정산서 보기</button></td></tr>`).join('')||'<tr><td colspan="4" class="k em">확정된 정산서가 없습니다. 정산 메일 발송일 이후에 확인하실 수 있습니다.</td></tr>'}
+async function loadMyStatements(){const mq=c=>SB.from('settlements').select(c).in('status',['confirmed','sent']).order('period_month',{ascending:false});let q=await mq('id,period_month,payable_amount,author_total,snapshot,sent_at');if(q.error)q=await mq('id,period_month,payable_amount,author_total,snapshot');const{data,error}=q;MY={};(data||[]).forEach(x=>MY[x.id]=x);
+  $('#mys').innerHTML=error?`<tr><td colspan="5" class="bad em">정산서를 불러오지 못했습니다.</td></tr>`:(data||[]).map(x=>`<tr><td>${x.period_month.slice(0,7)}</td><td class="r">${won1(x.author_total)}</td><td class="r">${won1(x.payable_amount)}</td><td class="cc hm">${x.sent_at?new Date(Date.parse(x.sent_at)+324e5).toISOString().slice(0,10):'-'}</td><td class="r"><button class="ghost" data-my="${x.id}">정산서 보기</button></td></tr>`).join('')||'<tr><td colspan="5" class="k em">확정된 정산서가 없습니다. 정산 메일 발송일 이후에 확인하실 수 있습니다.</td></tr>'}
 $('#mys').onclick=e=>{const b=e.target.closest('[data-my]');if(!b)return;const x=MY[b.dataset.my];if(!x||!x.snapshot)return;
   openLay(stHtml(x.snapshot)+'<div class="row noprint" style="justify-content:flex-end;margin-top:14px"><button class="ghost" id="spr">인쇄 / PDF 저장</button></div>');$('#spr').onclick=()=>printSt(x.snapshot)};
 

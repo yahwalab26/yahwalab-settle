@@ -39,7 +39,7 @@ button,input,textarea{font:inherit;color:inherit}
 .btn[disabled]{opacity:.4;cursor:not-allowed}
 .sec{padding:14px 18px;border-bottom:1px solid var(--line2)}
 .sec h2{margin:0 0 8px;font:600 14px/1.4 var(--ui)}
-.seg2{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg2{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--line);border-radius:7px;overflow:hidden}
 .sw{min-height:34px;padding:0 6px;border:0;border-right:1px solid var(--line);background:var(--paper);cursor:pointer;font-size:13px;font-weight:500;color:var(--ink2)}
 .sw:last-child{border-right:0}
 .sw.on{background:var(--ink);color:var(--onink)}
@@ -50,6 +50,15 @@ button,input,textarea{font:inherit;color:inherit}
 .field input,.field textarea{width:100%;min-height:36px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:var(--paper)}
 .field textarea{padding:8px 10px;min-height:92px;resize:vertical;line-height:1.55}
 .field input:focus,.field textarea:focus{border-color:var(--ink)}
+.gi{border:1px solid var(--line);border-radius:7px;padding:8px;margin-bottom:8px}
+.gh{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.gh b{font-size:13px;min-width:18px}
+.gh input{flex:1;min-width:0}
+.gi textarea{min-height:120px}
+.gadd{display:flex;flex-wrap:wrap;gap:6px}
+.field.chk{display:flex;align-items:center;gap:8px}
+.field.chk input{width:auto;min-height:0;margin:0}
+.field.chk>span{margin:0}
 .dock{position:sticky;bottom:0;margin-top:auto;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));background:var(--paper);border-top:1px solid var(--ink)}
 .need{margin:0 0 8px;font-size:12.5px;color:var(--red)}
 .btnrow{display:flex;gap:8px;margin-top:8px}
@@ -87,11 +96,15 @@ html,body{height:auto}
 <div class="sec"><h2>메일 종류</h2><div class="seg2" id="types" role="group" aria-label="메일 종류"></div></div>
 <div class="sec" id="fields">
 <label class="field" data-for="all"><span>작가명 <i>(비우면 ‘작가님’)</i></span><input id="author" autocomplete="off"></label>
-<label class="field" data-for="reject accept proof"><span>작품명</span><input id="title" autocomplete="off"></label>
+<label class="field chk" data-for="contract"><input id="inq" type="checkbox"><span>작가 문의에 답하는 메일 <i>(체크하면 “문의하신 내용에 대해…” 문장 포함)</i></span></label>
+<div class="field" id="gform" data-for="contract"><span>안내 항목 <i>(내용을 넣은 항목만 번호가 붙어 메일에 들어갑니다)</i></span><div id="gitems"></div><div class="gadd" id="gadd"></div></div>
+<label class="field" data-for="reject accept proof contract" data-sec2><span>작품명</span><input id="title" autocomplete="off"></label>
 <label class="field" data-for="accept"><span>작품 호평 코멘트 <i>(선택)</i></span><textarea id="comment"></textarea></label>
 <label class="field" data-for="proof"><span>교정 차수 <i>(숫자만, 비우면 생략)</i></span><input id="round" inputmode="numeric" autocomplete="off" placeholder="예: 1"></label>
 <label class="field" data-for="proof"><span>간단한 리뷰 <i>(선택)</i></span><textarea id="review"></textarea></label>
 <label class="field" data-for="proof"><span>기한</span><input id="deadline" type="date"></label>
+<label class="field" data-for="contract" data-sec2><span>프로모션 접수 시기</span><input id="promo" autocomplete="off" placeholder="예: 11월 초"></label>
+<label class="field" data-for="contract" data-sec2><span>출간 목표 월</span><input id="release" autocomplete="off" placeholder="예: 12월"></label>
 </div>
 </div>
 <div class="dock" data-dock></div>
@@ -101,10 +114,35 @@ html,body{height:auto}
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script>
-var TYPES=[["receipt","접수"],["reject","반려"],["accept","합격"],["proof","교정고"]];
+var TYPES=[["receipt","접수"],["reject","반려"],["accept","합격"],["proof","교정고"],["contract","계약 안내"]];
 var cur="receipt",view="input",lastMiss=[];
+var GI=[],TOKRE=/\{(작품명|프로모션 접수 시기|출간 목표 월)\}/g;
+var PRE=[
+ ["수익 배분 기준","작가 80%, 출판사 20%의 수익 배분은 플랫폼 수수료 및 기타 제반 공제액을 제외한 출판사 실수령액을 기준으로 합니다.\n작가님께 지급되는 정산금에는 사업소득세 3.3%가 원천징수되며, 정산 내역은 출간일 기준 익월부터 매월 안내해 드릴 예정입니다."],
+ ["예상 출간 일정 및 계약 기간","출간 일정의 경우 리디북스 1차 출간을 기준으로 안내해 드립니다.\n<{작품명}> 작품은 {프로모션 접수 시기} 프로모션 접수 후, {출간 목표 월} 출간을 목표로 하고 있습니다. 다만, 세부 일정은 진행 상황에 따라 변동될 수 있는 점 참고 부탁드립니다.\n\n또한 BL 작품은 야화랩의 BL 레이블인 <트루비>를 통해 출간됩니다.\n\n계약 기간은 최초 전자출판 서비스 개시일로부터 3년이며, 계약 만료 3개월 전까지 별도의 서면 해지 또는 조건 변경 통고가 없는 경우 1년 단위로 자동 연장됩니다."],
+ ["표지 제작 및 교정·교열, 제작 비용","표지 제작과 교정·교열을 포함한 전반적인 출간 과정은 출판사 내부에서 진행하며, 출간에 필요한 제작 비용 또한 출판사에서 부담합니다.\n\n표지는 내부 디자이너를 통해 디자인 표지로 제작될 예정인 점 참고 부탁드립니다."]
+];
+var PRE_LABEL=["+ 수익 배분 기준","+ 출간 일정·계약 기간","+ 표지·제작 비용","+ 직접 입력"];
+function usesTokens(){return GI.some(function(g){return /\{(작품명|프로모션 접수 시기|출간 목표 월)\}/.test(g.t+g.b)})}
+function drawItems(){
+  var box=$("#gitems");box.textContent="";
+  GI.forEach(function(g,i){
+    var d=document.createElement("div");d.className="gi";
+    var h=document.createElement("div");h.className="gh";
+    var nb=document.createElement("b");nb.textContent=(i+1)+".";
+    var ti=document.createElement("input");ti.value=g.t;ti.placeholder="안내 제목";ti.autocomplete="off";
+    ti.addEventListener("input",function(){g.t=ti.value;render()});
+    var rm=document.createElement("button");rm.type="button";rm.className="btn sm";rm.textContent="삭제";
+    rm.addEventListener("click",function(){GI.splice(i,1);drawItems();render()});
+    h.appendChild(nb);h.appendChild(ti);h.appendChild(rm);
+    var ta=document.createElement("textarea");ta.value=g.b;ta.placeholder="안내 내용 ({작품명} {프로모션 접수 시기} {출간 목표 월} 사용 가능)";
+    ta.addEventListener("input",function(){g.b=ta.value;render()});
+    d.appendChild(h);d.appendChild(ta);box.appendChild(d);
+  });
+}
+
 var $=function(s){return document.querySelector(s)};
-var ID={"작가명":"author","작품명":"title","작품 호평 코멘트":"comment","기한":"deadline"};
+var ID={"작가명":"author","작품명":"title","작품 호평 코멘트":"comment","기한":"deadline","프로모션 접수 시기":"promo","출간 목표 월":"release"};
 var DOCK='<p class="need" hidden></p><button class="btn primary block" data-act="ca">제목과 본문 전체 복사</button><div class="btnrow"><button class="btn sm" data-act="cs">제목 복사</button><button class="btn sm" data-act="cb">본문 복사</button><button class="btn sm" data-act="clear">입력 비우기</button></div>';
 document.querySelectorAll("[data-dock]").forEach(function(d){d.innerHTML=DOCK});
 
@@ -131,6 +169,17 @@ function build(){
     var cm=$("#comment").value.trim();
     var bar="────────────────────────";
     b=greet+"\n야화랩 편집부입니다.\n\n"+l2+"\n\n"+(cm?cm+"\n\n":"")+"편집부 검토 결과, 작가님의 작품을 야화랩에서 전자책으로 출간하고 싶어 계약을 제안드립니다.\n아래에 주요 계약 조건을 안내드립니다.\n\n"+bar+"\n계약 형태: 전자책 계약\n계약 비율: 작가님 80 : 야화랩 20\n유통처: 리디북스, 교보문고, 알라딘, YES24, 북큐브\n(유통사는 단계적으로 확대 중입니다.)\n"+bar+"\n\n회신해 주시면 가계약서를 전달드리겠습니다.\n또한 계약과 관련해 궁금하신 점이 있으시면 편하게 문의해 주세요.\n\n작가님과 좋은 인연을 이어 갈 수 있기를 기대합니다.\n감사합니다.\n\n야화랩 편집부 드림";
+  }else if(cur==="contract"){
+    var TK={"작품명":title,"프로모션 접수 시기":$("#promo").value.trim(),"출간 목표 월":$("#release").value.trim()};
+    var sub=function(x){return x.replace(TOKRE,function(_,k){return need(TK[k],k)})};
+    var n=0,list=[];
+    GI.forEach(function(g){
+      var t2=sub(g.t.trim()),b2=sub(g.b.trim());
+      if(!t2&&!b2)return;
+      n++;list.push(n+". "+(t2&&b2?t2+"\n"+b2:t2||b2));
+    });
+    s="[야화랩] 계약 진행 관련 안내드립니다.";
+    b=greet+"\n야화랩 편집부입니다.\n\n"+(n?($("#inq").checked?"문의하신 내용에 대해 아래와 같이 안내 드립니다.\n\n\n":"")+list.join("\n\n")+"\n\n\n":"")+"첨부해드린 가계약서를 충분히 검토해 보신 후 계약 진행 여부를 회신해 주시면 감사하겠습니다.\n계약 진행을 희망하시는 경우, 아래 항목을 작성하여 회신 메일에 첨부 부탁드립니다.\n회신 내용을 확인한 뒤 전자 계약을 진행할 예정입니다.\n\n-----\n주소:\n성명:\n필명:\n연락처:\n계좌번호:\n원고 인도일:\n-----\n\n전자 계약이 완료되면 출간 진행 및 이후 절차에 관해 담당자가 별도의 안내 메일을 드릴 예정입니다.\n추가로 궁금하신 사항이 있으시면 언제든 편하게 문의 부탁드립니다.\n\n날씨가 부쩍 쌀쌀해진 만큼 건강 유의하시고, 따뜻하고 기분 좋은 하루 보내시길 바랍니다.\n감사합니다.\n\n야화랩 편집부 드림";
   }else{
     var t=need(title,"작품명"),d=need(fmtDate($("#deadline").value),"기한");
     var r=$("#round").value.replace(/\D/g,""),n=r?r+"차 ":"",rv=$("#review").value.trim();
@@ -161,7 +210,7 @@ function render(){
     d.querySelectorAll("[data-act]").forEach(function(b){if(b.dataset.act!=="clear")b.disabled=m.miss.length>0});
   });
   document.querySelectorAll("#fields .field").forEach(function(f){
-    var k=f.dataset["for"];f.hidden=!(k==="all"||k.split(" ").indexOf(cur)>-1);
+    var k=f.dataset["for"];f.hidden=!(k==="all"||k.split(" ").indexOf(cur)>-1)||(cur==="contract"&&!usesTokens()&&f.hasAttribute("data-sec2"));
   });
   document.querySelectorAll("#types .sw").forEach(function(b){b.classList.toggle("on",b.dataset.k===cur);b.setAttribute("aria-pressed",b.dataset.k===cur)});
 }
@@ -177,14 +226,20 @@ TYPES.forEach(function(t){
   var b=document.createElement("button");b.className="sw";b.type="button";b.textContent=t[1];b.dataset.k=t[0];
   b.addEventListener("click",function(){cur=t[0];render()});$("#types").appendChild(b);
 });
-["author","title","comment","round","review","deadline"].forEach(function(id){$("#"+id).addEventListener("input",render)});
+["author","title","comment","round","review","deadline","promo","release","inq"].forEach(function(id){$("#"+id).addEventListener("input",render)});
+$("#inq").addEventListener("change",render);
 document.addEventListener("click",function(e){
   var b=e.target.closest("[data-act]");if(!b||b.disabled)return;
   var m=build(),a=b.dataset.act;
   if(a==="cs")copy(m.s,"제목을 복사했습니다.");
   else if(a==="cb")copy(m.b,"본문을 복사했습니다.");
   else if(a==="ca")copy(m.s+"\n\n"+m.b,"제목과 본문을 복사했습니다.");
-  else if(a==="clear"){["author","title","comment","round","review","deadline"].forEach(function(id){$("#"+id).value=""});render()}
+  else if(a==="clear"){["author","title","comment","round","review","deadline","promo","release"].forEach(function(id){$("#"+id).value=""});GI=[];$("#inq").checked=false;drawItems();render()}
+});
+PRE_LABEL.forEach(function(lb,i){
+  var b=document.createElement("button");b.type="button";b.className="btn sm";b.textContent=lb;
+  b.addEventListener("click",function(){GI.push(i<3?{t:PRE[i][0],b:PRE[i][1]}:{t:"",b:""});drawItems();render()});
+  $("#gadd").appendChild(b);
 });
 render();
 </script>

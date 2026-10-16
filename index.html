@@ -72,7 +72,6 @@ header>div{flex:none;max-width:100%}
 #nav a.on{color:var(--ink);border-color:var(--ink);font-weight:600}
 /* 영역(정산·도구·자료실) 탭 + 세부 메뉴 */
 #nav{gap:4px 44px}#nav a{font-size:15px;font-weight:500}#nav a.on{font-weight:700}
-#nav a .lk{font-size:11px;margin-left:4px;opacity:.7}
 #sub{display:flex;justify-content:center;flex-wrap:wrap;gap:2px 24px;padding:8px 0;background:var(--soft);border-bottom:1px solid var(--line)}
 #sub a{color:var(--mute);text-decoration:none;font-size:13px;padding:6px 2px;white-space:nowrap;border-bottom:1px solid transparent}
 #sub a:hover{color:var(--ink)}#sub a.on{color:var(--ink);font-weight:600;border-bottom-color:var(--ink)}
@@ -235,7 +234,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <div class="ver" id="ver" aria-label="사이트 버전"></div>
   <header><div><a href="#/home" id="homelink" aria-label="현황으로 이동" title="현황으로 이동"><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"></a><p class="sub">야화랩 정산 사이트</p></div>
     <div class="who"><span id="who"></span><span class="wb"><button class="lnk" id="pwb">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
-  <nav id="nav" aria-label="영역"><a href="#/home" data-a="settle">정산</a><a href="#/mail" data-a="tools">도구</a><a href="#/docs" data-a="vault">자료실<span class="lk" aria-hidden="true">🔒</span></a></nav>
+  <nav id="nav" aria-label="영역"><a href="#/home" data-a="settle">정산</a><a href="#/mail" data-a="tools">도구</a><a href="#/docs" data-a="vault">자료실</a></nav>
   <nav id="sub" aria-label="세부 메뉴"></nav>
 
   <div class="pg" id="pg-home">
@@ -304,7 +303,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.0.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.0.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -372,7 +371,7 @@ $('#homelink').onclick=e=>{if(location.hash===''||location.hash==='#/home'){e.pr
 const PG=['home','authors','settle','docs','books','proof','mail'];
 /* 영역 → 세부 메뉴. 주소(#/home 등)는 그대로이고 화면 묶음만 나눔. 영역을 누르면 그 영역에서 마지막으로 본 화면으로 감 */
 const AREAS={settle:['home','settle','authors','books'],tools:['mail','proof'],vault:['docs']};
-const NAVN={home:'현황',settle:'정산',authors:'작가',books:'출간작',mail:'메일 작성',proof:'교정고 점검',docs:'회사 자료'};
+const NAVN={home:'현황',settle:'정산',authors:'작가',books:'작품',mail:'메일 작성',proof:'교정고 점검',docs:'회사 자료'};
 const LASTP={};
 function setNav(id){const a=Object.keys(AREAS).find(k=>AREAS[k].includes(id));LASTP[a]=id;
   document.querySelectorAll('#nav a').forEach(x=>{x.classList.toggle('on',x.dataset.a===a);x.href='#/'+(LASTP[x.dataset.a]||AREAS[x.dataset.a][0])});
@@ -431,15 +430,15 @@ async function bkPublish(){const put=(t,c)=>{BKP={t,c};const e=$('#bkpub');if(e)
   put('홈페이지 반영을 요청했습니다. 1~2분 뒤 홈페이지에서 확인해 주세요.','ok')}
 async function loadBooks(){const el=$('#pg-books');if(!el)return;
   const[,r]=await Promise.all([loadRefs(),SB.from('works').select('id,title,label,release_date,public_listed,genre,cover_path,blog_url,sort_order').order('title')]);
-  if(r.error){el.innerHTML='<p class="bad">출간작을 불러오지 못했습니다. '+esc(r.error.message)+'</p>';return}
+  if(r.error){el.innerHTML='<p class="bad">작품을 불러오지 못했습니다. '+esc(r.error.message)+'</p>';return}
   BK=r.data||[];drawBooks()}
 function drawBooks(){const on=bkListed(),off=BK.filter(w=>!w.public_listed).sort((a,b)=>a.title.localeCompare(b.title,'ko'));
   const row=(w,i)=>{const m=bkMiss(w);return `<tr><td>${esc(w.title)}<div class="k" style="font-size:11.5px">${esc(bkNames(w.id)||'필명 미연결')}${w.label?' · '+esc(w.label):''}</div></td><td>${w.public_listed?'<b class="ok">공개</b>':'<span class="k">비공개</span>'}${!w.public_listed&&m.length&&m.length<4?`<div class="k" style="font-size:11.5px">미입력: ${m.join(', ')}</div>`:''}</td><td class="r">${w.public_listed?`<button class="ghost" data-bu="${w.id}" aria-label="위로" ${i===0?'disabled':''}>▲</button><button class="ghost" data-bd="${w.id}" aria-label="아래로" ${i===on.length-1?'disabled':''}>▼</button>`:''}<button class="ghost" data-be="${w.id}">편집</button></td></tr>`};
   const tbl=(rows,cap)=>`<div class="tw"><table class="vm"><caption class="sr-only">${cap}</caption><thead><tr><th>작품</th><th>상태</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="3" class="k" style="text-align:center">작품이 없습니다.</td></tr>'}</tbody></table></div>`;
-  $('#pg-books').innerHTML=`<h2><small>(01)</small>홈페이지 출간작</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">공개로 저장한 작품이 홈페이지 출간작이 됩니다. 위에서부터 이 순서로 보입니다.<br>저장하면 홈페이지에 자동으로 반영을 요청하며, 반영까지 1~2분 걸립니다.</p><div class="row" style="gap:10px;margin-bottom:8px"><button class="ghost" id="bkrp">홈페이지에 다시 반영</button><span id="bkpub" class="${BKP.c}" role="status">${esc(BKP.t)}</span></div>${tbl(on.map(row).join(''),'공개 중인 출간작')}
-  <h2><small>(02)</small>비공개 작품</h2>${tbl(off.map(row).join(''),'비공개 작품')}
-  <h2><small>(03)</small>작품 추가</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">판매 파일을 올리기 전에 출간작만 먼저 등록할 때 사용합니다. 정산 쪽 작품 목록에도 나타납니다.</p>
+  $('#pg-books').innerHTML=`<h2><small>(01)</small>작품 추가</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">판매 파일을 올리기 전에 출간작만 먼저 등록할 때 사용합니다. 정산 쪽 작품 목록에도 나타납니다.</p>
   <div class="card" style="text-align:left"><div class="row" style="justify-content:flex-start"><input id="bkat" type="text" aria-label="작품명" placeholder="작품명" maxlength="80" style="flex:1 1 200px;min-width:160px"><select id="bkaa" aria-label="필명" style="flex:1 1 160px"><option value="">필명 선택</option>${AUTHORS.map(a=>`<option value="${a.id}">${esc(a.pen_name)}</option>`).join('')}</select><button class="ghost" id="bkab">추가</button></div></div>
+  <h2><small>(02)</small>비공개 작품</h2>${tbl(off.map(row).join(''),'비공개 작품')}
+  <h2><small>(03)</small>홈페이지 출간작 등록</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">공개로 저장한 작품이 홈페이지 출간작이 됩니다. 위에서부터 이 순서로 보입니다.<br>저장하면 홈페이지에 자동으로 반영을 요청하며, 반영까지 1~2분 걸립니다.</p><div class="row" style="gap:10px;margin-bottom:8px"><button class="ghost" id="bkrp">홈페이지에 다시 반영</button><span id="bkpub" class="${BKP.c}" role="status">${esc(BKP.t)}</span></div>${tbl(on.map(row).join(''),'홈페이지 출간작 등록')}
   <div id="bke"></div>`;drawBookEdit()}
 function drawBookEdit(){const el=$('#bke'),w=BK.find(x=>x.id===BKSEL);if(!el)return;if(!w){el.innerHTML='';return}
   const cv=BKCOVER?URL.createObjectURL(BKCOVER):bkCover(w.cover_path),opt=(v,cur)=>`<option ${v===cur?'selected':''}>${v}</option>`;

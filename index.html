@@ -70,6 +70,12 @@ header>div{flex:none;max-width:100%}
 #nav{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 30px;padding:14px 0 0;border-bottom:1px solid var(--line);overflow:visible}
 #nav a{color:var(--mute);text-decoration:none;font-size:14px;padding:6px 0 10px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
 #nav a.on{color:var(--ink);border-color:var(--ink);font-weight:600}
+/* 영역(정산·도구·자료실) 탭 + 세부 메뉴 */
+#nav{gap:4px 44px}#nav a{font-size:15px;font-weight:500}#nav a.on{font-weight:700}
+#nav a .lk{font-size:11px;margin-left:4px;opacity:.7}
+#sub{display:flex;justify-content:center;flex-wrap:wrap;gap:2px 24px;padding:8px 0;background:var(--soft);border-bottom:1px solid var(--line)}
+#sub a{color:var(--mute);text-decoration:none;font-size:13px;padding:6px 2px;white-space:nowrap;border-bottom:1px solid transparent}
+#sub a:hover{color:var(--ink)}#sub a.on{color:var(--ink);font-weight:600;border-bottom-color:var(--ink)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 tr.first>*{border-top:1px solid var(--ink)}
 tbody th{font-weight:600;color:var(--ink);font-size:14px;letter-spacing:0}
@@ -229,7 +235,8 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <div class="ver" id="ver" aria-label="사이트 버전"></div>
   <header><div><a href="#/home" id="homelink" aria-label="현황으로 이동" title="현황으로 이동"><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"></a><p class="sub">야화랩 정산 사이트</p></div>
     <div class="who"><span id="who"></span><span class="wb"><button class="lnk" id="pwb">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
-  <nav id="nav"><a href="#/home" data-r="home">현황</a><a href="#/settle" data-r="settle">정산</a><a href="#/authors" data-r="authors">작가</a><a href="#/docs" data-r="docs">회사 자료</a><a href="#/books" data-r="books">출간작</a><a href="#/proof" data-r="proof">교정고 점검</a><a href="#/mail" data-r="mail">메일 작성</a></nav>
+  <nav id="nav" aria-label="영역"><a href="#/home" data-a="settle">정산</a><a href="#/mail" data-a="tools">도구</a><a href="#/docs" data-a="vault">자료실<span class="lk" aria-hidden="true">🔒</span></a></nav>
+  <nav id="sub" aria-label="세부 메뉴"></nav>
 
   <div class="pg" id="pg-home">
   <h2><small>(01)</small>정산 현황</h2>
@@ -297,7 +304,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v1.7.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.0.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -363,8 +370,15 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
 /* ---------- 메뉴(nav) ---------- */
 $('#homelink').onclick=e=>{if(location.hash===''||location.hash==='#/home'){e.preventDefault();loadHome();scrollTo(0,0)}};
 const PG=['home','authors','settle','docs','books','proof','mail'];
+/* 영역 → 세부 메뉴. 주소(#/home 등)는 그대로이고 화면 묶음만 나눔. 영역을 누르면 그 영역에서 마지막으로 본 화면으로 감 */
+const AREAS={settle:['home','settle','authors','books'],tools:['mail','proof'],vault:['docs']};
+const NAVN={home:'현황',settle:'정산',authors:'작가',books:'출간작',mail:'메일 작성',proof:'교정고 점검',docs:'회사 자료'};
+const LASTP={};
+function setNav(id){const a=Object.keys(AREAS).find(k=>AREAS[k].includes(id));LASTP[a]=id;
+  document.querySelectorAll('#nav a').forEach(x=>{x.classList.toggle('on',x.dataset.a===a);x.href='#/'+(LASTP[x.dataset.a]||AREAS[x.dataset.a][0])});
+  const sub=$('#sub'),L=AREAS[a];sub.hidden=L.length<2;sub.innerHTML=L.map(p=>`<a href="#/${p}"${p===id?' class="on" aria-current="page"':''}>${NAVN[p]}</a>`).join('')}
 function route(){const r=location.hash.replace(/^#\/?/,'')||'home',id=PG.includes(r)?r:'home';
-  PG.forEach(x=>$('#pg-'+x).hidden=x!==id);document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.r===id));
+  PG.forEach(x=>$('#pg-'+x).hidden=x!==id);setNav(id);
   document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle();if(id==='docs')loadDocs();if(id==='books')loadBooks()}
 addEventListener('hashchange',route);
 /* ---------- 회사 자료: 플랫폼 계약(플랫폼당 현재본 1건 + 교체 이력) · 기타 자료. 관리자 전용 ---------- */

@@ -296,7 +296,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v1.5.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v1.5.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -809,7 +809,7 @@ function parse(rows,p,hi){
           channel:c(g(r,'판매채널')),sale_method:c(g(r,'판매방식')),quantity:num(g(r,'판매수량')),list_price:num(g(r,'정가')),
           sale_price:num(g(r,'판매가')),gross_amount:num(g(r,'판매금액')),net_amount:null,raw});return}
       let refund,when,orig=null,list,sale,net,ik,title;
-      if(p==='aladin'){const f=c(g(r,'판매형태'));if(f!=='판매'&&f!=='취소')throw `알 수 없는 판매형태: ${f}`;
+      if(p==='aladin'){const f=c(g(r,'판매형태'));if(f!=='판매'&&f!=='대여'&&f!=='취소')throw `알 수 없는 판매형태: ${f}`;   // 대여(이벤트 기간 등)는 판매와 같은 1건 판매로 처리
         refund=f==='취소';when=dt(g(r,'판매/취소일시'));if(c(g(r,'원주문일시'))!=='')orig=dt(g(r,'원주문일시')).ts;
         list=g(r,'정가');sale=g(r,'판매가');net=g(r,'정산액');ik=g(r,'ISBN');title=g(r,'제목')}
       else{const f=c(g(r,'판매구분')),rf=c(g(r,'환불일'));refund=rf!==''||/환불|취소/.test(f);

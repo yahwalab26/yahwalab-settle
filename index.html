@@ -312,7 +312,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.2.2'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.2.3'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -373,8 +373,8 @@ function askPw(f){forced=f;$('#ct').textContent=f?'비밀번호 설정':'비밀�
   $('#cc').hidden=f;$('#cf').reset();$('#ce').textContent='';view('chpw')}
 $('#pwb').onclick=()=>askPw(false);$('#cc').onclick=()=>enter(ME);
 $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce');m.textContent='';
-  if(a!==$('#np2').value)return m.textContent='비밀번호 확인이 일치하지 않습니다.';
   if(a.length<6)return m.textContent='6자 이상으로 입력하세요.';
+  if(a!==$('#np2').value)return m.textContent='비밀번호 확인이 일치하지 않습니다.';
   const{error}=await SB.auth.updateUser({password:a});
   if(error)return m.textContent=/different|same/i.test(error.message)?'기존 비밀번호와 다른 비밀번호를 입력하세요.':error.message;
   await SB.rpc('complete_password_change');enter(ME)};
@@ -657,7 +657,7 @@ let CE=null;
 async function openWork(id){const w=WORKS.find(x=>x.id===id)||{title:'',label:null},mo=monVal('#dm');openLay('<p class="k">불러오는 중…</p>');
   const[{data,error},{data:ct},{data:fs}]=await Promise.all([SB.rpc('admin_work_daily',{p_work:id,p_month:mo+'-01'}),SB.from('contracts').select('id,work_id,platform_code,author_rate,effective_from,effective_to,kind,note').eq('work_id',id).order('effective_from'),SB.from('sales_lines').select('sale_date,sale_month').eq('work_id',id).order('sale_month').limit(1)]);
   if(error)return openLay(`<p class="bad">${esc(error.message)}</p>`);CT=CT.filter(c=>c.work_id!==id).concat(ct||[]);CE=null;
-  const pens=(WA[id]||[]).map(a=>(AUTHORS.find(x=>x.id===a)||{}).pen_name).filter(Boolean).join(', ')||'<span class="bad">연결된 작가 없음</span>',R=data||[],mine=CT.filter(c=>c.work_id===id).sort((a,b)=>a.kind.localeCompare(b.kind)||a.effective_from.localeCompare(b.effective_from));
+  const pens=(WA[id]||[]).map(a=>(AUTHORS.find(x=>x.id===a)||{}).pen_name).filter(Boolean).map(esc).join(', ')||'<span class="bad">연결된 작가 없음</span>',R=data||[],mine=CT.filter(c=>c.work_id===id).sort((a,b)=>a.kind.localeCompare(b.kind)||a.effective_from.localeCompare(b.effective_from));
   openLay(`<h3 id="lt" style="margin:0 0 4px">${esc(w.title)}</h3><p class="k" style="margin:0 0 14px">작가: ${pens}</p>
   <div class="row" style="justify-content:flex-start;gap:10px"><label class="k" for="wlb">레이블</label><select id="wlb" style="width:auto"><option value="">미지정</option><option ${w.label==='야화랩'?'selected':''}>야화랩</option><option ${w.label==='트루비'?'selected':''}>트루비</option></select><label class="k" for="wrd">발매일</label><input id="wrd" type="date" style="width:auto" value="${w.release_date||''}"><label class="k" for="wcs">계약 시작일</label><input id="wcs" type="date" style="width:auto" value="${w.contract_start||''}"></div>
   <p id="wri" class="k" style="font-size:13px;margin:8px 0 0">${(r=>r?`계약 만료일 <b>${r.date}</b> (D-${r.d}) · 자동 연장 시 갱신일 <b>${r.next}</b> · 해지 통보 마감 <b>${r.notice}</b> (${r.dn<0?'기한 경과':'D-'+r.dn})`:'계약 시작일을 입력하면 만료일(시작일+3년−1일)과 해지 통보 마감일을 알려드립니다. (3년 계약, 만료 3개월 전까지 해지 의사가 없으면 1년 자동 연장)')(renewal(w.contract_start))}</p>
@@ -705,7 +705,7 @@ async function viewCf(cid,wid){openLay('<p class="k">불러오는 중…</p>');c
 // 계약 비율은 현황 화면을 거치거나 작품을 열어야만 채워졌기 때문에, 작가 관리에서 바로 필명을 누르면 '미설정'으로 보였음 → 열기 전에 항상 최신 계약을 불러옴
 async function loadCT(){const{data,error}=await SB.from('contracts').select('id,work_id,platform_code,author_rate,effective_from,effective_to,kind,note');if(error)return false;CT=data||[];return true}
 async function openPen(aid){if(!await loadCT())return alert('계약 비율을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');const a=AUTHORS.find(x=>x.id===aid)||{},ws=WORKS.filter(w=>(WA[w.id]||[]).includes(aid));
-  openLay(`<h3 id="lt" style="margin:0 0 4px">${esc(a.pen_name)}</h3><p class="k" style="margin:0 0 14px">${esc(a.email||'')} · 연결된 작품 ${ws.length}개</p><table><caption class="sr-only">필명의 작품 목록</caption><thead><tr><th>작품</th><th>레이블</th><th class="r">계약 비율</th></tr></thead><tbody>${ws.map(w=>`<tr><td><button class="lnk" data-ow="${w.id}">${esc(w.title)}</button></td><td>${w.label||'미지정'}</td><td class="r">${rateTxt(w.id)}</td></tr>`).join('')||'<tr><td colspan="3" class="k em">연결된 작품이 없습니다.</td></tr>'}</tbody></table>`);
+  openLay(`<h3 id="lt" style="margin:0 0 4px">${esc(a.pen_name)}</h3><p class="k" style="margin:0 0 14px">${esc(a.email||'')} · 연결된 작품 ${ws.length}개</p><table><caption class="sr-only">필명의 작품 목록</caption><thead><tr><th>작품</th><th>레이블</th><th class="r">계약 비율</th></tr></thead><tbody>${ws.map(w=>`<tr><td><button class="lnk" data-ow="${w.id}">${esc(w.title)}</button></td><td>${esc(w.label||'미지정')}</td><td class="r">${rateTxt(w.id)}</td></tr>`).join('')||'<tr><td colspan="3" class="k em">연결된 작품이 없습니다.</td></tr>'}</tbody></table>`);
   $('#lbody').onclick=e=>{const b=e.target.closest('[data-ow]');if(b)openWork(b.dataset.ow)}}
 
 /* ---------- 월 정산서 (정산서_작가별_템플릿.xlsx 양식) ---------- */

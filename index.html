@@ -78,7 +78,7 @@ header>div{flex:none;max-width:100%}
 #sub a{flex:none;display:inline-flex;align-items:center;height:36px;padding:0 18px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:500;white-space:nowrap;transition:border-color .15s,background .15s,color .15s}
 #sub a:hover{border-color:var(--ink)}
 #sub a.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
-@media(max-width:560px){#sub{padding:12px 14px}#sub a{height:40px;padding:0 20px;font-size:14px}}
+@media(max-width:560px){#nav{padding-top:6px}#nav a{padding:12px 0 14px}#sub{padding:12px 14px}#sub a{height:40px;padding:0 16px;font-size:14px;color:var(--mute)}#sub a.on{background:#fff;border-color:var(--ink);color:var(--ink);font-weight:600}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 tr.first>*{border-top:1px solid var(--ink)}
 tbody th{font-weight:600;color:var(--ink);font-size:14px;letter-spacing:0}
@@ -312,7 +312,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.2.3'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.2.4'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));

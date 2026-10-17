@@ -86,7 +86,6 @@ tbody th{font-weight:600;color:var(--ink);font-size:14px;letter-spacing:0}
 .pr{display:flex;gap:8px;align-items:center}.pr .pn{flex:0 0 34%}.pr .pe{flex:1}.pr button{flex:none}
 @media(max-width:560px){.pr{flex-wrap:wrap}.pr .pn,.pr .pe{flex:1 1 100%}}
 @media(min-width:701px){.dsc .fr{text-align:center}.dsc .fr .row,.dsc #pchips,.dsc>.row{justify-content:center!important}#sres>p.k{text-align:center}}
-#alast:empty{display:none}
 .fr{padding:14px 0;border-bottom:1px solid var(--line)}.fl{display:block;font-size:13px;font-weight:600;margin-bottom:10px}
 .chp{border-radius:999px!important;padding:7px 16px!important}.chp[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
 .bar{display:flex;align-items:center;gap:12px;margin:8px 0}.bl{flex:0 0 62px;text-align:center;background:var(--soft);font-weight:600;font-size:13px;padding:9px 4px}
@@ -199,7 +198,6 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <section id="author" hidden>
   <header><div><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"><p class="sub">야화랩 정산 사이트</p></div>
     <div class="who"><span id="awho"></span><span class="wb"><button class="lnk" id="pwb2">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
-  <p class="k" id="alast" role="status" style="text-align:center;font-size:12px;margin:12px 0 0"></p>
   <div class="card" id="sch" style="margin-top:20px"></div>
   <h2><small>(01)</small>월별 정산서</h2>
   <div class="tw"><table class="vm"><caption class="sr-only">확정된 월별 정산서</caption><thead><tr><th>정산 기준월</th><th class="r">작가 정산액</th><th class="r">실 지급액</th><th class="cc hm">발송일</th><th></th></tr></thead><tbody id="mys"></tbody></table></div>
@@ -314,7 +312,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.2.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.2.2'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -359,13 +357,10 @@ $('#mf').onsubmit=async e=>{e.preventDefault();const m=$('#me'),b=$('#mb');m.tex
 let LOGID='',LOGAT=0;
 function uaShort(){const u=navigator.userAgent||'',os=/iPhone|iPad|iPod/.test(u)?'iOS':/Android/.test(u)?'Android':/Windows/.test(u)?'Windows':/Mac OS X/.test(u)?'macOS':/Linux/.test(u)?'Linux':'',br=/Edg\//.test(u)?'Edge':/OPR\//.test(u)?'Opera':/SamsungBrowser/.test(u)?'Samsung':/CriOS|Chrome\//.test(u)?'Chrome':/FxiOS|Firefox\//.test(u)?'Firefox':/Safari\//.test(u)?'Safari':'',mo=/Mobi/.test(u)?' 모바일':'';return (br+(os?' · '+os:'')+mo).trim()||'알 수 없음'}
 function logLogin(){try{if(!ME||(LOGID===ME.id&&Date.now()-LOGAT<6e5))return;LOGID=ME.id;LOGAT=Date.now();SB.rpc('log_login',{p_ua:uaShort()}).then(()=>{},()=>{})}catch{}}
-async function showPrevLogin(){const el=$('#alast');if(!el||!ME)return;if(LOGID===ME.id&&Date.now()-LOGAT<6e5)return;
-  try{const{data}=await SB.from('login_logs').select('created_at,ua').order('created_at',{ascending:false}).limit(1);const r=data&&data[0];
-    el.textContent=r?'직전 접속 '+new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+(r.ua?' · '+r.ua:'')+' — 본인이 아니라면 비밀번호를 바로 변경해 주세요.':''}catch{el.textContent=''}}
 async function enter(u){ME=u;const{data}=await SB.from('profiles').select('role,must_change_password').eq('id',u.id).maybeSingle();
   if(data?.must_change_password)return askPw(true);
   if(data?.role==='author'&&stale()){await SB.auth.signOut();view('login');$('#le').textContent='1시간 이상 사용이 없어 자동 로그아웃되었습니다. 다시 로그인해 주세요.';return}
-  if(data?.role==='author'){$('#awho').textContent=u.email;view('author');drawSchedule();loadRates();loadStats();initSearch();loadMyStatements();startIdle();showPrevLogin().then(logLogin,logLogin);return}
+  if(data?.role==='author'){$('#awho').textContent=u.email;view('author');drawSchedule();loadRates();loadStats();initSearch();loadMyStatements();startIdle();logLogin();return}
   stopIdle();
   if(data?.role!=='admin')return view('denied');
   if(!await mfaGate())return;

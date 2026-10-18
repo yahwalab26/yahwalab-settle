@@ -312,7 +312,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.2.4'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.2.5'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -381,6 +381,8 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
 
 /* ---------- 메뉴(nav) ---------- */
 $('#homelink').onclick=e=>{if(location.hash===''||location.hash==='#/home'){e.preventDefault();loadHome();scrollTo(0,0)}};
+/* 새로 접속(주소 입력·북마크·탭 복원)하면 현황에서 시작. 같은 탭의 새로고침·뒤로가기만 보던 화면 유지 */
+try{const nt=(performance.getEntriesByType('navigation')[0]||{}).type;if(!sessionStorage.getItem('yw_s')||nt==='navigate'){if(location.hash&&location.hash!=='#/home')history.replaceState(null,'',location.pathname+'#/home')}sessionStorage.setItem('yw_s','1')}catch(e){}
 const PG=['home','authors','settle','docs','books','proof','mail'];
 /* 영역 → 세부 메뉴. 주소(#/home 등)는 그대로이고 화면 묶음만 나눔. 영역을 누르면 그 영역에서 마지막으로 본 화면으로 감 */
 const AREAS={settle:['home','settle','authors','books'],tools:['mail','proof'],vault:['docs']};
@@ -880,7 +882,7 @@ const QP=new URLSearchParams(location.search);
 $('#ab').onclick=async e=>{e.target.disabled=true;$('#ae2').textContent='';
   const{data,error}=await SB.auth.verifyOtp({token_hash:QP.get('th'),type:QP.get('t')==='recovery'?'recovery':'invite'});
   if(error){e.target.disabled=false;return $('#ae2').textContent='링크가 만료되었거나 이미 사용되었습니다. 담당자에게 재발급을 요청해 주세요.'}
-  history.replaceState(null,'',location.pathname+location.hash);stamp();enter(data.user)};
+  history.replaceState(null,'',location.pathname+'#/home');stamp();enter(data.user)};
 (async()=>{if(QP.get('th'))return view('accept');const{data:{session}}=await SB.auth.getSession();session?enter(session.user):view('login')})();
 
 async function loadRefs(){const[w,i,a,l]=await Promise.all([SB.from('works').select('id,title,label,release_date,contract_start').order('title'),

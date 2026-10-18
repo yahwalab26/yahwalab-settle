@@ -320,6 +320,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
     <p class="k" style="font-size:12px;margin:0 0 10px;text-align:center">야화랩 홈페이지(yahwalab.xyz)의 방문자 통계입니다. 하루 단위로 집계되고 몇 시간 늦게 반영될 수 있습니다.</p>
     <div class="row" id="vsr" style="gap:8px;margin-bottom:12px"></div>
     <div id="vsb"><p class="k">불러오는 중…</p></div>
+    <div id="vcb"></div>
     <p class="k" style="font-size:12px;margin:16px 0 0;text-align:center"><a href="https://dash.cloudflare.com/" target="_blank" rel="noopener" style="text-decoration:underline">Cloudflare 대시보드에서 더 자세히 보기</a></p>
   </div>
   <div class="pg" id="pg-books" hidden></div>
@@ -333,7 +334,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.5.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.6.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -385,7 +386,8 @@ async function enter(u){ME=u;const{data}=await SB.from('profiles').select('role,
   stopIdle();
   if(data?.role!=='admin')return view('denied');
   if(!await mfaGate())return;
-  $('#who').textContent=u.email;$('#ver').textContent=VER;view('app');loadFresh();route();loadPeople();logLogin()}
+  $('#who').textContent=u.email;$('#ver').textContent=VER;view('app');loadFresh();route();loadPeople();logLogin();
+  try{document.cookie='yw_nt=1;domain=.yahwalab.xyz;path=/;max-age=31536000;SameSite=Lax;Secure'}catch{} /* 홈페이지 버튼 클릭 집계에서 관리자 본인 제외 */}
 try{const se=localStorage.getItem('yw_email');if(se){$('#em').value=se;$('#rm').checked=true}}catch{}
 
 /* ---------- 비밀번호 설정/변경 ---------- */
@@ -471,9 +473,20 @@ const VPAGE={'/':'홈(Publishing)','/epub2/':'EPUB2 제작','/web-production/':'
 const vcnt=n=>Number(n||0).toLocaleString('ko-KR');
 function vcountry(c){try{return new Intl.DisplayNames(['ko'],{type:'region'}).of(c)||c}catch(e){return c}}
 function vlist(title,rows){return rows.length?`<p style="margin:20px 0 4px"><b>${title}</b></p><div style="border-bottom:1px solid var(--line)">${rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:14px"><span>${esc(r[0])}</span><b>${vcnt(r[1])}</b></div>`).join('')}</div>`:''}
+/* 홈페이지 버튼 클릭(문의·이메일 복사·출간작): site_event_counts(관리자만 읽기) 합산. Cloudflare 통계와 별개로 로드 */
+async function loadClicks(my){const el=$('#vcb'),t=kst(),from=iso(addD(t,-(VDAYS-1))),to=iso(t);
+  const{data,error}=await SB.from('site_event_counts').select('day,event,page,label,n').gte('day',from).lte('day',to).limit(5000);
+  if(my!==VT)return;
+  if(error){el.innerHTML='<p class="k" style="margin-top:20px">문의 버튼 클릭을 불러오지 못했습니다. '+esc(error.message)+'</p>';return}
+  const R=data||[],sum=f=>R.filter(f).reduce((a,x)=>a+x.n,0);
+  if(!R.length){el.innerHTML='<p style="margin:20px 0 4px"><b>문의 버튼 클릭</b></p><p class="k">이 기간에 집계된 클릭이 없습니다.</p>';return}
+  const rows=[['투고 문의',sum(x=>x.event==='submit')],['제작 문의 · 홈페이지 제작',sum(x=>x.event==='make'&&x.page==='/web-production/')],['제작 문의 · EPUB2 제작',sum(x=>x.event==='make'&&x.page==='/epub2/')],['임프린트 등록 문의',sum(x=>x.event==='make_imprint')],['이메일 복사',sum(x=>x.event==='email_copy')],['출간작 클릭',sum(x=>x.event==='work_click')]],
+    wk={};R.filter(x=>x.event==='work_click').forEach(x=>{const k=x.label||'(제목 없음)';wk[k]=(wk[k]||0)+x.n});
+  el.innerHTML=vlist('문의 버튼 클릭 ('+VDAYS+'일)',rows)+vlist('출간작별 클릭',Object.entries(wk).sort((a,b)=>b[1]-a[1]).slice(0,8))}
 async function loadVisit(){const el=$('#vsb'),my=++VT;
   $('#vsr').innerHTML=[7,30,90].map(d=>`<button type="button" class="chp" data-vd="${d}" aria-pressed="${d===VDAYS}">${d}일</button>`).join('');
   el.innerHTML='<p class="k">불러오는 중…</p>';
+  $('#vcb').innerHTML='';loadClicks(my);
   const{data,error}=await SB.functions.invoke('cf-stats',{body:{days:VDAYS}});
   if(my!==VT)return;
   if(error||!data){el.innerHTML='<p class="k">통계를 불러오지 못했습니다. 서버 연결이 아직 안 되었거나 일시적인 오류일 수 있습니다. 아래 링크에서 Cloudflare 대시보드로 확인해 주세요.</p>';return}

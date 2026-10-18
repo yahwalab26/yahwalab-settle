@@ -331,7 +331,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.4.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.4.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -669,17 +669,15 @@ async function loadYear(mode){const el=$('#yr'),t=kst(),cy=t.getUTCFullYear(),pa
   const mp=Object.fromEntries(live.map((m,i)=>[m,rs[i].data||[]]));
   YR=ms.map(m=>({m,rows:mp[m]||[],future:m>now}));drawYear()}
 function drawYear(){if(!YR.length)return;
-  const cy=kst().getUTCFullYear(),T=YR.map(o=>{const by={};o.rows.filter(r=>vis(r.label)).forEach(r=>{by[r.label]=(by[r.label]||0)+Number(r.net)});return{m:o.m,f:o.future,by,t:Object.values(by).reduce((a,b)=>a+b,0)}}),
+  const cy=kst().getUTCFullYear(),T=YR.map(o=>{const by={};o.rows.filter(r=>vis(r.label)).forEach(r=>{by[r.label]=(by[r.label]||0)+Number(r.net)});return{m:o.m,f:o.future,t:Object.values(by).reduce((a,b)=>a+b,0)}}),
     max=Math.max(...T.map(x=>x.t),1),all=T.reduce((a,x)=>a+x.t,0),n=Math.max(T.filter(x=>!x.f).length,1),pm=$('#dm').value,modes=[['r12','최근 12개월']];
   for(let y=cy;y>=YEAR0;y--)modes.push([String(y),y+'년']);
-  /* 높이는 화면에 맞춰 고정, 막대는 그 안의 비율로 그려 세로 스크롤이 생기지 않음. 옆 스크롤 길이는 개월 수×36px */
+  /* 월 리스트: 월 · 비율 선(검정 한 가지) · 금액. 스크롤 없이 위에서 아래로 */
   $('#yr').innerHTML=`<div class="row" style="justify-content:flex-start;gap:8px;margin:0 0 12px">${modes.map(([k,t])=>`<button type="button" class="chp" data-ymode="${k}" aria-pressed="${k===YMODE}">${t}</button>`).join('')}</div>
-  <div class="row k" style="justify-content:space-between;margin:0 0 10px"><span>${YMODE==='r12'?'12개월':YMODE+'년'} 합계 <b style="color:var(--ink)">${won(all)}</b></span><span>월 평균 <b style="color:var(--ink)">${won(Math.round(all/n))}</b></span></div>
-  <div id="yrs" style="overflow-x:auto;overflow-y:hidden"><div style="min-width:${T.length*36}px;height:clamp(200px,34vh,280px);display:flex;gap:6px">${T.map((x,i)=>{const mm=+x.m.slice(5),yy=x.m.slice(2,4),sel=x.m===pm,p=x.t?Math.max(x.t/max*85,1.5):0;
-    return `<div ${x.f?'':`data-ym="${x.m}" role="button" tabindex="0" title="${x.m} · ${won(x.t)}"`} style="flex:1;min-width:0;display:flex;flex-direction:column;height:100%;${x.f?'opacity:.4':'cursor:pointer'}"><div style="position:relative;flex:1;min-height:0">${x.t?`<div class="k" style="position:absolute;left:50%;transform:translateX(-50%);bottom:calc(${p}% + 3px);font-size:11px;line-height:1.2;white-space:nowrap">${man(x.t)}</div>`:''}<div style="position:absolute;left:0;right:0;bottom:0;height:${p}%;display:flex;flex-direction:column-reverse">${Object.keys(COL).filter(l=>x.by[l]).map(l=>`<div style="height:${x.by[l]/x.t*100}%;background:${COL[l]}" title="${l} ${won(x.by[l])}"></div>`).join('')}</div></div><div class="k" style="text-align:center;font-size:12px;line-height:1.2;margin-top:4px;${sel?'color:var(--ink);font-weight:700;border-bottom:2px solid var(--ink)':''}">${mm}</div><div class="k" style="text-align:center;font-size:10px;line-height:1.2;height:12px">${i===0||(YMODE==='r12'&&mm===1)?"'"+yy:''}</div></div>`}).join('')}</div></div>
-  <div class="row k" style="margin-top:8px;font-size:12px">${Object.entries(COL).filter(([l])=>vis(l)).map(([l,c])=>`<span><i style="display:inline-block;width:10px;height:10px;background:${c};margin-right:5px"></i>${l}</span>`).join('')}</div>
-  <p class="k" style="font-size:12px;margin:8px 0 0">월 단위 정산액입니다. 막대를 누르면 위 월 선택이 그 달로 바뀝니다.</p>`;
-  const sc=$('#yrs');if(sc)sc.scrollLeft=YMODE==='r12'?sc.scrollWidth:0}
+  <div class="row k" style="justify-content:space-between;margin:0 0 6px"><span>${YMODE==='r12'?'12개월':YMODE+'년'} 합계 <b style="color:var(--ink)">${won(all)}</b></span><span>월 평균 <b style="color:var(--ink)">${won(Math.round(all/n))}</b></span></div>
+  <div style="border-bottom:1px solid var(--line)">${T.map(x=>{const mm=+x.m.slice(5),lb=YMODE==='r12'?x.m.slice(2,4)+'.'+x.m.slice(5):mm+'월',sel=x.m===pm,w=x.t?Math.max(x.t/max*100,1.5):0;
+    return `<div ${x.f?'':`data-ym="${x.m}" role="button" tabindex="0" title="${x.m} 월 선택"`} style="display:grid;grid-template-columns:52px 1fr 108px;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line);${x.f?'opacity:.4':'cursor:pointer'}"><span class="k" style="font-size:13px;${sel?'color:var(--ink);font-weight:700;text-decoration:underline;text-underline-offset:4px':''}">${lb}</span><span style="height:6px;background:var(--line);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:${w}%;background:var(--ink)"></i></span><span style="text-align:right;font-size:15px;font-weight:700">${x.f?'–':won(x.t)}</span></div>`}).join('')}</div>
+  <p class="k" style="font-size:12px;margin:8px 0 0">월 단위 정산액입니다. 행을 누르면 위 월 선택이 그 달로 바뀝니다.</p>`}
 const yrPick=e=>{const c=e.target.closest('[data-ymode]');if(c){loadYear(c.dataset.ymode);return}const b=e.target.closest('[data-ym]');if(!b)return;$('#dm').value=b.dataset.ym;$('#dm').dispatchEvent(new Event('change'));scrollTo({top:0,behavior:'smooth'})};
 $('#yr').onclick=yrPick;$('#yr').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-ym]')){e.preventDefault();yrPick(e)}};
 $('#dm').onchange=loadHome;

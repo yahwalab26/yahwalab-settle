@@ -252,6 +252,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <div class="row" id="lv" style="margin-top:16px"></div>
   <div class="row" id="lc" style="margin-top:14px;gap:12px"></div>
   <div class="card"><b>주간 정산액 (최근 8주)</b><div id="wk" style="margin-top:14px"></div></div>
+  <div class="card"><b>월별 정산액 (최근 12개월)</b><div id="yr" style="margin-top:14px"><p class="k" style="margin:0">불러오는 중…</p></div></div>
   <div class="card" id="tw" style="text-align:left"></div>
   <div class="card" id="rn" style="text-align:left"></div>
   <div class="pcs" id="pc" style="margin-top:22px"></div>
@@ -312,7 +313,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.2.5'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.3.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -606,10 +607,10 @@ setTimeout(syncX,0);
 let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',ridi:'리디',kyobo:'교보문고',aladin:'알라딘',yes24:'예스24',bookcube:'북큐브'};
 const man=n=>n>=1e4?(n/1e4).toFixed(1)+'만':Math.round(n).toLocaleString('ko-KR'),sum=(a,k)=>a.reduce((t,r)=>t+Number(r[k]),0);
 let WR=[],DY=[],CT=[],LV='야화랩',SALES=[];const vis=l=>LV==='야화랩'||l==='트루비';
-async function loadHome(){const m=$('#dm');monVal('#dm');const t=kst(),mon=iso(addD(t,-((t.getUTCDay()+6)%7)));
+async function loadHome(ev){const m=$('#dm');monVal('#dm');const t=kst(),mon=iso(addD(t,-((t.getUTCDay()+6)%7)));
   const[w,d,y,sr,c]=await Promise.all([SB.rpc('admin_weekly',{p_weeks:8}),SB.rpc('admin_detail',{p_month:m.value+'-01'}),SB.rpc('admin_daily',{p_from:mon,p_to:iso(t)}),SB.rpc('admin_sales_rows',{p_month:m.value+'-01'}),SB.from('contracts').select('id,work_id,platform_code,author_rate,effective_from,effective_to,kind,note')]);
   const er=w.error||d.error||y.error;if(er){reportErr('현황 조회',er.message);return}
-  DD=d.data||[];WR=w.data||[];DY=y.data||[];SALES=sr.data||[];CT=c.data||[];drawWeekly();drawWeek();drawDetail();drawRenew()}
+  DD=d.data||[];WR=w.data||[];DY=y.data||[];SALES=sr.data||[];CT=c.data||[];drawWeekly();drawWeek();drawDetail();drawRenew();if(!(ev&&ev.type==='change'))loadYear();else drawYear()}
 function drawWeekly(){const R=WR.filter(r=>vis(r.label)),W=[...new Set(R.map(r=>r.week_start))].sort(),by={};R.forEach(r=>{(by[r.week_start]??={})[r.label]=Number(r.net)});
   if(!W.length){$('#wk').innerHTML='<p class="k" style="margin:0">표시할 주간 데이터가 없습니다.</p>';return}
   const tot=w=>Object.values(by[w]).reduce((a,b)=>a+b,0),max=Math.max(...W.map(tot),1);
@@ -634,8 +635,26 @@ function drawDetail(){const base=DD.filter(r=>vis(r.label)),rows=base.filter(r=>
   const miss=sum(rows,'missing');$('#dn').textContent=miss?`정산율이 설정되지 않아 금액이 계산되지 않은 ${miss}건이 있습니다. (교보문고는 정산율 설정 필요)`:'';
   const W={};base.forEach(r=>{const o=W[r.work_id]??={t:r.title,l:r.label,q:0,n:0};o.q+=Number(r.quantity);o.n+=Number(r.net)});
   $('#wl').innerHTML=Object.entries(W).sort((a,b)=>b[1].n-a[1].n).map(([id,o])=>`<tr><td><button class="lnk" data-w="${id}">${esc(o.t)}</button></td><td class="hm">${o.l}</td><td class="r">${o.q}</td><td class="r">${won(o.n)}</td><td class="r hm">${rateTxt(id)}</td><td class="hm">${renewTxt(id)}</td></tr>`).join('')||'<tr><td colspan="6" class="k em">이 달의 데이터가 없습니다.</td></tr>'}
+/* 월별 정산액(최근 12개월): 월별 집계 함수가 없어 admin_detail을 월마다 불러 합산. 월 선택을 바꿀 때는 다시 불러오지 않음 */
+let YR=[];
+async function loadYear(){const t=kst(),ms=[];for(let i=11;i>=0;i--){const d=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()-i,1));ms.push(d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0'))}
+  $('#yr').innerHTML='<p class="k" style="margin:0">불러오는 중…</p>';
+  const rs=await Promise.all(ms.map(m=>SB.rpc('admin_detail',{p_month:m+'-01'}))),bad=rs.find(r=>r.error);
+  if(bad){reportErr('최근 12개월 조회',bad.error.message);$('#yr').innerHTML='<p class="k" style="margin:0">불러오지 못했습니다. 새로고침해 주세요.</p>';return}
+  YR=ms.map((m,i)=>({m,rows:rs[i].data||[]}));drawYear()}
+function drawYear(){if(!YR.length)return;
+  const T=YR.map(o=>{const by={};o.rows.filter(r=>vis(r.label)).forEach(r=>{by[r.label]=(by[r.label]||0)+Number(r.net)});return{m:o.m,by,t:Object.values(by).reduce((a,b)=>a+b,0)}}),
+    max=Math.max(...T.map(x=>x.t),1),all=T.reduce((a,x)=>a+x.t,0),cur=$('#dm').value;
+  $('#yr').innerHTML=`<div class="row k" style="justify-content:space-between;margin:0 0 10px"><span>12개월 합계 <b style="color:var(--ink)">${won(all)}</b></span><span>월 평균 <b style="color:var(--ink)">${won(Math.round(all/12))}</b></span></div>
+  <div id="yrs" style="overflow-x:auto"><div style="min-width:420px;display:flex;align-items:flex-end;gap:6px;height:210px">${T.map((x,i)=>{const mm=+x.m.slice(5),yy=x.m.slice(2,4),sel=x.m===cur;
+    return `<div data-ym="${x.m}" role="button" tabindex="0" style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;height:100%;cursor:pointer" title="${x.m} · ${won(x.t)}"><div class="k" style="text-align:center;font-size:11px;margin-bottom:3px">${x.t?man(x.t):''}</div><div style="height:${Math.max(x.t/max*150,x.t?2:0)}px;display:flex;flex-direction:column-reverse">${Object.keys(COL).filter(l=>x.by[l]).map(l=>`<div style="height:${x.by[l]/x.t*100}%;background:${COL[l]}" title="${l} ${won(x.by[l])}"></div>`).join('')}</div><div class="k" style="text-align:center;font-size:12px;margin-top:4px;${sel?'color:var(--ink);font-weight:700;border-bottom:2px solid var(--ink)':''}">${mm}</div><div class="k" style="text-align:center;font-size:10px;height:12px">${i===0||mm===1?"'"+yy:''}</div></div>`}).join('')}</div></div>
+  <div class="row k" style="margin-top:8px;font-size:12px">${Object.entries(COL).filter(([l])=>vis(l)).map(([l,c])=>`<span><i style="display:inline-block;width:10px;height:10px;background:${c};margin-right:5px"></i>${l}</span>`).join('')}</div>
+  <p class="k" style="font-size:12px;margin:8px 0 0">월 단위 정산액입니다. 막대를 누르면 위 월 선택이 그 달로 바뀝니다.</p>`;
+  const s=$('#yrs');if(s)s.scrollLeft=s.scrollWidth}
+const yrPick=e=>{const b=e.target.closest('[data-ym]');if(!b)return;$('#dm').value=b.dataset.ym;$('#dm').dispatchEvent(new Event('change'));scrollTo({top:0,behavior:'smooth'})};
+$('#yr').onclick=yrPick;$('#yr').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();yrPick(e)}};
 $('#dm').onchange=loadHome;
-$('#lv').onclick=e=>{const b=e.target.closest('[data-lv]');if(b){LV=b.dataset.lv;drawWeekly();drawWeek();drawDetail()}};
+$('#lv').onclick=e=>{const b=e.target.closest('[data-lv]');if(b){LV=b.dataset.lv;drawWeekly();drawWeek();drawDetail();drawYear()}};
 $('#wl').onclick=e=>{const b=e.target.closest('[data-w]');if(b)openWork(b.dataset.w)};
 
 /* ---------- 레이어(상세 창) · 확인 창 ---------- */

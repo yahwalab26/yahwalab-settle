@@ -176,7 +176,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
     <label class="chk"><input id="rm" type="checkbox"> 아이디 저장</label>
     <button>로그인</button><div id="le" class="bad"></div>
   </form>
-  <p class="k" style="max-width:340px;margin:18px auto 0;text-align:center;font-size:12px;line-height:1.8">🔒 ID 및 패스워드 분실 시 담당자(<a href="mailto:admin@yahwalab.xyz" style="color:inherit">admin@yahwalab.xyz</a>)에게 연락 부탁드립니다.</p>
+  <p class="k" style="max-width:340px;margin:18px auto 0;text-align:center;font-size:12px;line-height:1.8">ID 및 패스워드 분실 시 담당자(<a href="mailto:admin@yahwalab.xyz" style="color:inherit">admin@yahwalab.xyz</a>)에게 연락 부탁드립니다.</p>
   <p class="foot">YAHWA LAB · 여성향 웹소설 전문 콘텐츠 레이블</p>
 </section>
 
@@ -334,7 +334,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.6.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.6.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));

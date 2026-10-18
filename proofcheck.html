@@ -185,6 +185,17 @@ details.grp{margin:2px 0 0}
 .item .itx b{font-weight:600;background:var(--hl);border-bottom:1px solid var(--ink2)}
 .item .arr{color:var(--red)}
 .more{margin:4px 0 6px}
+.mk{margin:8px 0 0 25px}
+.mkswitch{display:flex;align-items:center;gap:8px;min-height:32px;font-size:13px;font-weight:500;cursor:pointer}
+.mkswitch input,.mkchk>input{width:16px;height:16px;flex:none;accent-color:var(--ink)}
+.mkcnt{margin:2px 0 6px;color:var(--mute);font-size:12.5px}
+.mkflt{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.mkflt .btn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--onink)}
+.mkbar{display:flex;gap:6px;margin:2px 0 4px 2px}
+.mkchk{display:flex;gap:6px;align-items:flex-start}
+.mkchk>input,.mkchk>.mkpad{margin-top:9px;width:16px;flex:none}
+.mkchk .item{flex:1;min-width:0}
+.mkwarn{color:var(--red)}
 .empty{padding:20px 18px;color:var(--mute)}
 
 /* ── 정리 도크(고정) ── */
@@ -1116,6 +1127,121 @@ details.grp{margin:2px 0 0}
   }
   const segsOfPara = (p) => iterSlots(p).map((x) => (x.k === 'slot' ? { t: sget(x), cid: x.cid } : (x.kind === 'br' ? { br: true } : null))).filter(Boolean);
 
+  // ───────── 교정 기호 반영(작교본) ─────────
+  // /A(B)/ 교체 · /A(추가)/ · /A(삭제)/ 와 작가 표기 (@수정X)를 반영한다. (@…) 코멘트는 건드리지 않고, 고른 것만 지운다.
+  // 글자만 지우고 남는 글자는 원래 자리(run)에 그대로 두므로 색·서식은 유지된다. 확신이 없는 것은 '확인필요'로 빼고 기본적으로 바꾸지 않는다.
+  const MK_BRK = '\u0001';
+  const colorName = (hex) => { const c = String(hex || '').toUpperCase(); return c === '#FF0000' ? '빨강' : c === '#008000' ? '초록' : (isBlackish(c) ? '검정' : c); };
+  const isRejText = (t) => /^\(@\s*수정\s*[xX×✕]\s*\)$/.test(t);
+  function pchars(p) {
+    const out = [];
+    for (const x of iterSlots(p)) {
+      if (x.k === 'slot') { const v = sget(x); for (let i = 0; i < v.length; i++) out.push({ ch: v[i], slot: x }); }
+      else out.push({ ch: x.kind === 'br' ? '\n' : MK_BRK, slot: null });
+    }
+    return out;
+  }
+  function splitMark(inner) {               // 'A(B)' → [A, B] (끝의 괄호 짝을 찾는다)
+    if (!inner.endsWith(')')) return null;
+    let d = 0;
+    for (let j = inner.length - 1; j >= 0; j--) {
+      if (inner[j] === ')') d++;
+      else if (inner[j] === '(') { d--; if (d === 0) return [inner.slice(0, j), inner.slice(j + 1, -1)]; }
+    }
+    return null;
+  }
+  function scanPara(p, pi, colors) {
+    const chars = pchars(p), s = chars.map((c) => c.ch).join('');
+    const res = { chars, s, items: [], comments: [], collapse: null };
+    if (s.indexOf('/') < 0 && s.indexOf('(@') < 0) return res;
+    const sp = commentSpans(s), inC = (i) => sp.some(([a, b]) => i >= a && i < b);
+    const colAt = (i) => colorName(chars[i] && chars[i].slot ? (colors || {})[chars[i].slot.cid] : '');
+    const show = (t) => t.replace(/\u0001/g, '');
+    const collapse = (del, a, b) => {       // 지운 자리 앞뒤 공백이 겹치면 한 칸으로
+      let l = a - 1; while (l >= 0 && del.has(l)) l--;
+      let r = b + 1; while (r < s.length && del.has(r)) r++;
+      const lc = l >= 0 ? s[l] : '', rc = r < s.length ? s[r] : '';
+      if (rc === ' ' && (lc === ' ' || lc === '')) del.add(r); else if (lc === ' ' && rc === '') del.add(l);
+    };
+    res.collapse = collapse;
+    const win = (a, b, del) => {            // 부호 앞뒤 10자. 코멘트 (@…) 는 중간에서 자르지 않는다
+      let lo = Math.max(0, a - 10), hi = Math.min(s.length, b + 11);
+      for (const [ca, cb] of sp) { if (ca < lo && lo < cb) lo = ca; if (ca < hi && hi < cb) hi = cb; }
+      let bf = '', af = '';
+      for (let i = lo; i < hi; i++) { bf += s[i]; if (!del.has(i)) af += s[i]; }
+      const pre = lo > 0 ? '…' : '', post = hi < s.length ? '…' : '';
+      return [pre + show(bf) + post, pre + show(af) + post];
+    };
+    sp.forEach(([a, b], k) => {
+      const rest = show(s.slice(0, a) + s.slice(b));
+      res.comments.push({ id: pi + 'c' + k, idx: pi, ref: p, a, b, text: show(s.slice(a, b)), color: colAt(a), reject: isRejText(s.slice(a, b)), empties: strip(rest, EDGE + '\n') === '' });
+    });
+    const add = (it) => { it.id = pi + ':' + res.items.length; it.idx = pi; it.ref = p; res.items.push(it); };
+    const noop = (kind, reason, i, j) => add({ kind, reason, color: colAt(i), raw: new Set(), removal: null, before: win(i, j, new Set())[0], after: '(변경 없음)', auto: false, noop: true, note: '' });
+    for (let i = s.indexOf('(@'); i >= 0; i = s.indexOf('(@', i + 1)) if (!inC(i)) { noop('확인필요', '닫히지 않은 (@ 코멘트 — 이 문단은 건드리지 않음', i, i + 2); return res; }
+    const sl = []; for (let i = 0; i < s.length; i++) if (s[i] === '/' && !inC(i)) sl.push(i);
+    const claimed = new Set(), only = (t) => /^[ \u00a0]*$/.test(t);
+    if (sl.length % 2) {
+      sl.forEach((i) => { const raw = new Set([i]), [b4, af] = win(i, i, raw); add({ kind: '확인필요', reason: '짝이 맞지 않는 / (문단에 걸친 범위일 수 있음) — 슬래시만 지움', color: colAt(i), raw, removal: null, before: b4, after: af, auto: false, note: '' }); });
+      return res;
+    }
+    for (let k = 0; k < sl.length; k += 2) {
+      const a = sl[k], b = sl[k + 1], inner = s.slice(a + 1, b), color = colAt(a);
+      const bad = (reason) => { const raw = new Set([a, b]), [b4, af] = win(a, b, raw); add({ kind: '확인필요', reason, color, raw, removal: null, before: b4, after: af, auto: false, note: '' }); };
+      if (/[\n\u0001]/.test(inner)) { bad('줄바꿈·개체가 섞인 범위 — 슬래시만 지움'); continue; }
+      const m = splitMark(inner);
+      if (!m) { bad('( ) 없이 / / 만 있는 범위 표시 — 슬래시만 지움'); continue; }
+      const [A, B] = m;
+      if (A === '' || B === '') { bad('내용이 빈 부호 — 슬래시만 지움'); continue; }
+      const k0 = B === '삭제' ? '삭제' : B === '추가' ? '추가' : '교체';
+      const rj = sp.findIndex(([ca, cb], j) => isRejText(s.slice(ca, cb)) && !claimed.has(j) && ((ca > b && only(s.slice(b + 1, ca))) || (cb <= a && only(s.slice(cb, a)))));
+      if (rj >= 0) claimed.add(rj);
+      const po = a + 1 + A.length, raw = new Set(), rng = (x, y) => { for (let q = x; q <= y; q++) raw.add(q); };
+      let kind, removal = null;
+      if (rj >= 0) { kind = '수정X 유지'; raw.add(a); if (k0 === '추가') { rng(a, b); removal = [a, b]; } else rng(po, b); }
+      else if (k0 === '삭제') { kind = '삭제'; rng(a, b); removal = [a, b]; }
+      else if (k0 === '추가') { kind = '추가'; raw.add(a); rng(po, b); }
+      else { kind = '교체'; rng(a, po); raw.add(b - 1); raw.add(b); }
+      const del = new Set(raw); if (removal) collapse(del, removal[0], removal[1]);
+      const [b4, af] = win(a, b, del), notes = [];
+      if (del.size > raw.size) notes.push('앞뒤 공백 정리');
+      const lc = a > 0 ? s[a - 1] : ' ', rc = b + 1 < s.length ? s[b + 1] : ' ';
+      if (kind === '추가' && lc === ' ' && /[가-힣A-Za-z0-9]/.test(rc) && /[가-힣A-Za-z0-9.,!?]$/.test(A)) notes.push('주의: 뒤 글자와 붙음');
+      if (rj >= 0) notes.push('작가 (@수정X)');
+      add({ kind, reason: '', color, raw, removal, before: b4, after: af, auto: true, note: notes.join(' · ') });
+    }
+    sp.forEach(([ca, cb], j) => { if (isRejText(s.slice(ca, cb)) && !claimed.has(j)) noop('확인필요', '(@수정X)가 어느 교정 부호 옆인지 알 수 없음 — 자동 처리 안 함', ca, cb - 1); });
+    return res;
+  }
+  /** 문서 전체 훑기(변경 없음): {items, comments, stats}. items[i].auto=false 는 '확인필요'. */
+  function scanMarks(ctx) {
+    const items = [], comments = [];
+    paragraphs(ctx.section).forEach((p, i) => { const r = scanPara(p, i + 1, ctx.colors); items.push(...r.items); comments.push(...r.comments); });
+    const n = (f) => items.filter(f).length;
+    return { items, comments, stats: { auto: n((x) => x.auto), review: n((x) => !x.auto), comments: comments.length, reject: n((x) => x.kind === '수정X 유지') } };
+  }
+  /** sel.ids: 반영할 항목 id(자동 항목 + 슬래시만 지울 '확인필요' 항목), sel.comments: 지울 코멘트 id. 반환: {log, applied} */
+  function applyMarks(ctx, sel) {
+    const ids = (sel && sel.ids) || new Set(), cids = (sel && sel.comments) || new Set(), log = [];
+    let applied = 0;
+    paragraphs(ctx.section).forEach((p, i) => {
+      const r = scanPara(p, i + 1, ctx.colors);
+      const its = r.items.filter((x) => ids.has(x.id) && !x.noop), cms = r.comments.filter((c) => cids.has(c.id));
+      if (!its.length && !cms.length) return;
+      const del = new Set(), rem = [];
+      its.forEach((x) => { x.raw.forEach((q) => del.add(q)); if (x.removal) rem.push(x.removal); });
+      cms.forEach((c) => { for (let q = c.a; q < c.b; q++) del.add(q); rem.push([c.a, c.b - 1]); });
+      rem.sort((a, b) => a[0] - b[0]).forEach(([a, b]) => r.collapse(del, a, b));
+      const keep = new Map();
+      r.chars.forEach((c, q) => { if (!c.slot) return; if (!keep.has(c.slot)) keep.set(c.slot, []); if (!del.has(q)) keep.get(c.slot).push(c.ch); });
+      keep.forEach((arr, slot) => { const nv = arr.join(''); if (nv !== sget(slot)) sset(slot, nv); });
+      dropLineseg(p);
+      its.forEach((x) => { applied++; log.push({ rule: '교정 기호 반영', sub: x.kind, ref: p, idx: x.idx, before: x.before, after: x.after }); });
+      cms.forEach((c) => { applied++; log.push({ rule: '편집자 코멘트 삭제', sub: '코멘트', ref: p, idx: c.idx, before: c.text, after: '(삭제)' }); });
+    });
+    return { log, applied };
+  }
+
   // ───────── 읽기/쓰기 ─────────
   function readColors(hdr) {
     const out = {};
@@ -1175,6 +1301,7 @@ details.grp{margin:2px 0 0}
     classify, kindOf, protRes, markTextOf, runChecks, clean, preview, load, save, reportCsv,
     isBlankP, makeBlank, strip, isBlackish, isEndMark, normalizeFormat, periodIssues, stripComments, commentSpans, paraAlign,
     ensureSlot, splitParagraph, splitAtBreak, roundQuotes, SB_RE, AUTO_ROUND_QUOTES, snapshot, compareRows, diffChars, charsOfSegs, segsOfPara,
+    scanMarks, applyMarks,
   };
 });
 
@@ -1242,6 +1369,9 @@ details.grp{margin:2px 0 0}
     { id: 'history', icon: 'shield', name: '문서 이력 제거',
       desc: '저장할 때 파일 안에 남은 이전 저장 이력을 지웁니다.',
       keys: '이력 히스토리 발송 개인정보 이전 저장', match: () => false },
+    { id: 'marks', icon: 'checklist', name: '교정 기호 반영',
+      desc: '작가 교정본(작교본)의 /…/ 교정 부호를 한꺼번에 반영합니다. /A(B)/는 B로, /A(추가)/는 A로, /A(삭제)/는 지우고(앞뒤 공백이 겹치면 한 칸으로), (@수정X)가 붙은 부호는 원문을 그대로 둡니다. 글자 색은 그대로 유지하고, (@의견) 코멘트는 고른 것만 지웁니다. 반영 전에 아래 목록에서 하나씩 확인하세요. 짝이 맞지 않는 /는 자동으로 바꾸지 않고 슬래시만 지울지 고르게 합니다.',
+      keys: '교정 기호 부호 슬래시 작교본 반영 수정X 코멘트 삭제 추가 교체 작가 편집자', match: (r) => r === '교정 기호 반영' || r === '편집자 코멘트 삭제' },
     { id: 'issues', icon: 'checklist', name: '확인할 항목',
       desc: '문장이 끝났는데 마침표 없이 다음 문장이 이어진 곳, 교정 표기(/원문(수정)/)의 색(어떤 색이든)과 슬래시 짝, (@의견) 괄호, 남은 작가 표기, 직선 따옴표, Enter 대신 Shift+Enter로 내려간 문단(줄바꿈만 있는 빈 문단 포함)을 확인해 알려 줍니다. (@의견) 안은 무시하고, 자동으로 고치지 않습니다.',
       keys: '확인 점검 오류 마침표 문장 슬래시 색 코멘트 의견 작가 따옴표 shift 시프트 강제 줄바꿈', match: () => false },
@@ -1252,7 +1382,7 @@ details.grp{margin:2px 0 0}
     rows: [], kinds: new Map(), rowIdx: new Map(), page: 0, view: mq('(max-width:899px)') ? 'tools' : 'edit',
     cleaned: false, dirty: false, log: [], issues: [], preview: null, previewBusy: false,
     chgText: new Set(), chgSpace: new Set(), open: new Set(), seen: new Set(), shown: {}, menuFor: null,
-    q: '', hits: [], hitPos: -1,
+    q: '', hits: [], hitPos: -1, mk: newMk(''),
     edMode: 'edit', snap: null, cmp: null, cmpPage: 0, cmpOnly: true, undoStack: [], lastOp: null,
   };
   function loadPrefs() {
@@ -1313,6 +1443,7 @@ details.grp{margin:2px 0 0}
     state.cleaned = false; state.dirty = false; state.log = []; state.page = 0; state.menuFor = null;
     state.snap = E.snapshot(ctx.section); state.edMode = 'edit'; state.cmp = null; state.cmpPage = 0; state.cmpOnly = true; state.undoStack = []; state.lastOp = null;
     state.chgText = new Set(); state.chgSpace = new Set(); state.preview = null; state.shown = {}; state.seen = new Set();
+    state.mk = newMk(name);
     recompute(); analyze();
     $('#btnExport').disabled = false;
     $('#fileChip').hidden = false; $('#fileName').textContent = name; $('#fileCount').textContent = `문단 ${nf(state.rows.length)}`;
@@ -1340,6 +1471,7 @@ details.grp{margin:2px 0 0}
     });
     if (r.redNoSlash) issues.push({ sev: '정보', rule: '슬래시 없이 색만 칠한 교정(오탈자 처리로 간주)', el: null, msg: `${r.redNoSlash}곳` });
     state.issues = issues;
+    refreshMarks();
   }
   const schedulePreview = debounce(() => {
     if (!state.ctx || state.cleaned) return;
@@ -1357,9 +1489,12 @@ details.grp{margin:2px 0 0}
     busy(true);
     setTimeout(() => {
       try {
+        let mkLog = [];
+        if (state.mk.apply) { const sel = mkSelection(); if (sel && (sel.ids.size || sel.comments.size)) mkLog = E.applyMarks(state.ctx, sel).log; }   // 교정 기호는 다른 정리보다 먼저 반영
         const r = E.clean(state.ctx, rules);
+        r.log = mkLog.concat(r.log);
         state.log = r.log; state.cleaned = true; state.dirty = true; state.menuFor = null;
-        state.chgText = new Set(r.log.filter((l) => FEATURES.slice(1, 6).some((f) => f.match(l.rule))).map((l) => l.ref));
+        state.chgText = new Set(r.log.filter((l) => FEATURES.slice(1, 6).some((f) => f.match(l.rule)) || l.rule === '교정 기호 반영' || l.rule === '편집자 코멘트 삭제').map((l) => l.ref));
         state.chgSpace = new Set(r.log.filter((l) => FEATURES[0].match(l.rule)).map((l) => l.ref));
         state.undoStack = []; state.lastOp = null;
         recompute(); analyze();
@@ -1818,7 +1953,90 @@ details.grp{margin:2px 0 0}
     });
     return wrap;
   }
+  // ───────── 교정 기호 반영(작교본) 카드 ─────────
+  function newMk(name) { return { scan: null, off: new Set(), on: new Set(), cdel: new Set(), apply: /작교/.test(name || ''), color: '전체' }; }
+  function refreshMarks() {
+    if (!state.ctx) { state.mk.scan = null; return; }
+    try {
+      const sc = E.scanMarks(state.ctx);
+      sc.items.forEach((x) => { x.sig = x.idx + '|' + x.kind + '|' + x.before; });
+      sc.comments.forEach((c) => { c.sig = c.idx + '|' + c.text; });
+      state.mk.scan = sc;
+    } catch (e) { state.mk.scan = null; }
+  }
+  const mkSel = (x) => (x.noop ? false : x.auto ? !state.mk.off.has(x.sig) : state.mk.on.has(x.sig));
+  /** 지금 선택대로 반영할 id 묶음(정리하기 직전에 다시 훑어서 만든다) */
+  function mkSelection() {
+    refreshMarks();
+    const sc = state.mk.scan;
+    if (!sc) return null;
+    return { ids: new Set(sc.items.filter(mkSel).map((x) => x.id)), comments: new Set(sc.comments.filter((c) => state.mk.cdel.has(c.sig)).map((c) => c.id)) };
+  }
+  function mkGroup(id, tag, label, list, selCount, bulk, rowFn) {
+    const shown = state.shown[id] || 30;
+    const d = h('details', { class: 'grp', open: state.open.has(id) || null },
+      h('summary', {}, chevIcon(), h('span', { class: 'tag', text: tag }), h('span', { class: 'gname', text: label }), h('span', { class: 'gcnt', text: selCount == null ? nf(list.length) : `${nf(selCount)}/${nf(list.length)}` })));
+    openToggle(d, id);
+    if (bulk) d.append(h('div', { class: 'mkbar' },
+      h('button', { class: 'btn sm', type: 'button', onclick: () => { bulk(true); renderSide(); } }, '모두 선택'),
+      h('button', { class: 'btn sm', type: 'button', onclick: () => { bulk(false); renderSide(); } }, '모두 해제')));
+    list.slice(0, shown).forEach((it) => d.append(rowFn(it)));
+    if (list.length > shown) d.append(moreBtn(id, shown, list.length));
+    return d;
+  }
+  function mkRow(x) {
+    const mk = state.mk, warn = /주의/.test(x.note || '') ? x.note.split(' · ').filter((t) => /주의/.test(t)).join(' · ') : '';
+    const meta = [`문단 ${nf(x.idx)}`, x.color, x.reason || '', (x.note || '').split(' · ').filter((t) => t && !/주의/.test(t)).join(' · ')].filter(Boolean).join(' · ');
+    const body = h('button', { class: 'item', type: 'button', onclick: () => jumpTo(x.ref) },
+      h('span', { class: 'ino' }, meta, warn ? h('span', { class: 'mkwarn', text: ' · ⚠ ' + warn }) : null),
+      h('span', { class: 'itx' }, x.before, h('span', { class: 'arr', text: '  →  ' }), x.after));
+    if (x.noop) return h('div', { class: 'mkchk' }, h('span', { class: 'mkpad' }), body);
+    const cb = h('input', { type: 'checkbox', 'aria-label': '이 항목 반영', checked: mkSel(x) || null, onchange: (e) => {
+      const on = e.target.checked;
+      if (x.auto) { if (on) mk.off.delete(x.sig); else mk.off.add(x.sig); } else if (on) mk.on.add(x.sig); else mk.on.delete(x.sig);
+      renderSide();
+    } });
+    return h('div', { class: 'mkchk' }, cb, body);
+  }
+  function mkComRow(c) {
+    const mk = state.mk;
+    const cb = h('input', { type: 'checkbox', 'aria-label': '이 코멘트 지우기', checked: mk.cdel.has(c.sig) || null, onchange: (e) => { if (e.target.checked) mk.cdel.add(c.sig); else mk.cdel.delete(c.sig); renderSide(); } });
+    const body = h('button', { class: 'item', type: 'button', onclick: () => jumpTo(c.ref) },
+      h('span', { class: 'ino' }, `문단 ${nf(c.idx)} · ${c.color}` + (c.reject ? ' · 작가 수정X' : ''), c.empties ? h('span', { class: 'mkwarn', text: ' · ⚠ 지우면 빈 줄이 남음' }) : null),
+      h('span', { class: 'itx', text: c.text }));
+    return h('div', { class: 'mkchk' }, cb, body);
+  }
+  function marksCard(f) {
+    const mk = state.mk, sc = mk.scan;
+    if (!state.ctx || !sc) return null;
+    const applied = state.cleaned ? state.log.filter((l) => f.match(l.rule)) : [];
+    if (!sc.items.length && !applied.length) return null;          // 교정 부호가 없으면 카드를 보이지 않는다
+    const vis = (x) => mk.color === '전체' || x.color === mk.color;
+    const autoAll = sc.items.filter((x) => x.auto), revAll = sc.items.filter((x) => !x.auto);
+    const nAuto = autoAll.filter(mkSel).length, nRev = revAll.filter(mkSel).length, nCom = sc.comments.filter((c) => mk.cdel.has(c.sig)).length;
+    let status = '', cls = 'fs';
+    if (state.cleaned && applied.length && !mk.apply) status = `${nf(applied.length)}곳 반영`;
+    else if (mk.apply) { status = state.cleaned ? `${nf(applied.length)}곳 반영 · 추가 ${nf(nAuto + nRev + nCom)}건 예정` : `${nf(nAuto + nRev + nCom)}건 반영 예정`; cls += ' on'; }
+    else status = '꺼짐';
+    const wrap = h('div', { class: 'mk' });
+    wrap.append(h('label', { class: 'mkswitch' }, h('input', { type: 'checkbox', checked: mk.apply || null, onchange: (e) => { mk.apply = e.target.checked; renderSide(); } }), h('span', { text: state.cleaned ? '다시 정리할 때 함께 반영' : '정리할 때 함께 반영' })));
+    wrap.append(h('div', { class: 'mkcnt', text: `자동 ${nf(autoAll.length)}건 · 확인 필요 ${nf(revAll.length)}건 · 코멘트 ${nf(sc.comments.length)}개` + (mk.apply ? '' : ' · 켜기 전에는 아무것도 바뀌지 않습니다') }));
+    const colors = Array.from(new Set(sc.items.concat(sc.comments).map((x) => x.color).filter(Boolean)));
+    if (colors.length > 1) wrap.append(h('div', { class: 'mkflt' }, ['전체'].concat(colors).map((c) => h('button', { class: 'btn sm', type: 'button', 'aria-pressed': mk.color === c ? 'true' : 'false', onclick: () => { mk.color = c; renderSide(); } }, c))));
+    const setAuto = (list) => (on) => list.forEach((x) => { if (on) mk.off.delete(x.sig); else mk.off.add(x.sig); });
+    ['교체', '추가', '삭제', '수정X 유지'].forEach((k) => {
+      const all = autoAll.filter((x) => x.kind === k), list = all.filter(vis);
+      if (list.length) wrap.append(mkGroup('mk|' + k, '반영', k + (k === '수정X 유지' ? ' (원문 그대로)' : ''), list, list.filter(mkSel).length, setAuto(list), mkRow));
+    });
+    const rev = revAll.filter(vis);
+    if (rev.length) wrap.append(mkGroup('mk|rev', '확인', '확인 필요 (슬래시만 지울 것을 고르세요)', rev, rev.filter((x) => !x.noop && mkSel(x)).length, (on) => rev.forEach((x) => { if (x.noop) return; if (on) mk.on.add(x.sig); else mk.on.delete(x.sig); }), mkRow));
+    const cms = sc.comments.filter(vis);
+    if (cms.length) wrap.append(mkGroup('mk|com', '코멘트', '편집자 코멘트 (고른 것만 지움)', cms, cms.filter((c) => mk.cdel.has(c.sig)).length, (on) => cms.forEach((c) => { if (on) mk.cdel.add(c.sig); else mk.cdel.delete(c.sig); }), mkComRow));
+    if (applied.length) wrap.append(itemsDetails('feat|' + f.id, `바뀐 곳 ${nf(applied.length)}곳 보기`, applied, logItem));
+    return h('div', { class: 'feat' }, h('div', { class: 'fh' }, icon(f.icon), h('b', { text: f.name }), h('span', { class: cls, text: status })), h('p', { class: 'fd', text: f.desc }), wrap);
+  }
   function featEl(f) {
+    if (f.id === 'marks') return marksCard(f);
     let status = '', cls = 'fs', body = null;
     if (f.id === 'history' || f.id === 'format') status = '저장할 때 적용';
     else if (f.id === 'quotes' && !E.AUTO_ROUND_QUOTES) {
@@ -1857,7 +2075,7 @@ details.grp{margin:2px 0 0}
       }
     }
     const feats = q ? FEATURES.filter((f) => (f.name + ' ' + f.desc + ' ' + f.keys).toLowerCase().includes(q)) : FEATURES;
-    feats.forEach((f) => parts.push(featEl(f)));
+    feats.forEach((f) => { const el = featEl(f); if (el) parts.push(el); });
     if (q && !feats.length && (!state.ctx || !state.hits.length)) parts.push(h('div', { class: 'empty', text: '일치하는 기능이나 원고가 없습니다.' }));
     box.replaceChildren(...parts);
   }

@@ -317,8 +317,10 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   </div>
   <div class="pg" id="pg-visit" hidden>
     <h2><small>(01)</small>홈페이지 방문자</h2>
-    <p class="k" style="font-size:12px;margin:0 0 12px;text-align:center">야화랩 홈페이지(yahwalab.xyz)의 방문자 통계입니다.</p>
-    <div class="card" style="text-align:left"><b>Cloudflare Web Analytics</b><p class="k" style="margin:6px 0 12px">방문 수, 페이지별 조회, 접속 국가, 기기를 Cloudflare 대시보드에서 확인합니다.</p><a href="https://dash.cloudflare.com/" target="_blank" rel="noopener" class="k" style="text-decoration:underline">Cloudflare 대시보드 열기</a></div>
+    <p class="k" style="font-size:12px;margin:0 0 10px;text-align:center">야화랩 홈페이지(yahwalab.xyz)의 방문자 통계입니다. 하루 단위로 집계되고 몇 시간 늦게 반영될 수 있습니다.</p>
+    <div class="row" id="vsr" style="gap:8px;margin-bottom:12px"></div>
+    <div id="vsb"><p class="k">불러오는 중…</p></div>
+    <p class="k" style="font-size:12px;margin:16px 0 0;text-align:center"><a href="https://dash.cloudflare.com/" target="_blank" rel="noopener" style="text-decoration:underline">Cloudflare 대시보드에서 더 자세히 보기</a></p>
   </div>
   <div class="pg" id="pg-books" hidden></div>
   <div class="pg" id="pg-proof" hidden></div>
@@ -331,7 +333,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.4.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.5.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -412,7 +414,7 @@ function setNav(id){const a=Object.keys(AREAS).find(k=>AREAS[k].includes(id));LA
   const sub=$('#sub'),L=AREAS[a];sub.hidden=L.length<2;sub.innerHTML=L.map(p=>`<a href="#/${p}"${p===id?' class="on" aria-current="page"':''}>${NAVN[p]}</a>`).join('')}
 function route(){const r=location.hash.replace(/^#\/?/,'')||'home',id=PG.includes(r)?r:'home';
   PG.forEach(x=>$('#pg-'+x).hidden=x!==id);setNav(id);
-  document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle();if(id==='docs')loadDocs();if(id==='alog')loadLogs();if(id==='llog')loadLoginLogs();if(id==='books')loadBooks()}
+  document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle();if(id==='docs')loadDocs();if(id==='alog')loadLogs();if(id==='llog')loadLoginLogs();if(id==='visit')loadVisit();if(id==='books')loadBooks()}
 addEventListener('hashchange',route);
 /* ---------- 회사 자료: 플랫폼 계약(플랫폼당 현재본 1건 + 교체 이력) · 기타 자료. 관리자 전용 ---------- */
 let DOCS=[],DCURL=null,DPLAT='',LGM='',LGT=0,LLM='',LLT=0; /* LGM: 접근 기록 조회 월, LGT: 월 전환 시 늦게 온 응답 무시용 */
@@ -463,6 +465,27 @@ $('#pg-docs').onchange=e=>{if(e.target.id==='dcx'){const f=e.target.files[0];$('
 $('#lgm').onchange=()=>{LGM=monVal('#lgm');loadLogs()};
 $('#llm').onchange=()=>{LLM=monVal('#llm');loadLoginLogs()};
 $('#llr').onclick=e=>{const b=e.target.closest('[data-lr]');if(b){LLRO=b.dataset.lr;loadLoginLogs()}};
+/* 방문자: Edge Function cf-stats(관리자 전용, Cloudflare 통계 조회) 호출. 토큰은 서버 비밀값에만 있음 */
+let VDAYS=30,VT=0;
+const VPAGE={'/':'홈(Publishing)','/epub2/':'EPUB2 제작','/web-production/':'홈페이지 제작'},VDEV={desktop:'컴퓨터',mobile:'모바일',tablet:'태블릿'};
+const vcnt=n=>Number(n||0).toLocaleString('ko-KR');
+function vcountry(c){try{return new Intl.DisplayNames(['ko'],{type:'region'}).of(c)||c}catch(e){return c}}
+function vlist(title,rows){return rows.length?`<p style="margin:20px 0 4px"><b>${title}</b></p><div style="border-bottom:1px solid var(--line)">${rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:14px"><span>${esc(r[0])}</span><b>${vcnt(r[1])}</b></div>`).join('')}</div>`:''}
+async function loadVisit(){const el=$('#vsb'),my=++VT;
+  $('#vsr').innerHTML=[7,30,90].map(d=>`<button type="button" class="chp" data-vd="${d}" aria-pressed="${d===VDAYS}">${d}일</button>`).join('');
+  el.innerHTML='<p class="k">불러오는 중…</p>';
+  const{data,error}=await SB.functions.invoke('cf-stats',{body:{days:VDAYS}});
+  if(my!==VT)return;
+  if(error||!data){el.innerHTML='<p class="k">통계를 불러오지 못했습니다. 서버 연결이 아직 안 되었거나 일시적인 오류일 수 있습니다. 아래 링크에서 Cloudflare 대시보드로 확인해 주세요.</p>';return}
+  if(data.error){el.innerHTML='<p class="k">'+(data.error==='not_configured'?'통계 연결 설정이 아직 안 되어 있습니다. 아래 링크에서 Cloudflare 대시보드로 확인해 주세요.':'통계를 불러오지 못했습니다. '+esc(data.detail||data.error))+'</p>';return}
+  const D=data.daily||[],vis=D.reduce((a,x)=>a+x.visits,0),pv=D.reduce((a,x)=>a+x.views,0),avg=Math.round(vis/Math.max(D.length,1)),last=D.slice(-14),mx=Math.max(...last.map(x=>x.visits),1);
+  if(!D.length){el.innerHTML='<p class="k">아직 집계된 방문이 없습니다. 방문 기록은 몇 시간 뒤부터 쌓입니다.</p>';return}
+  const stat=(l,v)=>`<div style="text-align:center"><div class="k" style="font-size:12px">${l}</div><div style="font-size:22px;font-weight:700">${vcnt(v)}</div></div>`;
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">${stat(VDAYS+'일 방문',vis)}${stat('페이지뷰',pv)}${stat('일 평균 방문',avg)}</div>
+  <p style="margin:0 0 4px"><b>일별 방문</b> <span class="k" style="font-size:12px">(최근 ${last.length}일)</span></p>
+  <div style="border-bottom:1px solid var(--line)">${last.map(x=>`<div style="display:grid;grid-template-columns:52px 1fr 52px;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)"><span class="k" style="font-size:13px">${x.date.slice(5).replace('-','.')}</span><span style="height:6px;background:var(--line);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:${x.visits?Math.max(x.visits/mx*100,2):0}%;background:var(--ink)"></i></span><span style="text-align:right;font-size:15px;font-weight:700">${vcnt(x.visits)}</span></div>`).join('')}</div>
+  ${vlist('많이 본 페이지',(data.pages||[]).map(x=>[VPAGE[x.name]||x.name,x.views]))}${vlist('접속 국가',(data.countries||[]).map(x=>[vcountry(x.name),x.views]))}${vlist('기기',(data.devices||[]).map(x=>[VDEV[x.name]||x.name,x.views]))}`}
+$('#vsr').onclick=e=>{const b=e.target.closest('[data-vd]');if(b){VDAYS=+b.dataset.vd;loadVisit()}};
 /* ---------- 출간작: 홈페이지(yahwalab.xyz)에 보일 작품 등록. works 컬럼을 재사용하고 표지는 covers 버킷에 저장 ---------- */
 let BK=[],BKSEL=null,BKCOVER=null; /* BKCOVER: 편집 중 새로 고른 표지(520×780 JPG로 변환된 Blob) */
 const BKG=['BL','로판','현로'],BKURL=/^https:\/\/blog\.naver\.com\//;

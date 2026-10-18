@@ -243,7 +243,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <div class="ver" id="ver" aria-label="사이트 버전"></div>
   <header><div><a href="#/home" id="homelink" aria-label="현황으로 이동" title="현황으로 이동"><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"></a><p class="sub">야화랩 정산 사이트</p></div>
     <div class="who"><span id="who"></span><span class="wb"><button class="lnk" id="pwb">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
-  <nav id="nav" aria-label="영역"><a href="#/home" data-a="settle">정산</a><a href="#/mail" data-a="tools">도구</a><a href="#/docs" data-a="vault">자료실</a></nav>
+  <nav id="nav" aria-label="영역"><a href="#/home" data-a="settle">정산</a><a href="#/mail" data-a="tools">도구</a><a href="#/docs" data-a="vault">자료실</a><a href="#/alog" data-a="logs">로그</a></nav>
   <nav id="sub" aria-label="세부 메뉴"></nav>
 
   <div class="pg" id="pg-home">
@@ -253,7 +253,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <div class="row" id="lc" style="margin-top:14px;gap:12px"></div>
   <div class="card" id="tw" style="text-align:left"></div>
   <div class="card"><b>주간 정산액 (최근 8주)</b><div id="wk" style="margin-top:14px"></div></div>
-  <div class="card"><b>월별 정산액 (최근 12개월)</b><div id="yr" style="margin-top:14px"><p class="k" style="margin:0">불러오는 중…</p></div></div>
+  <div class="card"><b>월별 정산액</b><div id="yr" style="margin-top:14px"><p class="k" style="margin:0">불러오는 중…</p></div></div>
   <div class="card" id="rn" style="text-align:left"></div>
   <div class="pcs" id="pc" style="margin-top:22px"></div>
   <div class="xs" style="margin-top:12px"><table class="fix"><caption class="sr-only">판매 상세</caption><colgroup><col style="width:12%"><col style="width:12%"><col style="width:28%"><col style="width:8%"><col style="width:13%"><col style="width:13%"><col style="width:14%"></colgroup><thead><tr><th class="cc">판매일</th><th class="cc">플랫폼</th><th>작품명</th><th class="r">수량</th><th class="r">판매액</th><th class="r">수익액</th><th class="r">예상정산액</th></tr></thead><tbody id="dt"></tbody><tfoot id="dtf"></tfoot></table></div>
@@ -302,6 +302,24 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <div class="tw" style="margin-top:20px"><table><caption class="sr-only">작가 목록: 같은 작가의 이름·연락처·인증 상태는 합쳐서 표시하고, 필명별로 이메일과 작품을 나누어 표시합니다.</caption><thead><tr><th scope="col">이름</th><th scope="col">필명</th><th scope="col" class="hm">연락처</th><th scope="col" class="hm">이메일</th><th scope="col" class="cc">인증</th><th scope="col" class="cc">관리</th></tr></thead><tbody id="alist"></tbody></table></div>
   </div>
   <div class="pg" id="pg-docs" hidden></div>
+  <div class="pg" id="pg-alog" hidden>
+    <h2><small>(01)</small>접근 기록</h2>
+    <p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">개인정보·작품 계약서·회사 자료를 열람한 기록입니다. 월을 바꾸면 그 달의 기록을 보여줍니다.</p>
+    <div class="row" style="gap:10px;margin-bottom:8px"><label class="k" for="lgm">조회 월</label><input id="lgm" type="month" style="width:auto;height:36px;padding:0 6px"><span id="lgc" class="k" role="status"></span></div>
+    <div id="dlog"><p class="k">불러오는 중…</p></div>
+  </div>
+  <div class="pg" id="pg-llog" hidden>
+    <h2><small>(01)</small>로그인 기록</h2>
+    <p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">관리자(2단계 인증 통과 후)와 작가의 로그인 기록입니다. 같은 계정은 10분 안에 한 번만 기록되며, IP는 관리자만 기록합니다.</p>
+    <div class="row" id="llr" style="gap:8px;margin-bottom:10px"></div>
+    <div class="row" style="gap:10px;margin-bottom:8px"><label class="k" for="llm">조회 월</label><input id="llm" type="month" style="width:auto;height:36px;padding:0 6px"><span id="llc" class="k" role="status"></span></div>
+    <div id="dll"><p class="k">불러오는 중…</p></div>
+  </div>
+  <div class="pg" id="pg-visit" hidden>
+    <h2><small>(01)</small>홈페이지 방문자</h2>
+    <p class="k" style="font-size:12px;margin:0 0 12px;text-align:center">야화랩 홈페이지(yahwalab.xyz)의 방문자 통계입니다.</p>
+    <div class="card" style="text-align:left"><b>Cloudflare Web Analytics</b><p class="k" style="margin:6px 0 12px">방문 수, 페이지별 조회, 접속 국가, 기기를 Cloudflare 대시보드에서 확인합니다.</p><a href="https://dash.cloudflare.com/" target="_blank" rel="noopener" class="k" style="text-decoration:underline">Cloudflare 대시보드 열기</a></div>
+  </div>
   <div class="pg" id="pg-books" hidden></div>
   <div class="pg" id="pg-proof" hidden></div>
   <div class="pg" id="pg-mail" hidden></div>
@@ -313,7 +331,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.3.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.4.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -384,17 +402,17 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
 $('#homelink').onclick=e=>{if(location.hash===''||location.hash==='#/home'){e.preventDefault();loadHome();scrollTo(0,0)}};
 /* 새로 접속(주소 입력·북마크·탭 복원)하면 현황에서 시작. 같은 탭의 새로고침·뒤로가기만 보던 화면 유지 */
 try{const nt=(performance.getEntriesByType('navigation')[0]||{}).type;if(!sessionStorage.getItem('yw_s')||nt==='navigate'){if(location.hash&&location.hash!=='#/home')history.replaceState(null,'',location.pathname+'#/home')}sessionStorage.setItem('yw_s','1')}catch(e){}
-const PG=['home','authors','settle','docs','books','proof','mail'];
+const PG=['home','authors','settle','docs','books','proof','mail','alog','llog','visit'];
 /* 영역 → 세부 메뉴. 주소(#/home 등)는 그대로이고 화면 묶음만 나눔. 영역을 누르면 그 영역에서 마지막으로 본 화면으로 감 */
-const AREAS={settle:['home','settle','authors','books'],tools:['mail','proof'],vault:['docs']};
-const NAVN={home:'현황',settle:'정산',authors:'작가',books:'작품',mail:'메일 작성',proof:'교정고 점검',docs:'회사 자료'};
+const AREAS={settle:['home','settle','authors','books'],tools:['mail','proof'],vault:['docs'],logs:['alog','llog','visit']};
+const NAVN={home:'현황',settle:'정산',authors:'작가',books:'작품',mail:'메일 작성',proof:'교정고 점검',docs:'회사 자료',alog:'접근 기록',llog:'로그인 기록',visit:'방문자'};
 const LASTP={};
 function setNav(id){const a=Object.keys(AREAS).find(k=>AREAS[k].includes(id));LASTP[a]=id;
   document.querySelectorAll('#nav a').forEach(x=>{x.classList.toggle('on',x.dataset.a===a);x.href='#/'+(LASTP[x.dataset.a]||AREAS[x.dataset.a][0])});
   const sub=$('#sub'),L=AREAS[a];sub.hidden=L.length<2;sub.innerHTML=L.map(p=>`<a href="#/${p}"${p===id?' class="on" aria-current="page"':''}>${NAVN[p]}</a>`).join('')}
 function route(){const r=location.hash.replace(/^#\/?/,'')||'home',id=PG.includes(r)?r:'home';
   PG.forEach(x=>$('#pg-'+x).hidden=x!==id);setNav(id);
-  document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle();if(id==='docs')loadDocs();if(id==='books')loadBooks()}
+  document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle();if(id==='docs')loadDocs();if(id==='alog')loadLogs();if(id==='llog')loadLoginLogs();if(id==='books')loadBooks()}
 addEventListener('hashchange',route);
 /* ---------- 회사 자료: 플랫폼 계약(플랫폼당 현재본 1건 + 교체 이력) · 기타 자료. 관리자 전용 ---------- */
 let DOCS=[],DCURL=null,DPLAT='',LGM='',LGT=0,LLM='',LLT=0; /* LGM: 접근 기록 조회 월, LGT: 월 전환 시 늦게 온 응답 무시용 */
@@ -402,15 +420,13 @@ const dFmt=t=>t?String(t).slice(0,10):'';
 async function loadDocs(){const el=$('#pg-docs');if(!el)return;
   const{data,error}=await SB.from('company_documents').select('id,category,platform_code,title,memo,mime,size_bytes,is_current,created_at,replaced_at').order('created_at',{ascending:false});
   if(error){el.innerHTML='<p class="bad">회사 자료를 불러오지 못했습니다. '+esc(error.message)+'</p>';return}
-  DOCS=data||[];drawDocs();loadLogs();loadLoginLogs()}
+  DOCS=data||[];drawDocs()}
 function drawDocs(){const P=['ridi','kyobo','aladin','yes24','bookcube'],pc=DOCS.filter(d=>d.category==='platform_contract'),cur=c=>pc.find(d=>d.platform_code===c&&d.is_current),hn=c=>pc.filter(d=>d.platform_code===c&&!d.is_current).length,oth=DOCS.filter(d=>d.category==='other');
   $('#pg-docs').innerHTML=`<h2><small>(01)</small>플랫폼 계약</h2><div class="tw"><table class="vm"><caption class="sr-only">플랫폼별 계약서</caption><thead><tr><th>플랫폼</th><th>상태</th><th></th></tr></thead><tbody>${P.map(c=>{const d=cur(c),n=hn(c);return `<tr><td>${PN[c]}</td><td>${d?`<b>등록됨</b><div class="k" style="font-size:11.5px">${dFmt(d.created_at)}${d.memo?' · '+esc(d.memo):''}</div>`:'<span class="bad">미등록</span>'}${n?`<div><button class="lnk" data-dh="${c}">교체 이력 ${n}건</button></div>`:''}</td><td class="r">${d?`<button class="ghost" data-dv="${d.id}">보기</button> <button class="ghost" data-dp="${c}">교체</button> <button class="ghost" data-dd="${d.id}">삭제</button>`:`<button class="ghost" data-dp="${c}">등록</button>`}</td></tr>`}).join('')}</tbody></table></div>
   <input type="file" id="dcf" accept="application/pdf" hidden><p id="dcm" class="k" style="min-height:18px"></p>
   <h2><small>(02)</small>기타 회사 자료</h2>
   <div class="card" style="text-align:left"><div class="row" style="justify-content:flex-start"><input id="dct" type="text" aria-label="자료 제목" placeholder="제목 (예: 사업자등록증)" maxlength="80" style="flex:1 1 200px;min-width:160px"><input id="dcn" type="text" aria-label="메모" placeholder="메모 (선택)" maxlength="200" style="flex:1 1 200px;min-width:160px"></div><div class="row" style="justify-content:flex-start;margin-top:14px"><button class="ghost" id="dcp">파일 선택</button><span id="dcfn" class="k" style="flex:1 1 140px;min-width:0;overflow-wrap:anywhere">선택한 파일이 없습니다. (PDF·JPG·PNG·WebP)</span><button id="dcs">올리기</button><input type="file" id="dcx" accept="application/pdf,image/jpeg,image/png,image/webp" hidden></div></div>
-  <div class="tw" style="margin-top:12px"><table class="vm"><caption class="sr-only">기타 회사 자료</caption><thead><tr><th>제목</th><th class="hm">등록일</th><th></th></tr></thead><tbody>${oth.length?oth.map(d=>`<tr><td>${esc(d.title)}${d.memo?`<div class="k" style="font-size:11.5px">${esc(d.memo)}</div>`:''}</td><td class="hm">${dFmt(d.created_at)}</td><td class="r"><button class="ghost" data-dv="${d.id}">보기</button> <button class="ghost" data-dd="${d.id}">삭제</button></td></tr>`).join(''):'<tr><td colspan="3" class="k" style="text-align:center">등록된 자료가 없습니다.</td></tr>'}</tbody></table></div>
-  <h2><small>(03)</small>접근 기록</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">개인정보·작품 계약서·회사 자료를 열람한 기록입니다. 월을 바꾸면 그 달의 기록을 보여줍니다.</p><div class="row" style="gap:10px;margin-bottom:8px"><label class="k" for="lgm">조회 월</label><input id="lgm" type="month" style="width:auto;height:36px;padding:0 6px"><span id="lgc" class="k" role="status"></span></div><div id="dlog"><p class="k">불러오는 중…</p></div>
-  <h2><small>(04)</small>로그인 기록</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">관리자(2단계 인증 통과 후)와 작가의 로그인 기록입니다. 같은 계정은 10분 안에 한 번만 기록되며, IP는 관리자만 기록합니다.</p><div class="row" style="gap:10px;margin-bottom:8px"><label class="k" for="llm">조회 월</label><input id="llm" type="month" style="width:auto;height:36px;padding:0 6px"><span id="llc" class="k" role="status"></span></div><div id="dll"><p class="k">불러오는 중…</p></div>`;const lm=$('#lgm');if(lm)lm.value=LGM||kst().toISOString().slice(0,7);const ll=$('#llm');if(ll)ll.value=LLM||kst().toISOString().slice(0,7)}
+  <div class="tw" style="margin-top:12px"><table class="vm"><caption class="sr-only">기타 회사 자료</caption><thead><tr><th>제목</th><th class="hm">등록일</th><th></th></tr></thead><tbody>${oth.length?oth.map(d=>`<tr><td>${esc(d.title)}${d.memo?`<div class="k" style="font-size:11.5px">${esc(d.memo)}</div>`:''}</td><td class="hm">${dFmt(d.created_at)}</td><td class="r"><button class="ghost" data-dv="${d.id}">보기</button> <button class="ghost" data-dd="${d.id}">삭제</button></td></tr>`).join(''):'<tr><td colspan="3" class="k" style="text-align:center">등록된 자료가 없습니다.</td></tr>'}</tbody></table></div>`}
 const LGA={person_view:'개인정보 열람',work_contract_view:'작품 계약서 열람',company_doc_view:'회사 자료 열람'};
 async function loadLogs(){const el=$('#dlog');if(!el)return;const mv=monVal('#lgm'),my=++LGT,y=+mv.slice(0,4),mo=+mv.slice(5,7),from=new Date(Date.UTC(y,mo-1,1)-9*36e5).toISOString(),to=new Date(Date.UTC(y,mo,1)-9*36e5).toISOString();
   el.innerHTML='<p class="k">불러오는 중…</p>';
@@ -422,14 +438,16 @@ async function loadLogs(){const el=$('#dlog');if(!el)return;const mv=monVal('#lg
   const nm=r=>r.action==='person_view'?(AUTHORS.filter(a=>a.person_id===r.target_id).map(a=>a.pen_name).join(', ')||String(r.target_id||'').slice(0,8)):(r.label||'-');
   el.innerHTML=`<div class="tw"><table><caption class="sr-only">접근 기록</caption><thead><tr><th>일시</th><th class="hm">관리자</th><th>구분</th><th>대상</th></tr></thead><tbody>${L.map(r=>`<tr><td>${new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})}</td><td class="hm">${esc(r.admin_email||'-')}</td><td>${LGA[r.action]||esc(r.action)}</td><td>${esc(nm(r))}</td></tr>`).join('')}</tbody></table></div>`}
 const LLR={admin:'관리자',author:'작가'};
-async function loadLoginLogs(){const el=$('#dll');if(!el)return;const mv=monVal('#llm'),my=++LLT,y=+mv.slice(0,4),mo=+mv.slice(5,7),from=new Date(Date.UTC(y,mo-1,1)-9*36e5).toISOString(),to=new Date(Date.UTC(y,mo,1)-9*36e5).toISOString();
+let LLRO='admin'; /* 로그인 기록 보기: 관리자/작가 */
+async function loadLoginLogs(){const el=$('#dll');if(!el)return;const mv=monVal('#llm'),my=++LLT,y=+mv.slice(0,4),mo=+mv.slice(5,7),from=new Date(Date.UTC(y,mo-1,1)-9*36e5).toISOString(),to=new Date(Date.UTC(y,mo,1)-9*36e5).toISOString(),adm=LLRO==='admin';
+  $('#llr').innerHTML=['admin','author'].map(r=>`<button type="button" class="chp" data-lr="${r}" aria-pressed="${r===LLRO}">${LLR[r]}</button>`).join('');
   el.innerHTML='<p class="k">불러오는 중…</p>';
-  const{data,error,count}=await SB.from('login_logs').select('created_at,email,role,ip,ua',{count:'exact'}).gte('created_at',from).lt('created_at',to).order('created_at',{ascending:false}).limit(1000);
+  const{data,error,count}=await SB.from('login_logs').select('created_at,email,role,ip,ua',{count:'exact'}).eq('role',LLRO).gte('created_at',from).lt('created_at',to).order('created_at',{ascending:false}).limit(1000);
   if(my!==LLT)return;const cn=$('#llc');if(cn)cn.textContent='';
   if(error){el.innerHTML='<p class="bad">로그인 기록을 불러오지 못했습니다. '+esc(error.message)+'</p>';return}
-  const L=data||[];if(!L.length){el.innerHTML='<p class="k">'+mv.replace('-','년 ')+'월에는 기록이 없습니다.</p>';return}
+  const L=data||[];if(!L.length){el.innerHTML='<p class="k">'+mv.replace('-','년 ')+'월에는 '+LLR[LLRO]+' 로그인 기록이 없습니다.</p>';return}
   if(cn)cn.textContent='총 '+(count??L.length).toLocaleString('ko-KR')+'건'+((count||0)>L.length?' (최근 '+L.length.toLocaleString('ko-KR')+'건만 표시)':'');
-  el.innerHTML=`<div class="tw"><table><caption class="sr-only">로그인 기록</caption><thead><tr><th>일시</th><th>계정</th><th>구분</th><th class="hm">기기</th><th class="hm">IP</th></tr></thead><tbody>${L.map(r=>`<tr><td>${new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})}</td><td>${esc(r.email||'-')}</td><td>${LLR[r.role]||esc(r.role)}</td><td class="hm">${esc(r.ua||'-')}</td><td class="hm">${esc(r.ip||'-')}</td></tr>`).join('')}</tbody></table></div>`}
+  el.innerHTML=`<div class="tw"><table><caption class="sr-only">${LLR[LLRO]} 로그인 기록</caption><thead><tr><th>일시</th><th>계정</th><th class="hm">기기</th>${adm?'<th class="hm">IP</th>':''}</tr></thead><tbody>${L.map(r=>`<tr><td>${new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})}</td><td>${esc(r.email||'-')}</td><td class="hm">${esc(r.ua||'-')}</td>${adm?`<td class="hm">${esc(r.ip||'-')}</td>`:''}</tr>`).join('')}</tbody></table></div>`}
 async function viewDoc(id){openLay('<p class="k">불러오는 중…</p>');const{data,error}=await call({action:'company_doc_get',id});if(error)return openLay(`<p class="bad">${esc(error)}</p>`);
   const bytes=Uint8Array.from(atob(data.data),c=>c.charCodeAt(0));if(DCURL)URL.revokeObjectURL(DCURL);DCURL=URL.createObjectURL(new Blob([bytes],{type:data.mime}));
   openLay(`<div class="row" style="justify-content:flex-end;margin-bottom:12px"><a href="${DCURL}" target="_blank" rel="noopener" class="k" style="text-decoration:underline">새 창에서 열기</a></div><h3 id="lt" style="margin:0 0 10px">${esc(data.title||'자료')}</h3>${data.mime==='application/pdf'?`<iframe src="${DCURL}" title="${esc(data.title||'자료')}" style="width:100%;height:70vh;border:1px solid var(--line)"></iframe>`:`<img src="${DCURL}" alt="${esc(data.title||'자료')}" style="max-width:100%;display:block;margin:0 auto;border:1px solid var(--line)">`}`)}
@@ -441,7 +459,10 @@ $('#pg-docs').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
   if(d.dd){if(!confirm('이 자료를 삭제할까요?\n삭제하면 복구할 수 없습니다.'))return;const{error}=await call({action:'company_doc_delete',id:d.dd});if(error)return alert(error);return loadDocs()}
   if(b.id==='dcp')return $('#dcx').click();
   if(b.id==='dcs'){const t=$('#dct').value.trim(),f=$('#dcx').files[0];if(!t)return alert('제목을 입력해 주세요.');if(!f)return alert('파일을 선택해 주세요.');return docUp({category:'other',title:t,memo:$('#dcn').value.trim()},f,'올리는 중…')}};
-$('#pg-docs').onchange=e=>{if(e.target.id==='dcx'){const f=e.target.files[0];$('#dcfn').textContent=f?f.name:'선택한 파일이 없습니다. (PDF·JPG·PNG·WebP)';return}if(e.target.id==='lgm'){LGM=monVal('#lgm');loadLogs();return}if(e.target.id==='llm'){LLM=monVal('#llm');loadLoginLogs();return}if(e.target.id!=='dcf')return;const f=e.target.files[0];if(!f||!DPLAT)return;if(f.type!=='application/pdf'){const m=$('#dcm');m.className='bad';m.textContent='플랫폼 계약서는 PDF만 올릴 수 있습니다.';return}docUp({category:'platform_contract',platform_code:DPLAT,title:PN[DPLAT]+' 계약서'},f,'올리는 중…')};
+$('#pg-docs').onchange=e=>{if(e.target.id==='dcx'){const f=e.target.files[0];$('#dcfn').textContent=f?f.name:'선택한 파일이 없습니다. (PDF·JPG·PNG·WebP)';return}if(e.target.id!=='dcf')return;const f=e.target.files[0];if(!f||!DPLAT)return;if(f.type!=='application/pdf'){const m=$('#dcm');m.className='bad';m.textContent='플랫폼 계약서는 PDF만 올릴 수 있습니다.';return}docUp({category:'platform_contract',platform_code:DPLAT,title:PN[DPLAT]+' 계약서'},f,'올리는 중…')};
+$('#lgm').onchange=()=>{LGM=monVal('#lgm');loadLogs()};
+$('#llm').onchange=()=>{LLM=monVal('#llm');loadLoginLogs()};
+$('#llr').onclick=e=>{const b=e.target.closest('[data-lr]');if(b){LLRO=b.dataset.lr;loadLoginLogs()}};
 /* ---------- 출간작: 홈페이지(yahwalab.xyz)에 보일 작품 등록. works 컬럼을 재사용하고 표지는 covers 버킷에 저장 ---------- */
 let BK=[],BKSEL=null,BKCOVER=null; /* BKCOVER: 편집 중 새로 고른 표지(520×780 JPG로 변환된 Blob) */
 const BKG=['BL','로판','현로'],BKURL=/^https:\/\/blog\.naver\.com\//;
@@ -635,25 +656,32 @@ function drawDetail(){const base=DD.filter(r=>vis(r.label)),rows=base.filter(r=>
   const miss=sum(rows,'missing');$('#dn').textContent=miss?`정산율이 설정되지 않아 금액이 계산되지 않은 ${miss}건이 있습니다. (교보문고는 정산율 설정 필요)`:'';
   const W={};base.forEach(r=>{const o=W[r.work_id]??={t:r.title,l:r.label,q:0,n:0};o.q+=Number(r.quantity);o.n+=Number(r.net)});
   $('#wl').innerHTML=Object.entries(W).sort((a,b)=>b[1].n-a[1].n).map(([id,o])=>`<tr><td><button class="lnk" data-w="${id}">${esc(o.t)}</button></td><td class="hm">${o.l}</td><td class="r">${o.q}</td><td class="r">${won(o.n)}</td><td class="r hm">${rateTxt(id)}</td><td class="hm">${renewTxt(id)}</td></tr>`).join('')||'<tr><td colspan="6" class="k em">이 달의 데이터가 없습니다.</td></tr>'}
-/* 월별 정산액(최근 12개월): 월별 집계 함수가 없어 admin_detail을 월마다 불러 합산. 월 선택을 바꿀 때는 다시 불러오지 않음 */
-let YR=[];
-async function loadYear(){const t=kst(),ms=[];for(let i=11;i>=0;i--){const d=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()-i,1));ms.push(d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0'))}
-  $('#yr').innerHTML='<p class="k" style="margin:0">불러오는 중…</p>';
-  const rs=await Promise.all(ms.map(m=>SB.rpc('admin_detail',{p_month:m+'-01'}))),bad=rs.find(r=>r.error);
-  if(bad){reportErr('최근 12개월 조회',bad.error.message);$('#yr').innerHTML='<p class="k" style="margin:0">불러오지 못했습니다. 새로고침해 주세요.</p>';return}
-  YR=ms.map((m,i)=>({m,rows:rs[i].data||[]}));drawYear()}
+/* 월별 정산액: '최근 12개월' 또는 연도(1~12월). 월별 집계 함수가 없어 admin_detail을 월마다 불러 합산(이번 달 이후는 조회 안 함). 월 선택을 바꿀 때는 다시 불러오지 않음 */
+let YR=[],YMODE='',YRT=0;const YEAR0=2025;
+async function loadYear(mode){const el=$('#yr'),t=kst(),cy=t.getUTCFullYear(),pad=n=>String(n).padStart(2,'0'),now=cy+'-'+pad(t.getUTCMonth()+1);
+  if(mode)YMODE=mode;if(!YMODE)YMODE=String(cy);
+  const ms=[];if(YMODE==='r12'){for(let i=11;i>=0;i--){const d=new Date(Date.UTC(cy,t.getUTCMonth()-i,1));ms.push(d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1))}}else{for(let k=1;k<=12;k++)ms.push(YMODE+'-'+pad(k))}
+  const my=++YRT,live=ms.filter(m=>m<=now);el.style.opacity='.5';
+  const rs=await Promise.all(live.map(m=>SB.rpc('admin_detail',{p_month:m+'-01'})));
+  if(my!==YRT)return;el.style.opacity='';
+  const bad=rs.find(r=>r.error);
+  if(bad){reportErr('월별 정산액 조회',bad.error.message);el.innerHTML='<p class="k" style="margin:0">불러오지 못했습니다. 새로고침해 주세요.</p>';return}
+  const mp=Object.fromEntries(live.map((m,i)=>[m,rs[i].data||[]]));
+  YR=ms.map(m=>({m,rows:mp[m]||[],future:m>now}));drawYear()}
 function drawYear(){if(!YR.length)return;
-  const T=YR.map(o=>{const by={};o.rows.filter(r=>vis(r.label)).forEach(r=>{by[r.label]=(by[r.label]||0)+Number(r.net)});return{m:o.m,by,t:Object.values(by).reduce((a,b)=>a+b,0)}}),
-    max=Math.max(...T.map(x=>x.t),1),all=T.reduce((a,x)=>a+x.t,0),cur=$('#dm').value;
+  const cy=kst().getUTCFullYear(),T=YR.map(o=>{const by={};o.rows.filter(r=>vis(r.label)).forEach(r=>{by[r.label]=(by[r.label]||0)+Number(r.net)});return{m:o.m,f:o.future,by,t:Object.values(by).reduce((a,b)=>a+b,0)}}),
+    max=Math.max(...T.map(x=>x.t),1),all=T.reduce((a,x)=>a+x.t,0),n=Math.max(T.filter(x=>!x.f).length,1),pm=$('#dm').value,modes=[['r12','최근 12개월']];
+  for(let y=cy;y>=YEAR0;y--)modes.push([String(y),y+'년']);
   /* 높이는 화면에 맞춰 고정, 막대는 그 안의 비율로 그려 세로 스크롤이 생기지 않음. 옆 스크롤 길이는 개월 수×36px */
-  $('#yr').innerHTML=`<div class="row k" style="justify-content:space-between;margin:0 0 10px"><span>12개월 합계 <b style="color:var(--ink)">${won(all)}</b></span><span>월 평균 <b style="color:var(--ink)">${won(Math.round(all/T.length))}</b></span></div>
-  <div id="yrs" style="overflow-x:auto;overflow-y:hidden"><div style="min-width:${T.length*36}px;height:clamp(200px,34vh,280px);display:flex;gap:6px">${T.map((x,i)=>{const mm=+x.m.slice(5),yy=x.m.slice(2,4),sel=x.m===cur,p=x.t?Math.max(x.t/max*85,1.5):0;
-    return `<div data-ym="${x.m}" role="button" tabindex="0" style="flex:1;min-width:0;display:flex;flex-direction:column;height:100%;cursor:pointer" title="${x.m} · ${won(x.t)}"><div style="position:relative;flex:1;min-height:0">${x.t?`<div class="k" style="position:absolute;left:50%;transform:translateX(-50%);bottom:calc(${p}% + 3px);font-size:11px;line-height:1.2;white-space:nowrap">${man(x.t)}</div>`:''}<div style="position:absolute;left:0;right:0;bottom:0;height:${p}%;display:flex;flex-direction:column-reverse">${Object.keys(COL).filter(l=>x.by[l]).map(l=>`<div style="height:${x.by[l]/x.t*100}%;background:${COL[l]}" title="${l} ${won(x.by[l])}"></div>`).join('')}</div></div><div class="k" style="text-align:center;font-size:12px;line-height:1.2;margin-top:4px;${sel?'color:var(--ink);font-weight:700;border-bottom:2px solid var(--ink)':''}">${mm}</div><div class="k" style="text-align:center;font-size:10px;line-height:1.2;height:12px">${i===0||mm===1?"'"+yy:''}</div></div>`}).join('')}</div></div>
+  $('#yr').innerHTML=`<div class="row" style="justify-content:flex-start;gap:8px;margin:0 0 12px">${modes.map(([k,t])=>`<button type="button" class="chp" data-ymode="${k}" aria-pressed="${k===YMODE}">${t}</button>`).join('')}</div>
+  <div class="row k" style="justify-content:space-between;margin:0 0 10px"><span>${YMODE==='r12'?'12개월':YMODE+'년'} 합계 <b style="color:var(--ink)">${won(all)}</b></span><span>월 평균 <b style="color:var(--ink)">${won(Math.round(all/n))}</b></span></div>
+  <div id="yrs" style="overflow-x:auto;overflow-y:hidden"><div style="min-width:${T.length*36}px;height:clamp(200px,34vh,280px);display:flex;gap:6px">${T.map((x,i)=>{const mm=+x.m.slice(5),yy=x.m.slice(2,4),sel=x.m===pm,p=x.t?Math.max(x.t/max*85,1.5):0;
+    return `<div ${x.f?'':`data-ym="${x.m}" role="button" tabindex="0" title="${x.m} · ${won(x.t)}"`} style="flex:1;min-width:0;display:flex;flex-direction:column;height:100%;${x.f?'opacity:.4':'cursor:pointer'}"><div style="position:relative;flex:1;min-height:0">${x.t?`<div class="k" style="position:absolute;left:50%;transform:translateX(-50%);bottom:calc(${p}% + 3px);font-size:11px;line-height:1.2;white-space:nowrap">${man(x.t)}</div>`:''}<div style="position:absolute;left:0;right:0;bottom:0;height:${p}%;display:flex;flex-direction:column-reverse">${Object.keys(COL).filter(l=>x.by[l]).map(l=>`<div style="height:${x.by[l]/x.t*100}%;background:${COL[l]}" title="${l} ${won(x.by[l])}"></div>`).join('')}</div></div><div class="k" style="text-align:center;font-size:12px;line-height:1.2;margin-top:4px;${sel?'color:var(--ink);font-weight:700;border-bottom:2px solid var(--ink)':''}">${mm}</div><div class="k" style="text-align:center;font-size:10px;line-height:1.2;height:12px">${i===0||(YMODE==='r12'&&mm===1)?"'"+yy:''}</div></div>`}).join('')}</div></div>
   <div class="row k" style="margin-top:8px;font-size:12px">${Object.entries(COL).filter(([l])=>vis(l)).map(([l,c])=>`<span><i style="display:inline-block;width:10px;height:10px;background:${c};margin-right:5px"></i>${l}</span>`).join('')}</div>
   <p class="k" style="font-size:12px;margin:8px 0 0">월 단위 정산액입니다. 막대를 누르면 위 월 선택이 그 달로 바뀝니다.</p>`;
-  const s=$('#yrs');if(s)s.scrollLeft=s.scrollWidth}
-const yrPick=e=>{const b=e.target.closest('[data-ym]');if(!b)return;$('#dm').value=b.dataset.ym;$('#dm').dispatchEvent(new Event('change'));scrollTo({top:0,behavior:'smooth'})};
-$('#yr').onclick=yrPick;$('#yr').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();yrPick(e)}};
+  const sc=$('#yrs');if(sc)sc.scrollLeft=YMODE==='r12'?sc.scrollWidth:0}
+const yrPick=e=>{const c=e.target.closest('[data-ymode]');if(c){loadYear(c.dataset.ymode);return}const b=e.target.closest('[data-ym]');if(!b)return;$('#dm').value=b.dataset.ym;$('#dm').dispatchEvent(new Event('change'));scrollTo({top:0,behavior:'smooth'})};
+$('#yr').onclick=yrPick;$('#yr').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-ym]')){e.preventDefault();yrPick(e)}};
 $('#dm').onchange=loadHome;
 $('#lv').onclick=e=>{const b=e.target.closest('[data-lv]');if(b){LV=b.dataset.lv;drawWeekly();drawWeek();drawDetail();drawYear()}};
 $('#wl').onclick=e=>{const b=e.target.closest('[data-w]');if(b)openWork(b.dataset.w)};

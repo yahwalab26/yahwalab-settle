@@ -1410,7 +1410,7 @@ details.grp{margin:2px 0 0}
     rows: [], kinds: new Map(), rowIdx: new Map(), page: 0, view: mq('(max-width:899px)') ? 'tools' : 'edit',
     cleaned: false, dirty: false, log: [], issues: [], preview: null, previewBusy: false,
     chgText: new Set(), chgSpace: new Set(), open: new Set(), seen: new Set(), shown: {}, menuFor: null,
-    q: '', hits: [], hitPos: -1, mk: newMk(''),
+    q: '', hits: [], hitPos: -1, mk: newMk(''), focusEl: null,
     edMode: 'edit', snap: null, cmp: null, cmpPage: 0, cmpOnly: true, undoStack: [], lastOp: null,
   };
   function loadPrefs() {
@@ -1471,7 +1471,7 @@ details.grp{margin:2px 0 0}
     state.cleaned = false; state.dirty = false; state.log = []; state.page = 0; state.menuFor = null;
     state.snap = E.snapshot(ctx.section); state.edMode = 'edit'; state.cmp = null; state.cmpPage = 0; state.cmpOnly = true; state.undoStack = []; state.lastOp = null;
     state.chgText = new Set(); state.chgSpace = new Set(); state.preview = null; state.shown = {}; state.seen = new Set();
-    state.mk = newMk(name);
+    state.mk = newMk(name); state.focusEl = null;
     recompute(); analyze();
     $('#btnExport').disabled = false;
     $('#fileChip').hidden = false; $('#fileName').textContent = name; $('#fileCount').textContent = `문단 ${nf(state.rows.length)}`;
@@ -1529,7 +1529,7 @@ details.grp{margin:2px 0 0}
         $('#fileCount').textContent = `문단 ${nf(state.rows.length)}`;
         state.shown = {};
         state.cmpOnly = true; state.cmpPage = 0; buildCmp(); state.edMode = 'compare';       // 정리가 끝나면 원본과 나란히 보여 줌
-        renderAll();
+        { const kf = cmpIndexOfFocus(); if (kf != null) state.cmpPage = Math.floor(kf / CMP_PAGE); renderAll(); if (kf != null) scrollCmpRow(kf); }   // 다시 정리해도 편집하던 문장 위치로
         if (r.issues.some((i) => i.rule === '끝 표기 미추가')) toast('작품명이 비어 있어 끝 표기는 넣지 않았습니다.', 'err');
       } catch (e) { toast('정리 중 오류가 났습니다: ' + (e && e.message), 'err'); }
       busy(false);
@@ -1659,6 +1659,7 @@ details.grp{margin:2px 0 0}
   function jumpTo(el) {
     if (state.edMode === 'compare' && state.cmp) { jumpCompare(el); return; }
     if (!el || !state.rowIdx.has(el)) { toast('이 문단은 이미 지워져서 이동할 수 없습니다.'); return; }
+    state.focusEl = el;
     if (mq('(max-width:899px)')) setView('edit');
     const i = state.rowIdx.get(el);
     state.page = Math.floor(i / PAGE); renderEditor();
@@ -1688,6 +1689,7 @@ details.grp{margin:2px 0 0}
     const sp = e.target.closest && e.target.closest('.seg'); if (!sp) return;
     const slot = slotOf(sp); if (!slot) return;
     slot.node.nodeValue = sp.textContent.replace(/[\r\n]+/g, ' '); state.dirty = true; state.lastOp = 'text';
+    { const rw = sp.closest('.row'); if (rw && state.rows[+rw.dataset.i]) state.focusEl = state.rows[+rw.dataset.i]; }   // 비교 화면으로 돌아갈 때 이 문단으로 복귀
     refreshKind(sp.closest('.row')); reanalyze();
   }
   function onSegPaste(e) {
@@ -1815,10 +1817,28 @@ details.grp{margin:2px 0 0}
     return h('span', { class: 'seg2', role: 'group', 'aria-label': '보기 방식' },
       [['edit', '편집'], ['compare', '정리 전·후 비교']].map(([m, label]) => h('button', { type: 'button', class: 'sw' + (state.edMode === m ? ' on' : ''), 'aria-pressed': String(state.edMode === m), onclick: () => setEdMode(m) }, label)));
   }
+  /** 편집하던 문단이 비교 목록의 몇 번째 줄인지(바뀐 곳이 아니어도 가장 가까운 아래 줄). 없으면 null */
+  function cmpIndexOfFocus() {
+    const el = state.focusEl;
+    if (!el || !el.parentNode || !state.cmp) return null;
+    let k = state.cmp.elIndex.get(el);
+    if (k == null && state.rowIdx.has(el)) {
+      const i = state.rowIdx.get(el);
+      k = state.cmp.entries.findIndex((en) => en.r && en.r.after && state.rowIdx.has(en.r.after) && state.rowIdx.get(en.r.after) >= i);
+      if (k < 0) k = null;
+    }
+    return k;
+  }
+  function scrollCmpRow(k) {
+    const r = document.querySelector(`.crow[data-e="${k}"]`);
+    if (r) { if (r.scrollIntoView) r.scrollIntoView({ block: 'center' }); r.classList.add('flash'); setTimeout(() => r.classList.remove('flash'), 2000); }
+  }
   function setEdMode(m) {
     state.menuFor = null;
-    if (m === 'compare') { buildCmp(); state.edMode = 'compare'; } else state.edMode = 'edit';
+    let k = null;
+    if (m === 'compare') { buildCmp(); state.edMode = 'compare'; k = cmpIndexOfFocus(); if (k != null) state.cmpPage = Math.floor(k / CMP_PAGE); } else state.edMode = 'edit';
     renderEditor();
+    if (k != null) scrollCmpRow(k);   // 편집하던 문장 위치로 돌아간다
   }
   function buildCmp() {
     recompute();

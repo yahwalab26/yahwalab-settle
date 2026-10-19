@@ -1270,6 +1270,54 @@ details.grp{margin:2px 0 0}
     return { log, applied };
   }
 
+  // ───────── 색만 칠한 글자(부호 없음) → 확인 후 검정으로 되돌리기 ─────────
+  // 글자는 그대로 두고 run 의 글자 서식(charPr)만 '같은 서식 + 글자색 검정'으로 바꾼다. 기본은 건드리지 않는다(작가 요청 색과 구분 어려움).
+  function blackVariant(ctx, cid) {
+    ctx.blackOf = ctx.blackOf || {};
+    if (ctx.blackOf[cid]) return ctx.blackOf[cid];
+    const all = descendants(ctx.header, 'charPr'), base = all.find((c) => c.getAttribute('id') === cid);
+    if (!base) return null;
+    const nid = String(Math.max(...all.map((c) => parseInt(c.getAttribute('id'), 10) || 0)) + 1);
+    const n = base.cloneNode(true);
+    n.setAttribute('id', nid); n.setAttribute('textColor', '#000000');
+    base.parentNode.appendChild(n);
+    base.parentNode.setAttribute('itemCnt', String(kids(base.parentNode, 'charPr').length));
+    ctx.colors[nid] = '#000000';
+    if (ctx.italics.has(cid)) ctx.italics.add(nid);
+    ctx.headerModified = true; ctx.blackOf[cid] = nid;
+    return nid;
+  }
+  /** 글자색이 칠해진 문단 목록(변경 없음). 교정 부호(/)나 (@코멘트)가 칠해진 글자에 남은 문단은 제외 */
+  function scanColors(ctx) {
+    const items = [];
+    paragraphs(ctx.section).forEach((p, i) => {
+      const chars = [];
+      for (const s of iterSlots(p)) { if (s.k !== 'slot') continue; const hex = ctx.colors[s.cid], col = !isBlackish(hex); for (const ch of sget(s)) chars.push({ ch, hex: col ? hex : '' }); }
+      const f = chars.findIndex((c) => c.hex);
+      if (f < 0) return;
+      const ctext = chars.filter((c) => c.hex).map((c) => c.ch).join('');
+      if (!ctext.trim() || ctext.includes('/') || ctext.includes('(@')) return;
+      const lo = Math.max(0, f - 20), hi = Math.min(chars.length, lo + 110), parts = [];
+      for (let k = lo; k < hi; k++) { const g = parts[parts.length - 1]; if (g && g.hex === chars[k].hex) g.t += chars[k].ch; else parts.push({ t: chars[k].ch, hex: chars[k].hex }); }
+      items.push({ id: String(i + 1), idx: i + 1, ref: p, names: Array.from(new Set(chars.filter((c) => c.hex).map((c) => colorName(c.hex)))), n: ctext.length, parts, pre: lo > 0, post: hi < chars.length });
+    });
+    return { items };
+  }
+  /** ids: 되돌릴 문단 id(scanColors 의 id) 집합. 반환 {log, applied} */
+  function applyUncolor(ctx, ids) {
+    const log = []; let applied = 0;
+    scanColors(ctx).items.filter((x) => ids.has(x.id)).forEach((x) => {
+      let n = 0;
+      iterSlots(x.ref).forEach((s) => {
+        if (s.k !== 'slot' || isBlackish(ctx.colors[s.cid])) return;
+        const nid = blackVariant(ctx, s.cid);
+        if (nid) { s.run.setAttribute('charPrIDRef', nid); n += sget(s).length; }
+      });
+      if (n) { applied++; const t = x.parts.map((q) => q.t).join(''); log.push({ rule: '색 검정으로 되돌리기', sub: x.names.join('·'), ref: x.ref, idx: x.idx, before: `[${x.names.join('·')} ${n}자] ${t}`, after: `[검정] ${t}` }); }
+    });
+    return { log, applied };
+  }
+
   // ───────── 읽기/쓰기 ─────────
   function readColors(hdr) {
     const out = {};
@@ -1329,7 +1377,7 @@ details.grp{margin:2px 0 0}
     classify, kindOf, protRes, markTextOf, runChecks, clean, preview, load, save, reportCsv,
     isBlankP, makeBlank, strip, isBlackish, isEndMark, normalizeFormat, periodIssues, stripComments, commentSpans, paraAlign,
     ensureSlot, splitParagraph, splitAtBreak, roundQuotes, SB_RE, AUTO_ROUND_QUOTES, snapshot, compareRows, diffChars, charsOfSegs, segsOfPara,
-    scanMarks, applyMarks,
+    scanMarks, applyMarks, scanColors, applyUncolor,
   };
 });
 
@@ -1400,6 +1448,9 @@ details.grp{margin:2px 0 0}
     { id: 'marks', icon: 'checklist', name: '교정 기호 반영',
       desc: '작가 교정본(작교본)의 /…/ 교정 부호를 한꺼번에 반영합니다. /A(B)/는 B로, /A(추가)/는 A로, /A(삭제)/는 지우고(앞뒤 공백이 겹치면 한 칸으로), (@수정X)가 붙은 부호는 원문을 그대로 둡니다. 글자 색은 그대로 유지하고, (@의견) 코멘트는 고른 것만 지웁니다. 반영 전에 아래 목록에서 하나씩 확인하세요. /문장/처럼 괄호 없이 슬래시만 있는 범위(문단에 걸친 것 포함)는 슬래시만 지우고 문장은 그대로 둡니다. 짝이 맞지 않는 /는 자동으로 바꾸지 않고 슬래시만 지울지 고르게 합니다.',
       keys: '교정 기호 부호 슬래시 작교본 반영 수정X 코멘트 삭제 추가 교체 작가 편집자', match: (r) => r === '교정 기호 반영' || r === '편집자 코멘트 삭제' },
+    { id: 'colors', icon: 'type', name: '색만 칠한 글자 확인',
+      desc: '교정 부호(/…/) 없이 글자색만 칠해진 부분(주로 오탈자 수정)을 문단별로 보여 줍니다. 기본은 그대로 두며, 체크한 문장만 정리할 때 글자색이 검정으로 돌아갑니다. 글자는 바뀌지 않습니다. 부호나 코멘트가 아직 남은 문단은 교정 기호 반영을 마친 뒤 다시 정리하면 목록에 나타납니다.',
+      keys: '색 글자색 검정 오탈자 색만 칠한 빨강 초록 되돌리기', match: (r) => r === '색 검정으로 되돌리기' },
     { id: 'issues', icon: 'checklist', name: '확인할 항목',
       desc: '문장이 끝났는데 마침표 없이 다음 문장이 이어진 곳, 교정 표기(/원문(수정)/)의 색(어떤 색이든)과 슬래시 짝, (@의견) 괄호, 남은 작가 표기, 직선 따옴표, Enter 대신 Shift+Enter로 내려간 문단(줄바꿈만 있는 빈 문단 포함)을 확인해 알려 줍니다. (@의견) 안은 무시하고, 자동으로 고치지 않습니다.',
       keys: '확인 점검 오류 마침표 문장 슬래시 색 코멘트 의견 작가 따옴표 shift 시프트 강제 줄바꿈', match: () => false },
@@ -1410,7 +1461,7 @@ details.grp{margin:2px 0 0}
     rows: [], kinds: new Map(), rowIdx: new Map(), page: 0, view: mq('(max-width:899px)') ? 'tools' : 'edit',
     cleaned: false, dirty: false, log: [], issues: [], preview: null, previewBusy: false,
     chgText: new Set(), chgSpace: new Set(), open: new Set(), seen: new Set(), shown: {}, menuFor: null,
-    q: '', hits: [], hitPos: -1, mk: newMk(''), focusEl: null,
+    q: '', hits: [], hitPos: -1, mk: newMk(''), cl: newCl(), focusEl: null,
     edMode: 'edit', snap: null, cmp: null, cmpPage: 0, cmpOnly: true, undoStack: [], lastOp: null,
   };
   function loadPrefs() {
@@ -1471,7 +1522,7 @@ details.grp{margin:2px 0 0}
     state.cleaned = false; state.dirty = false; state.log = []; state.page = 0; state.menuFor = null;
     state.snap = E.snapshot(ctx.section); state.edMode = 'edit'; state.cmp = null; state.cmpPage = 0; state.cmpOnly = true; state.undoStack = []; state.lastOp = null;
     state.chgText = new Set(); state.chgSpace = new Set(); state.preview = null; state.shown = {}; state.seen = new Set();
-    state.mk = newMk(name); state.focusEl = null;
+    state.mk = newMk(name); state.cl = newCl(); state.focusEl = null;
     recompute(); analyze();
     $('#btnExport').disabled = false;
     $('#fileChip').hidden = false; $('#fileName').textContent = name; $('#fileCount').textContent = `문단 ${nf(state.rows.length)}`;
@@ -1499,7 +1550,7 @@ details.grp{margin:2px 0 0}
     });
     if (r.redNoSlash) issues.push({ sev: '정보', rule: '슬래시 없이 색만 칠한 교정(오탈자 처리로 간주)', el: null, msg: `${r.redNoSlash}곳` });
     state.issues = issues;
-    refreshMarks();
+    refreshMarks(); refreshColors();
   }
   const schedulePreview = debounce(() => {
     if (!state.ctx || state.cleaned) return;
@@ -1519,10 +1570,12 @@ details.grp{margin:2px 0 0}
       try {
         let mkLog = [];
         if (state.mk.apply) { const sel = mkSelection(); if (sel && (sel.ids.size || sel.comments.size)) mkLog = E.applyMarks(state.ctx, sel).log; }   // 교정 기호는 다른 정리보다 먼저 반영
+        let clLog = [];
+        if (state.cl.sel.size) { const ids = clSelection(); if (ids && ids.size) clLog = E.applyUncolor(state.ctx, ids).log; }   // 체크한 색 글자만 검정으로
         const r = E.clean(state.ctx, rules);
-        r.log = mkLog.concat(r.log);
+        r.log = mkLog.concat(clLog, r.log);
         state.log = r.log; state.cleaned = true; state.dirty = true; state.menuFor = null;
-        state.chgText = new Set(r.log.filter((l) => FEATURES.slice(1, 6).some((f) => f.match(l.rule)) || l.rule === '교정 기호 반영' || l.rule === '편집자 코멘트 삭제').map((l) => l.ref));
+        state.chgText = new Set(r.log.filter((l) => FEATURES.slice(1, 6).some((f) => f.match(l.rule)) || l.rule === '교정 기호 반영' || l.rule === '편집자 코멘트 삭제' || l.rule === '색 검정으로 되돌리기').map((l) => l.ref));
         state.chgSpace = new Set(r.log.filter((l) => FEATURES[0].match(l.rule)).map((l) => l.ref));
         state.undoStack = []; state.lastOp = null;
         recompute(); analyze();
@@ -1808,7 +1861,8 @@ details.grp{margin:2px 0 0}
 
   // ───────── 정리 전·후 비교 ─────────
   const CMP_PAGE = 60;
-  const TEXT_TAGS = ['공백 제거', '… 통일', '기울임 표기', '끝 표기', '따옴표 통일'];
+  const TEXT_TAGS = ['공백 제거', '… 통일', '기울임 표기', '끝 표기', '따옴표 통일', '교정 기호 반영', '편집자 코멘트 삭제', '색 검정으로 되돌리기'];
+  const colSig = (segs) => segs.map((g) => (g.br ? 'n' : (E.isBlackish(state.ctx.colors[g.cid]) ? '0' : '1').repeat(g.t.length))).join('');
   const tagOf = (rule) => (rule.includes('공백') ? '공백 제거' : rule.includes('말줄임표') ? '… 통일' : rule.includes('기울임') ? '기울임 표기' : rule.includes('둥근 따옴표') ? '따옴표 통일' : (rule.startsWith('문서 끝') || rule.startsWith('끝 표기')) ? '끝 표기' : rule);
   const isBlankText = (t) => E.strip(t, E.EDGE + '\n') === '';
 
@@ -1851,7 +1905,8 @@ details.grp{margin:2px 0 0}
       else if (!r.before && r.after) { r.changed = true; r.tags = [isBlankText(E.ptext(r.after)) ? '빈 줄 추가' : '문단 추가']; }
       else {
         const alignChg = r.before.align !== r.after.getAttribute('paraPrIDRef');
-        r.changed = r.before.plain !== E.ptext(r.after) || alignChg;
+        const colChg = colSig(r.before.segs) !== colSig(E.segsOfPara(r.after));      // 글자는 같고 색만 달라진 경우도 바뀐 곳
+        r.changed = r.before.plain !== E.ptext(r.after) || alignChg || colChg;
         if (r.changed) {
           r.tags = Array.from(logTags.get(r.after) || []).filter((t) => TEXT_TAGS.includes(t));
           if (alignChg && !r.tags.includes('끝 표기')) r.tags.push('정렬 변경');
@@ -2001,6 +2056,43 @@ details.grp{margin:2px 0 0}
     });
     return wrap;
   }
+  // ───────── 색만 칠한 글자 → 확인 후 검정으로 ─────────
+  function newCl() { return { scan: null, sel: new Set(), color: '전체' }; }
+  function refreshColors() {
+    if (!state.ctx) { state.cl.scan = null; return; }
+    try {
+      const sc = E.scanColors(state.ctx);
+      sc.items.forEach((x) => { x.sig = x.idx + '|' + x.parts.map((q) => q.t).join('').slice(0, 40); });
+      state.cl.scan = sc;
+    } catch (e) { state.cl.scan = null; }
+  }
+  function clSelection() {
+    refreshColors();
+    const sc = state.cl.scan;
+    return sc ? new Set(sc.items.filter((x) => state.cl.sel.has(x.sig)).map((x) => x.id)) : null;
+  }
+  function clRow(x) {
+    const cl = state.cl;
+    const cb = h('input', { type: 'checkbox', 'aria-label': '이 문장의 색을 검정으로 되돌리기', checked: cl.sel.has(x.sig) || null, onchange: (e) => { if (e.target.checked) cl.sel.add(x.sig); else cl.sel.delete(x.sig); renderSide(); } });
+    const txt = h('span', { class: 'itx' }, x.pre ? '…' : null, x.parts.map((q) => { const s = h('span', { text: q.t }); if (q.hex) s.style.color = q.hex; return s; }), x.post ? '…' : null);
+    return h('div', { class: 'mkchk' }, cb, h('button', { class: 'item', type: 'button', onclick: () => jumpTo(x.ref) }, h('span', { class: 'ino', text: `문단 ${nf(x.idx)} · ${x.names.join('·')} · 색 글자 ${nf(x.n)}자` }), txt));
+  }
+  function colorsCard(f) {
+    const cl = state.cl, sc = cl.scan;
+    if (!state.ctx || !sc) return null;
+    const applied = state.cleaned ? state.log.filter((l) => f.match(l.rule)) : [];
+    if (!sc.items.length && !applied.length) return null;
+    const vis = (x) => cl.color === '전체' || x.names.includes(cl.color), list = sc.items.filter(vis);
+    const nSel = sc.items.filter((x) => cl.sel.has(x.sig)).length;
+    let status = nSel ? `${nf(nSel)}문장 되돌릴 예정` : (applied.length ? `${nf(applied.length)}곳 되돌림` : '고른 것 없음');
+    const wrap = h('div', { class: 'mk' });
+    wrap.append(h('div', { class: 'mkcnt', text: `색만 칠한 문단 ${nf(sc.items.length)}개 · 체크한 문장만 "정리하기" 때 검정이 됩니다(글자는 그대로)` }));
+    const names = Array.from(new Set(sc.items.reduce((a, x) => a.concat(x.names), [])));
+    if (names.length > 1) wrap.append(h('div', { class: 'mkflt' }, ['전체'].concat(names).map((c) => h('button', { class: 'btn sm', type: 'button', 'aria-pressed': cl.color === c ? 'true' : 'false', onclick: () => { cl.color = c; renderSide(); } }, c))));
+    if (list.length) wrap.append(mkGroup('cl|list', '색', '색만 칠한 글자 (부호 없음)', list, list.filter((x) => cl.sel.has(x.sig)).length, (on) => list.forEach((x) => { if (on) cl.sel.add(x.sig); else cl.sel.delete(x.sig); }), clRow));
+    if (applied.length) wrap.append(itemsDetails('feat|' + f.id, `되돌린 곳 ${nf(applied.length)}곳 보기`, applied, logItem));
+    return h('div', { class: 'feat' }, h('div', { class: 'fh' }, icon(f.icon), h('b', { text: f.name }), h('span', { class: 'fs' + (nSel ? ' on' : ''), text: status })), h('p', { class: 'fd', text: f.desc }), wrap);
+  }
   // ───────── 교정 기호 반영(작교본) 카드 ─────────
   function newMk(name) { return { scan: null, off: new Set(), on: new Set(), cdel: new Set(), apply: /작교/.test(name || ''), color: '전체' }; }
   function refreshMarks() {
@@ -2087,6 +2179,7 @@ details.grp{margin:2px 0 0}
   }
   function featEl(f) {
     if (f.id === 'marks') return marksCard(f);
+    if (f.id === 'colors') return colorsCard(f);
     let status = '', cls = 'fs', body = null;
     if (f.id === 'history' || f.id === 'format') status = '저장할 때 적용';
     else if (f.id === 'quotes' && !E.AUTO_ROUND_QUOTES) {

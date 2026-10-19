@@ -203,6 +203,14 @@ details.grp{margin:2px 0 0}
 .dock .field{display:block;margin:0 0 10px}
 .dock .field>span{display:block;margin-bottom:4px;font-size:12.5px;color:var(--ink2)}
 .dock input,.dock select{width:100%;min-height:36px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:var(--paper)}
+.cpick{margin:0 0 10px}
+.cpick summary{cursor:pointer;font-size:13px;font-weight:600;min-height:32px;display:flex;align-items:center}
+.cprow{display:flex;gap:6px;align-items:center;margin-top:6px}
+.dock .cprow input.cpcol{width:40px;min-height:34px;padding:0;border:1px solid var(--line);border-radius:0;background:transparent;cursor:pointer;flex:none}
+.dock .cprow input.cphex{width:92px;min-height:34px;padding:0 4px;border:0;border-bottom:1px solid var(--ink);border-radius:0;background:transparent;font-size:13px;text-transform:uppercase;flex:none}
+.cprecent{display:flex;gap:6px;margin-top:6px;min-height:0}
+.cprecent .cpsw{width:22px;height:22px;padding:0;border:1px solid var(--line);cursor:pointer}
+.cphint{margin:6px 0 0;font-size:12px;color:var(--mute);line-height:1.5}
 .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 
 .toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;display:flex;gap:14px;align-items:center;max-width:min(92vw,520px);padding:10px 16px;border-radius:8px;background:var(--ink);color:var(--onink);font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.25)}
@@ -243,6 +251,17 @@ details.grp{margin:2px 0 0}
             <option value="mode2">지문 사이 빈 줄 있음</option>
             <option value="mode3">지문은 붙이고 대사·속마음만 한 줄 띄움</option>
           </select></label>
+        <details class="cpick" id="cpick">
+          <summary>선택한 글자에 색 지정</summary>
+          <div class="cprow">
+            <input class="cpcol" id="cpColor" type="color" value="#ff0000" aria-label="색상표에서 고르기">
+            <input class="cphex" id="cpHex" type="text" value="#FF0000" maxlength="7" spellcheck="false" autocomplete="off" aria-label="HEX 색 코드" placeholder="#RRGGBB">
+            <button class="btn sm" id="cpApply" type="button">적용</button>
+            <button class="btn sm" id="cpBlack" type="button">검정으로</button>
+          </div>
+          <div class="cprecent" id="cpRecent" aria-label="최근 쓴 색"></div>
+          <p class="cphint" id="cpHint"></p>
+        </details>
         <button class="btn primary block" id="btnClean" type="button" disabled>정리하기</button>
         <div class="btnrow" id="afterRow" hidden>
           <button class="btn sm" id="btnRevert" type="button"><span class="ic" data-icon="undo" data-size="14"></span>원본으로 되돌리기</button>
@@ -1272,20 +1291,48 @@ details.grp{margin:2px 0 0}
 
   // ───────── 색만 칠한 글자(부호 없음) → 확인 후 검정으로 되돌리기 ─────────
   // 글자는 그대로 두고 run 의 글자 서식(charPr)만 '같은 서식 + 글자색 검정'으로 바꾼다. 기본은 건드리지 않는다(작가 요청 색과 구분 어려움).
-  function blackVariant(ctx, cid) {
-    ctx.blackOf = ctx.blackOf || {};
-    if (ctx.blackOf[cid]) return ctx.blackOf[cid];
+  /** 같은 서식에 글자색만 hex 인 charPr 의 id. 같은 서식·색이 이미 있으면 그것을 재사용하고, 없으면 복제해 header 에 추가한다 */
+  function charPrWithColor(ctx, cid, hex) {
+    hex = String(hex).toUpperCase();
+    ctx.colorOf = ctx.colorOf || {};
+    const key = cid + '|' + hex;
+    if (ctx.colorOf[key]) return ctx.colorOf[key];
+    if (String(ctx.colors[cid] || '').toUpperCase() === hex) return (ctx.colorOf[key] = cid);
     const all = descendants(ctx.header, 'charPr'), base = all.find((c) => c.getAttribute('id') === cid);
     if (!base) return null;
+    const canon = (el, root) => el.localName + '[' + Array.from(el.attributes).filter((a) => !(root && (a.name === 'id' || a.name === 'textColor'))).map((a) => a.name + '=' + a.value).sort().join(';') + ']' + Array.from(el.childNodes).filter((n) => n.nodeType === 1).map((c) => canon(c, false)).join('');
+    const want = canon(base, true);
+    const same = all.find((c) => c !== base && String(c.getAttribute('textColor') || '').toUpperCase() === hex && canon(c, true) === want);
+    if (same) return (ctx.colorOf[key] = same.getAttribute('id'));
     const nid = String(Math.max(...all.map((c) => parseInt(c.getAttribute('id'), 10) || 0)) + 1);
     const n = base.cloneNode(true);
-    n.setAttribute('id', nid); n.setAttribute('textColor', '#000000');
+    n.setAttribute('id', nid); n.setAttribute('textColor', hex);
     base.parentNode.appendChild(n);
     base.parentNode.setAttribute('itemCnt', String(kids(base.parentNode, 'charPr').length));
-    ctx.colors[nid] = '#000000';
+    ctx.colors[nid] = hex;
     if (ctx.italics.has(cid)) ctx.italics.add(nid);
-    ctx.headerModified = true; ctx.blackOf[cid] = nid;
-    return nid;
+    ctx.headerModified = true;
+    return (ctx.colorOf[key] = nid);
+  }
+  const blackVariant = (ctx, cid) => charPrWithColor(ctx, cid, '#000000');
+  /** ranges: [{slot, a, b}] = 편집 화면에서 드래그한 글자(슬롯 안 위치). 그 글자만 run 을 쪼개 글자색 hex 를 입힌다. 반환 {changed(글자 수), skipped(구조상 건너뛴 곳)} */
+  function colorRanges(ctx, ranges, hex) {
+    let changed = 0, skipped = 0;
+    for (const { slot, a, b } of ranges) {
+      const run = slot.run, node = slot.node, T = node.nodeValue || '', lo = Math.max(0, a), hi = Math.min(T.length, b), tEl = node.parentNode;
+      if (hi <= lo) continue;
+      const simple = run && tEl && tEl.localName === 't' && tEl.childNodes.length === 1 && Array.from(run.childNodes).filter((n) => n.nodeType === 1).length === 1;
+      const nid = simple ? charPrWithColor(ctx, slot.cid, hex) : null;
+      if (!nid) { skipped++; continue; }
+      if (nid === slot.cid) continue;
+      const mk = (txt, cid) => { const r = run.cloneNode(true), t = kids(r, 't')[0]; r.setAttribute('charPrIDRef', cid); while (t.firstChild) t.removeChild(t.firstChild); t.appendChild(node.ownerDocument.createTextNode(txt)); return r; };
+      const par = run.parentNode;
+      if (lo > 0) par.insertBefore(mk(T.slice(0, lo), slot.cid), run);
+      if (hi < T.length) par.insertBefore(mk(T.slice(hi), slot.cid), run.nextSibling);
+      node.nodeValue = T.slice(lo, hi); run.setAttribute('charPrIDRef', nid);
+      changed += hi - lo;
+    }
+    return { changed, skipped };
   }
   /** 글자색이 칠해진 문단 목록(변경 없음). 교정 부호(/)나 (@코멘트)가 칠해진 글자에 남은 문단은 제외 */
   function scanColors(ctx) {
@@ -1377,7 +1424,7 @@ details.grp{margin:2px 0 0}
     classify, kindOf, protRes, markTextOf, runChecks, clean, preview, load, save, reportCsv,
     isBlankP, makeBlank, strip, isBlackish, isEndMark, normalizeFormat, periodIssues, stripComments, commentSpans, paraAlign,
     ensureSlot, splitParagraph, splitAtBreak, roundQuotes, SB_RE, AUTO_ROUND_QUOTES, snapshot, compareRows, diffChars, charsOfSegs, segsOfPara,
-    scanMarks, applyMarks, scanColors, applyUncolor,
+    scanMarks, applyMarks, scanColors, applyUncolor, colorRanges,
   };
 });
 
@@ -1461,7 +1508,7 @@ details.grp{margin:2px 0 0}
     rows: [], kinds: new Map(), rowIdx: new Map(), page: 0, view: mq('(max-width:899px)') ? 'tools' : 'edit',
     cleaned: false, dirty: false, log: [], issues: [], preview: null, previewBusy: false,
     chgText: new Set(), chgSpace: new Set(), open: new Set(), seen: new Set(), shown: {}, menuFor: null,
-    q: '', hits: [], hitPos: -1, mk: newMk(''), cl: newCl(), focusEl: null,
+    q: '', hits: [], hitPos: -1, mk: newMk(''), cl: newCl(), cp: { sel: null, recent: [] }, focusEl: null,
     edMode: 'edit', snap: null, cmp: null, cmpPage: 0, cmpOnly: true, undoStack: [], lastOp: null,
   };
   function loadPrefs() {
@@ -1775,6 +1822,64 @@ details.grp{margin:2px 0 0}
     const fn = state.undoStack.pop();
     if (!fn) return;
     fn(); recompute(); analyze(); renderAll();
+  }
+  // ───────── 드래그한 글자에 색 지정(색상표·HEX) ─────────
+  const RECENT_KEY = 'proofcheck.recentColors';
+  const normHex = (v) => { v = String(v || '').trim().toUpperCase(); if (v && v[0] !== '#') v = '#' + v; if (/^#[0-9A-F]{3}$/.test(v)) v = '#' + v[1] + v[1] + v[2] + v[2] + v[3] + v[3]; return /^#[0-9A-F]{6}$/.test(v) ? v : null; };
+  /** 지금 드래그한 범위 → 편집 화면 글자 조각별 [{slot, a, b}] */
+  function segRangesOf(rg) {
+    const ranges = []; let total = 0;
+    $('#paneEditor').querySelectorAll('.seg').forEach((sp) => {
+      const slot = segMap.get(sp);
+      if (!slot || !rg.intersectsNode(sp)) return;
+      const len = sp.textContent.length, off = (c, o) => { const r = document.createRange(); r.setStart(sp, 0); r.setEnd(c, o); return r.toString().length; };
+      const a = sp.contains(rg.startContainer) ? off(rg.startContainer, rg.startOffset) : 0;
+      const b = sp.contains(rg.endContainer) ? off(rg.endContainer, rg.endOffset) : len;
+      if (b > a) { ranges.push({ slot, a, b }); total += b - a; }
+    });
+    return { ranges, total };
+  }
+  function cpHint() {
+    const n = state.cp.sel ? state.cp.sel.total : 0;
+    $('#cpHint').textContent = n ? `선택한 글자 ${nf(n)}자 — 색을 고르고 [적용]을 누르세요.` : '편집 화면에서 색을 바꿀 글자를 드래그로 선택하세요. 실수로 검정이 된 글자를 되살릴 때 씁니다.';
+  }
+  function onSelChange() {
+    const sel = window.getSelection(), pane = $('#paneEditor');
+    if (!sel || !sel.rangeCount || !pane) return;
+    const rg = sel.getRangeAt(0);
+    if (!pane.contains(rg.commonAncestorContainer)) return;      // 색상 입력칸 등 편집 화면 밖은 마지막 선택을 유지
+    state.cp.sel = sel.isCollapsed ? null : segRangesOf(rg);     // 편집 화면에서 커서만 놓으면 선택 해제
+    cpHint();
+  }
+  function renderRecent() {
+    $('#cpRecent').replaceChildren(...state.cp.recent.map((c) => h('button', { type: 'button', class: 'cpsw', title: c, 'aria-label': '최근 쓴 색 ' + c, style: 'background:' + c, onclick: () => { $('#cpHex').value = c; $('#cpColor').value = c.toLowerCase(); } })));
+  }
+  function applySelColor(input) {
+    const hex = normHex(input), sel = state.cp.sel;
+    if (!state.ctx) return;
+    if (!hex) { toast('색 코드는 #RRGGBB 형식입니다. 예: #FF0000', 'err'); return; }
+    if (!sel || !sel.total) { toast('편집 화면에서 색을 바꿀 글자를 먼저 드래그해 선택하세요.', 'err'); return; }
+    const ps = Array.from(new Set(sel.ranges.map((r) => r.slot.run.parentNode)));
+    const backups = ps.map((p) => ({ p, kids: Array.from(p.childNodes).map((n) => n.cloneNode(true)) }));
+    const res = E.colorRanges(state.ctx, sel.ranges, hex);
+    if (!res.changed) { toast(res.skipped ? '이 부분은 구조상 색을 바꿀 수 없어 건너뛰었습니다.' : '이미 같은 색입니다.', res.skipped ? 'err' : ''); return; }
+    state.dirty = true;
+    pushUndo(() => backups.forEach(({ p, kids }) => { while (p.firstChild) p.removeChild(p.firstChild); kids.forEach((n) => p.appendChild(n)); }));
+    state.cp.recent = [hex].concat(state.cp.recent.filter((c) => c !== hex)).slice(0, 6);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(state.cp.recent)); } catch (e) { /* 이번 방문에만 */ }
+    state.cp.sel = null; const gs = window.getSelection(); if (gs) gs.removeAllRanges();
+    recompute(); renderEditor(); renderRecent(); cpHint(); reanalyze();
+    toast(`${nf(res.changed)}자의 색을 ${hex}로 바꿨습니다.` + (res.skipped ? ` (${res.skipped}곳은 건너뜀)` : ''), '', { label: '되돌리기', fn: undoLast });
+  }
+  function initColorPicker() {
+    const col = $('#cpColor'), hex = $('#cpHex');
+    try { state.cp.recent = (JSON.parse(localStorage.getItem(RECENT_KEY) || '[]') || []).filter((c) => /^#[0-9A-F]{6}$/.test(c)).slice(0, 6); } catch (e) { state.cp.recent = []; }
+    col.addEventListener('input', () => { hex.value = col.value.toUpperCase(); });
+    hex.addEventListener('input', () => { const v = normHex(hex.value); if (v) col.value = v.toLowerCase(); });
+    $('#cpApply').addEventListener('click', () => applySelColor(hex.value));
+    $('#cpBlack').addEventListener('click', () => applySelColor('#000000'));
+    document.addEventListener('selectionchange', onSelChange);
+    renderRecent(); cpHint();
   }
   function enterAt(sp) {
     const row = sp.closest('.row'); if (!row) return;
@@ -2233,6 +2338,7 @@ details.grp{margin:2px 0 0}
   $('#fileInput').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; openFile(f); });
   $('#btnExport').addEventListener('click', exportHwpx);
   $('#btnClean').addEventListener('click', runClean);
+  initColorPicker();
   $('#btnCsv').addEventListener('click', exportCsv);
   const rv = $('#btnRevert'); let armed = false;
   rv.addEventListener('click', () => {

@@ -1185,15 +1185,20 @@ details.grp{margin:2px 0 0}
     const sl = []; for (let i = 0; i < s.length; i++) if (s[i] === '/' && !inC(i)) sl.push(i);
     const claimed = new Set(), only = (t) => /^[ \u00a0]*$/.test(t);
     if (sl.length % 2) {
-      sl.forEach((i) => { const raw = new Set([i]), [b4, af] = win(i, i, raw); add({ kind: '확인필요', reason: '짝이 맞지 않는 / (문단에 걸친 범위일 수 있음) — 슬래시만 지움', color: colAt(i), raw, removal: null, before: b4, after: af, auto: false, note: '' }); });
+      sl.forEach((i) => { const raw = new Set([i]), [b4, af] = win(i, i, raw); add({ kind: '확인필요', reason: '짝이 맞지 않는 / (문단에 걸친 범위일 수 있음) — 슬래시만 지움', color: colAt(i), raw, removal: null, before: b4, after: af, auto: false, note: '', lone: sl.length === 1, openOk: !/[가-힣A-Za-z0-9]/.test(i > 0 ? s[i - 1] : ' ') }); });
       return res;
     }
     for (let k = 0; k < sl.length; k += 2) {
       const a = sl[k], b = sl[k + 1], inner = s.slice(a + 1, b), color = colAt(a);
       const bad = (reason) => { const raw = new Set([a, b]), [b4, af] = win(a, b, raw); add({ kind: '확인필요', reason, color, raw, removal: null, before: b4, after: af, auto: false, note: '' }); };
       if (/[\n\u0001]/.test(inner)) { bad('줄바꿈·개체가 섞인 범위 — 슬래시만 지움'); continue; }
+      if (sp.some(([ca, cb]) => ca > a && cb < b)) { bad('코멘트가 안에 들어 있는 범위 — 슬래시만 지움'); continue; }
       const m = splitMark(inner);
-      if (!m) { bad('( ) 없이 / / 만 있는 범위 표시 — 슬래시만 지움'); continue; }
+      if (!m) {   // /문장/ : 슬래시만 지우고 문장은 그대로(작가가 직접 수정·추가한 부분). 앞이 글자에 붙은 a/b 꼴은 부호로 보지 않는다
+        if (inner.trim() !== '' && !/[가-힣A-Za-z0-9]/.test(a > 0 ? s[a - 1] : ' ')) { const raw = new Set([a, b]), [b4, af] = win(a, b, raw); add({ kind: '범위 표시', reason: '', color, raw, removal: null, before: b4, after: af, auto: true, note: '' }); }
+        else bad('( ) 없이 / / 만 있고 앞이 글자에 붙어 있음 — 슬래시만 지움');
+        continue;
+      }
       const [A, B] = m;
       if (A === '' || B === '') { bad('내용이 빈 부호 — 슬래시만 지움'); continue; }
       const k0 = B === '삭제' ? '삭제' : B === '추가' ? '추가' : '교체';
@@ -1226,12 +1231,25 @@ details.grp{margin:2px 0 0}
   function scanMarks(ctx) {
     const items = [], comments = [];
     paragraphs(ctx.section).forEach((p, i) => { const r = scanPara(p, i + 1, ctx.colors); items.push(...r.items); comments.push(...r.comments); });
-    const n = (f) => items.filter(f).length;
+    // 문단에 걸친 /문장…/ : 슬래시가 하나뿐인 문단 둘이 가까이(40문단 이내) 이어지면 한 범위로 보고 슬래시만 지운다
+    const lone = items.filter((x) => x.lone);
+    for (let k = 0; k + 1 < lone.length;) {
+      const a = lone[k], b = lone[k + 1];
+      if (a.openOk && b.idx > a.idx && b.idx - a.idx <= 40) {
+        a.kind = '범위 표시'; a.auto = true; a.span = [a.idx, b.idx]; a.partner = b.id; a.note = '문단 걸침'; a.reason = '';
+        a.before = a.before + '  ⋯  ' + b.before; a.after = a.after + '  ⋯  ' + b.after;
+        b.kind = '범위 표시'; b.auto = true; b.hidden = true;
+        k += 2;
+      } else k++;
+    }
+    const n = (f) => items.filter((x) => !x.hidden && f(x)).length;
     return { items, comments, stats: { auto: n((x) => x.auto), review: n((x) => !x.auto), comments: comments.length, reject: n((x) => x.kind === '수정X 유지') } };
   }
   /** sel.ids: 반영할 항목 id(자동 항목 + 슬래시만 지울 '확인필요' 항목), sel.comments: 지울 코멘트 id. 반환: {log, applied} */
   function applyMarks(ctx, sel) {
-    const ids = (sel && sel.ids) || new Set(), cids = (sel && sel.comments) || new Set(), log = [];
+    const full = scanMarks(ctx), meta = new Map(full.items.map((x) => [x.id, x]));
+    const ids = new Set((sel && sel.ids) || []), cids = (sel && sel.comments) || new Set(), log = [];
+    ids.forEach((id) => { const m = meta.get(id); if (m && m.partner) ids.add(m.partner); });   // 문단에 걸친 범위는 양쪽을 함께
     let applied = 0;
     paragraphs(ctx.section).forEach((p, i) => {
       const r = scanPara(p, i + 1, ctx.colors);
@@ -1246,7 +1264,7 @@ details.grp{margin:2px 0 0}
       r.chars.forEach((c, q) => { if (!c.slot) return; if (!keep.has(c.slot)) keep.set(c.slot, []); if (!del.has(q)) keep.get(c.slot).push(c.ch); });
       keep.forEach((arr, slot) => { const nv = arr.join(''); if (nv !== sget(slot)) sset(slot, nv); });
       dropLineseg(p);
-      its.forEach((x) => { applied++; log.push({ rule: '교정 기호 반영', sub: x.kind, ref: p, idx: x.idx, before: x.before, after: x.after }); });
+      its.forEach((x) => { const m = meta.get(x.id) || x; if (m.hidden) return; applied++; log.push({ rule: '교정 기호 반영', sub: m.kind, ref: p, idx: m.idx, before: m.before, after: m.after }); });
       cms.forEach((c) => { applied++; log.push({ rule: '편집자 코멘트 삭제', sub: '코멘트', ref: p, idx: c.idx, before: c.text, after: '(삭제)' }); });
     });
     return { log, applied };
@@ -1380,7 +1398,7 @@ details.grp{margin:2px 0 0}
       desc: '저장할 때 파일 안에 남은 이전 저장 이력을 지웁니다.',
       keys: '이력 히스토리 발송 개인정보 이전 저장', match: () => false },
     { id: 'marks', icon: 'checklist', name: '교정 기호 반영',
-      desc: '작가 교정본(작교본)의 /…/ 교정 부호를 한꺼번에 반영합니다. /A(B)/는 B로, /A(추가)/는 A로, /A(삭제)/는 지우고(앞뒤 공백이 겹치면 한 칸으로), (@수정X)가 붙은 부호는 원문을 그대로 둡니다. 글자 색은 그대로 유지하고, (@의견) 코멘트는 고른 것만 지웁니다. 반영 전에 아래 목록에서 하나씩 확인하세요. 짝이 맞지 않는 /는 자동으로 바꾸지 않고 슬래시만 지울지 고르게 합니다.',
+      desc: '작가 교정본(작교본)의 /…/ 교정 부호를 한꺼번에 반영합니다. /A(B)/는 B로, /A(추가)/는 A로, /A(삭제)/는 지우고(앞뒤 공백이 겹치면 한 칸으로), (@수정X)가 붙은 부호는 원문을 그대로 둡니다. 글자 색은 그대로 유지하고, (@의견) 코멘트는 고른 것만 지웁니다. 반영 전에 아래 목록에서 하나씩 확인하세요. /문장/처럼 괄호 없이 슬래시만 있는 범위(문단에 걸친 것 포함)는 슬래시만 지우고 문장은 그대로 둡니다. 짝이 맞지 않는 /는 자동으로 바꾸지 않고 슬래시만 지울지 고르게 합니다.',
       keys: '교정 기호 부호 슬래시 작교본 반영 수정X 코멘트 삭제 추가 교체 작가 편집자', match: (r) => r === '교정 기호 반영' || r === '편집자 코멘트 삭제' },
     { id: 'issues', icon: 'checklist', name: '확인할 항목',
       desc: '문장이 끝났는데 마침표 없이 다음 문장이 이어진 곳, 교정 표기(/원문(수정)/)의 색(어떤 색이든)과 슬래시 짝, (@의견) 괄호, 남은 작가 표기, 직선 따옴표, Enter 대신 Shift+Enter로 내려간 문단(줄바꿈만 있는 빈 문단 포함)을 확인해 알려 줍니다. (@의견) 안은 무시하고, 자동으로 고치지 않습니다.',
@@ -1980,7 +1998,9 @@ details.grp{margin:2px 0 0}
     refreshMarks();
     const sc = state.mk.scan;
     if (!sc) return null;
-    return { ids: new Set(sc.items.filter(mkSel).map((x) => x.id)), comments: new Set(sc.comments.filter((c) => state.mk.cdel.has(c.sig)).map((c) => c.id)) };
+    const ids = new Set();
+    sc.items.filter((x) => !x.hidden && mkSel(x)).forEach((x) => { ids.add(x.id); if (x.partner) ids.add(x.partner); });
+    return { ids, comments: new Set(sc.comments.filter((c) => state.mk.cdel.has(c.sig)).map((c) => c.id)) };
   }
   function mkGroup(id, tag, label, list, selCount, bulk, rowFn) {
     const shown = state.shown[id] || 30;
@@ -1996,7 +2016,7 @@ details.grp{margin:2px 0 0}
   }
   function mkRow(x) {
     const mk = state.mk, warn = /주의/.test(x.note || '') ? x.note.split(' · ').filter((t) => /주의/.test(t)).join(' · ') : '';
-    const meta = [`문단 ${nf(x.idx)}`, x.color, x.reason || '', (x.note || '').split(' · ').filter((t) => t && !/주의/.test(t)).join(' · ')].filter(Boolean).join(' · ');
+    const meta = [x.span ? `문단 ${nf(x.span[0])}~${nf(x.span[1])}` : `문단 ${nf(x.idx)}`, x.color, x.reason || '', (x.note || '').split(' · ').filter((t) => t && !/주의/.test(t)).join(' · ')].filter(Boolean).join(' · ');
     const body = h('button', { class: 'item', type: 'button', onclick: () => jumpTo(x.ref) },
       h('span', { class: 'ino' }, meta, warn ? h('span', { class: 'mkwarn', text: ' · ⚠ ' + warn }) : null),
       h('span', { class: 'itx' }, x.before, h('span', { class: 'arr', text: '  →  ' }), x.after));
@@ -2022,7 +2042,7 @@ details.grp{margin:2px 0 0}
     const applied = state.cleaned ? state.log.filter((l) => f.match(l.rule)) : [];
     if (!sc.items.length && !applied.length) return null;          // 교정 부호가 없으면 카드를 보이지 않는다
     const vis = (x) => mk.color === '전체' || x.color === mk.color;
-    const autoAll = sc.items.filter((x) => x.auto), revAll = sc.items.filter((x) => !x.auto);
+    const shownItems = sc.items.filter((x) => !x.hidden), autoAll = shownItems.filter((x) => x.auto), revAll = shownItems.filter((x) => !x.auto);
     const nAuto = autoAll.filter(mkSel).length, nRev = revAll.filter(mkSel).length, nCom = sc.comments.filter((c) => mk.cdel.has(c.sig)).length;
     let status = '', cls = 'fs';
     if (state.cleaned && applied.length && !mk.apply) status = `${nf(applied.length)}곳 반영`;
@@ -2034,9 +2054,9 @@ details.grp{margin:2px 0 0}
     const colors = Array.from(new Set(sc.items.concat(sc.comments).map((x) => x.color).filter(Boolean)));
     if (colors.length > 1) wrap.append(h('div', { class: 'mkflt' }, ['전체'].concat(colors).map((c) => h('button', { class: 'btn sm', type: 'button', 'aria-pressed': mk.color === c ? 'true' : 'false', onclick: () => { mk.color = c; renderSide(); } }, c))));
     const setAuto = (list) => (on) => list.forEach((x) => { if (on) mk.off.delete(x.sig); else mk.off.add(x.sig); });
-    ['교체', '추가', '삭제', '수정X 유지'].forEach((k) => {
+    ['교체', '추가', '삭제', '수정X 유지', '범위 표시'].forEach((k) => {
       const all = autoAll.filter((x) => x.kind === k), list = all.filter(vis);
-      if (list.length) wrap.append(mkGroup('mk|' + k, '반영', k + (k === '수정X 유지' ? ' (원문 그대로)' : ''), list, list.filter(mkSel).length, setAuto(list), mkRow));
+      if (list.length) wrap.append(mkGroup('mk|' + k, '반영', k + (k === '수정X 유지' ? ' (원문 그대로)' : k === '범위 표시' ? ' (/ 만 지우고 문장은 그대로)' : ''), list, list.filter(mkSel).length, setAuto(list), mkRow));
     });
     const rev = revAll.filter(vis);
     if (rev.length) wrap.append(mkGroup('mk|rev', '확인', '확인 필요 (슬래시만 지울 것을 고르세요)', rev, rev.filter((x) => !x.noop && mkSel(x)).length, (on) => rev.forEach((x) => { if (x.noop) return; if (on) mk.on.add(x.sig); else mk.on.delete(x.sig); }), mkRow));

@@ -176,7 +176,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
     <label class="chk"><input id="rm" type="checkbox"> 아이디 저장</label>
     <button>로그인</button><div id="le" class="bad"></div>
   </form>
-  <p class="k" style="max-width:340px;margin:18px auto 0;text-align:center;font-size:12px;line-height:1.8">ID 및 패스워드 분실 시 담당자(<a href="mailto:admin@yahwalab.xyz" style="color:inherit">admin@yahwalab.xyz</a>)에게 연락 부탁드립니다.</p>
+  <p class="k" style="max-width:340px;margin:18px auto 0;text-align:center;font-size:12px;line-height:1.8">🔒 ID 및 패스워드 분실 시 담당자(<a href="mailto:admin@yahwalab.xyz" style="color:inherit">admin@yahwalab.xyz</a>)에게 연락 부탁드립니다.</p>
   <p class="foot">YAHWA LAB · 여성향 웹소설 전문 콘텐츠 레이블</p>
 </section>
 
@@ -317,7 +317,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   </div>
   <div class="pg" id="pg-visit" hidden>
     <h2><small>(01)</small>홈페이지 방문자</h2>
-    <p class="k" style="font-size:12px;margin:0 0 10px;text-align:center">야화랩 홈페이지(yahwalab.xyz)의 방문자 통계입니다. 하루 단위로 집계되고 몇 시간 늦게 반영될 수 있습니다.</p>
+    <p class="k" style="font-size:12px;margin:0 0 10px;text-align:center">야화랩 홈페이지(yahwalab.xyz) 메인 페이지의 방문자 통계입니다. 하루(한국 시간) 단위로 집계되고 몇 시간 늦게 반영될 수 있습니다.</p>
     <div class="row" id="vsr" style="gap:8px;margin-bottom:12px"></div>
     <div id="vsb"><p class="k">불러오는 중…</p></div>
     <div id="vcb"></div>
@@ -334,7 +334,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.6.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.7.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -467,14 +467,16 @@ $('#pg-docs').onchange=e=>{if(e.target.id==='dcx'){const f=e.target.files[0];$('
 $('#lgm').onchange=()=>{LGM=monVal('#lgm');loadLogs()};
 $('#llm').onchange=()=>{LLM=monVal('#llm');loadLoginLogs()};
 $('#llr').onclick=e=>{const b=e.target.closest('[data-lr]');if(b){LLRO=b.dataset.lr;loadLoginLogs()}};
-/* 방문자: Edge Function cf-stats(관리자 전용, Cloudflare 통계 조회) 호출. 토큰은 서버 비밀값에만 있음 */
-let VDAYS=30,VT=0;
-const VPAGE={'/':'홈(Publishing)','/epub2/':'EPUB2 제작','/web-production/':'홈페이지 제작'},VDEV={desktop:'컴퓨터',mobile:'모바일',tablet:'태블릿'};
+/* 방문자: Edge Function cf-stats(관리자 전용, Cloudflare 통계 조회) 호출. 토큰은 서버 비밀값에만 있음. 집계 시작일(VSTART) 이전은 보여주지 않음 */
+const VSTART='2026-10-19',VDEV={desktop:'컴퓨터',mobile:'모바일',tablet:'태블릿'};
+let VF='',VTO='',VT=0;
+function vrange(){const t=iso(kst());let to=VTO||t;if(to>t)to=t;if(to<VSTART)to=VSTART;let f=VF||iso(addD(new Date(to+'T00:00:00Z'),-6));if(f<VSTART)f=VSTART;if(f>to)f=to;
+  if(Math.round((Date.parse(to)-Date.parse(f))/864e5)+1>93)f=iso(addD(new Date(to+'T00:00:00Z'),-92));return{f,to,n:Math.round((Date.parse(to)-Date.parse(f))/864e5)+1}}
 const vcnt=n=>Number(n||0).toLocaleString('ko-KR');
 function vcountry(c){try{return new Intl.DisplayNames(['ko'],{type:'region'}).of(c)||c}catch(e){return c}}
 function vlist(title,rows){return rows.length?`<p style="margin:20px 0 4px"><b>${title}</b></p><div style="border-bottom:1px solid var(--line)">${rows.map(r=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:14px"><span>${esc(r[0])}</span><b>${vcnt(r[1])}</b></div>`).join('')}</div>`:''}
 /* 홈페이지 버튼 클릭(문의·이메일 복사·출간작): site_event_counts(관리자만 읽기) 합산. Cloudflare 통계와 별개로 로드 */
-async function loadClicks(my){const el=$('#vcb'),t=kst(),from=iso(addD(t,-(VDAYS-1))),to=iso(t);
+async function loadClicks(my,from,to){const el=$('#vcb');
   const{data,error}=await SB.from('site_event_counts').select('day,event,page,label,n').gte('day',from).lte('day',to).limit(5000);
   if(my!==VT)return;
   if(error){el.innerHTML='<p class="k" style="margin-top:20px">문의 버튼 클릭을 불러오지 못했습니다. '+esc(error.message)+'</p>';return}
@@ -482,23 +484,23 @@ async function loadClicks(my){const el=$('#vcb'),t=kst(),from=iso(addD(t,-(VDAYS
   if(!R.length){el.innerHTML='<p style="margin:20px 0 4px"><b>문의 버튼 클릭</b></p><p class="k">이 기간에 집계된 클릭이 없습니다.</p>';return}
   const rows=[['투고 문의',sum(x=>x.event==='submit')],['제작 문의 · 홈페이지 제작',sum(x=>x.event==='make'&&x.page==='/web-production/')],['제작 문의 · EPUB2 제작',sum(x=>x.event==='make'&&x.page==='/epub2/')],['임프린트 등록 문의',sum(x=>x.event==='make_imprint')],['이메일 복사',sum(x=>x.event==='email_copy')],['출간작 클릭',sum(x=>x.event==='work_click')]],
     wk={};R.filter(x=>x.event==='work_click').forEach(x=>{const k=x.label||'(제목 없음)';wk[k]=(wk[k]||0)+x.n});
-  el.innerHTML=vlist('문의 버튼 클릭 ('+VDAYS+'일)',rows)+vlist('출간작별 클릭',Object.entries(wk).sort((a,b)=>b[1]-a[1]).slice(0,8))}
-async function loadVisit(){const el=$('#vsb'),my=++VT;
-  $('#vsr').innerHTML=[7,30,90].map(d=>`<button type="button" class="chp" data-vd="${d}" aria-pressed="${d===VDAYS}">${d}일</button>`).join('');
+  el.innerHTML=vlist('문의 버튼 클릭 ('+from.slice(5).replace('-','.')+' ~ '+to.slice(5).replace('-','.')+')',rows)+vlist('출간작별 클릭',Object.entries(wk).sort((a,b)=>b[1]-a[1]).slice(0,8))}
+async function loadVisit(){const el=$('#vsb'),my=++VT,R=vrange();
+  $('#vsr').innerHTML=`<label class="k" for="vqf">조회 기간</label><input id="vqf" type="date" min="${VSTART}" max="${iso(kst())}" value="${R.f}" style="width:auto"><span>~</span><input id="vqt" type="date" min="${VSTART}" max="${iso(kst())}" value="${R.to}" style="width:auto"><span class="k" style="font-size:12px">${VSTART.replace(/-/g,'.')}부터 집계 · 최대 93일</span>`;
   el.innerHTML='<p class="k">불러오는 중…</p>';
-  $('#vcb').innerHTML='';loadClicks(my);
-  const{data,error}=await SB.functions.invoke('cf-stats',{body:{days:VDAYS}});
+  $('#vcb').innerHTML='';loadClicks(my,R.f,R.to);
+  const{data,error}=await SB.functions.invoke('cf-stats',{body:{from:R.f,to:R.to}});
   if(my!==VT)return;
   if(error||!data){el.innerHTML='<p class="k">통계를 불러오지 못했습니다. 서버 연결이 아직 안 되었거나 일시적인 오류일 수 있습니다. 아래 링크에서 Cloudflare 대시보드로 확인해 주세요.</p>';return}
   if(data.error){el.innerHTML='<p class="k">'+(data.error==='not_configured'?'통계 연결 설정이 아직 안 되어 있습니다. 아래 링크에서 Cloudflare 대시보드로 확인해 주세요.':'통계를 불러오지 못했습니다. '+esc(data.detail||data.error))+'</p>';return}
-  const D=data.daily||[],vis=D.reduce((a,x)=>a+x.visits,0),pv=D.reduce((a,x)=>a+x.views,0),avg=Math.round(vis/Math.max(D.length,1)),last=D.slice(-14),mx=Math.max(...last.map(x=>x.visits),1);
-  if(!D.length){el.innerHTML='<p class="k">아직 집계된 방문이 없습니다. 방문 기록은 몇 시간 뒤부터 쌓입니다.</p>';return}
+  const D=(data.daily||[]).filter(x=>x.date>=VSTART),T=data.total||{visits:(data.daily||[]).reduce((a,x)=>a+x.visits,0),views:(data.daily||[]).reduce((a,x)=>a+x.views,0)},mx=Math.max(...D.map(x=>x.visits),1);
+  if(!T.visits&&!T.views&&!D.some(x=>x.visits)){el.innerHTML='<p class="k">이 기간에 집계된 방문이 없습니다. 방문 기록은 몇 시간 뒤부터 쌓입니다.</p>';return}
   const stat=(l,v)=>`<div style="text-align:center"><div class="k" style="font-size:12px">${l}</div><div style="font-size:22px;font-weight:700">${vcnt(v)}</div></div>`;
-  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">${stat(VDAYS+'일 방문',vis)}${stat('페이지뷰',pv)}${stat('일 평균 방문',avg)}</div>
-  <p style="margin:0 0 4px"><b>일별 방문</b> <span class="k" style="font-size:12px">(최근 ${last.length}일)</span></p>
-  <div style="border-bottom:1px solid var(--line)">${last.map(x=>`<div style="display:grid;grid-template-columns:52px 1fr 52px;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)"><span class="k" style="font-size:13px">${x.date.slice(5).replace('-','.')}</span><span style="height:6px;background:var(--line);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:${x.visits?Math.max(x.visits/mx*100,2):0}%;background:var(--ink)"></i></span><span style="text-align:right;font-size:15px;font-weight:700">${vcnt(x.visits)}</span></div>`).join('')}</div>
-  ${vlist('많이 본 페이지',(data.pages||[]).map(x=>[VPAGE[x.name]||x.name,x.views]))}${vlist('접속 국가',(data.countries||[]).map(x=>[vcountry(x.name),x.views]))}${vlist('기기',(data.devices||[]).map(x=>[VDEV[x.name]||x.name,x.views]))}`}
-$('#vsr').onclick=e=>{const b=e.target.closest('[data-vd]');if(b){VDAYS=+b.dataset.vd;loadVisit()}};
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">${stat('기간 방문',T.visits)}${stat('페이지뷰',T.views)}${stat('일 평균 방문',Math.round(T.visits/R.n))}</div>
+  <p style="margin:0 0 4px"><b>일별 방문</b> <span class="k" style="font-size:12px">(종료일 기준 최근 7일 · 기간을 바꿔도 같은 값)</span></p>
+  <div style="border-bottom:1px solid var(--line)">${D.map(x=>`<div style="display:grid;grid-template-columns:52px 1fr 52px;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)"><span class="k" style="font-size:13px">${x.date.slice(5).replace('-','.')}</span><span style="height:6px;background:var(--line);position:relative"><i style="position:absolute;left:0;top:0;bottom:0;width:${x.visits?Math.max(x.visits/mx*100,2):0}%;background:var(--ink)"></i></span><span style="text-align:right;font-size:15px;font-weight:700">${vcnt(x.visits)}</span></div>`).join('')}</div>
+  ${vlist('접속 국가',(data.countries||[]).map(x=>[vcountry(x.name),x.views]))}${vlist('기기',(data.devices||[]).map(x=>[VDEV[x.name]||x.name,x.views]))}${data.scope==='main'?'':'<p class="k" style="font-size:12px;margin:14px 0 0">※ 홈 외 페이지가 포함된 값입니다(서버 함수를 최신으로 교체하면 메인 페이지만 집계).</p>'}`}
+$('#vsr').onchange=e=>{if(e.target.id!=='vqf'&&e.target.id!=='vqt')return;const f=$('#vqf').value,t=$('#vqt').value;if(!f||!t)return;VF=f;VTO=t;loadVisit()};
 /* ---------- 출간작: 홈페이지(yahwalab.xyz)에 보일 작품 등록. works 컬럼을 재사용하고 표지는 covers 버킷에 저장 ---------- */
 let BK=[],BKSEL=null,BKCOVER=null; /* BKCOVER: 편집 중 새로 고른 표지(520×780 JPG로 변환된 Blob) */
 const BKG=['BL','로판','현로'],BKURL=/^https:\/\/blog\.naver\.com\//;

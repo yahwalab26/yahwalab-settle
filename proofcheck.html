@@ -1131,6 +1131,9 @@ details.grp{margin:2px 0 0}
   // /A(B)/ 교체 · /A(추가)/ · /A(삭제)/ 와 작가 표기 (@수정X)를 반영한다. (@…) 코멘트는 건드리지 않고, 고른 것만 지운다.
   // 글자만 지우고 남는 글자는 원래 자리(run)에 그대로 두므로 색·서식은 유지된다. 확신이 없는 것은 '확인필요'로 빼고 기본적으로 바꾸지 않는다.
   const MK_BRK = '\u0001';
+  // 부호 바로 뒤에 글자가 붙어 있을 때, 조사·어미로 보이면 붙여 두고 새 단어면 한 칸 띄운다(애매하면 띄우지 않는다)
+  const JOSA1 = '이가을를은는의에로와과도만들께랑나라인임며고서다요죠네군면니게던든';
+  const JOSA_W = /^(처럼|만큼|보다|부터|까지|마다|조차|밖에|뿐|씩|쯤|께서|에서|에게|한테|으로|이라|입니다|이다|이었|였|지만|지요|네요)/;
   const colorName = (hex) => { const c = String(hex || '').toUpperCase(); return c === '#FF0000' ? '빨강' : c === '#008000' ? '초록' : (isBlackish(c) ? '검정' : c); };
   const isRejText = (t) => /^\(@\s*수정\s*[xX×✕]\s*\)$/.test(t);
   function pchars(p) {
@@ -1164,11 +1167,11 @@ details.grp{margin:2px 0 0}
       if (rc === ' ' && (lc === ' ' || lc === '')) del.add(r); else if (lc === ' ' && rc === '') del.add(l);
     };
     res.collapse = collapse;
-    const win = (a, b, del) => {            // 부호 앞뒤 10자. 코멘트 (@…) 는 중간에서 자르지 않는다
+    const win = (a, b, del, subs) => {            // 부호 앞뒤 10자. 코멘트 (@…) 는 중간에서 자르지 않는다
       let lo = Math.max(0, a - 10), hi = Math.min(s.length, b + 11);
       for (const [ca, cb] of sp) { if (ca < lo && lo < cb) lo = ca; if (ca < hi && hi < cb) hi = cb; }
       let bf = '', af = '';
-      for (let i = lo; i < hi; i++) { bf += s[i]; if (!del.has(i)) af += s[i]; }
+      for (let i = lo; i < hi; i++) { bf += s[i]; if (!del.has(i)) af += (subs && subs[i]) || s[i]; }
       const pre = lo > 0 ? '…' : '', post = hi < s.length ? '…' : '';
       return [pre + show(bf) + post, pre + show(af) + post];
     };
@@ -1202,13 +1205,19 @@ details.grp{margin:2px 0 0}
       else if (k0 === '삭제') { kind = '삭제'; rng(a, b); removal = [a, b]; }
       else if (k0 === '추가') { kind = '추가'; raw.add(a); rng(po, b); }
       else { kind = '교체'; rng(a, po); raw.add(b - 1); raw.add(b); }
+      const lc = a > 0 ? s[a - 1] : ' ', nx = s.slice(b + 1, b + 4), res0 = k0 === '교체' ? B : A;
+      const wordStart = !/[가-힣A-Za-z0-9]/.test(lc);
+      const glued = rj < 0 && (kind === '교체' || kind === '추가') && wordStart && /^[가-힣A-Za-z0-9]/.test(nx) && !/[\s(\[{“‘"'<]$/.test(res0);
+      const josa = glued && (JOSA_W.test(nx) || JOSA1.indexOf(nx[0]) >= 0);
+      let subs = null;
+      if (glued && !josa) { raw.delete(b); subs = { [b]: ' ' }; }   // 닫는 / 자리에 한 칸을 넣는다
       const del = new Set(raw); if (removal) collapse(del, removal[0], removal[1]);
-      const [b4, af] = win(a, b, del), notes = [];
+      const [b4, af] = win(a, b, del, subs), notes = [];
       if (del.size > raw.size) notes.push('앞뒤 공백 정리');
-      const lc = a > 0 ? s[a - 1] : ' ', rc = b + 1 < s.length ? s[b + 1] : ' ';
-      if (kind === '추가' && lc === ' ' && /[가-힣A-Za-z0-9]/.test(rc) && /[가-힣A-Za-z0-9.,!?]$/.test(A)) notes.push('주의: 뒤 글자와 붙음');
+      if (subs) notes.push('뒤 공백 추가');
+      else if (glued && josa && kind === '추가') notes.push('주의: 뒤 글자와 붙음(조사로 보여 띄우지 않음)');
       if (rj >= 0) notes.push('작가 (@수정X)');
-      add({ kind, reason: '', color, raw, removal, before: b4, after: af, auto: true, note: notes.join(' · ') });
+      add({ kind, reason: '', color, raw, removal, subs, before: b4, after: af, auto: true, note: notes.join(' · ') });
     }
     sp.forEach(([ca, cb], j) => { if (isRejText(s.slice(ca, cb)) && !claimed.has(j)) noop('확인필요', '(@수정X)가 어느 교정 부호 옆인지 알 수 없음 — 자동 처리 안 함', ca, cb - 1); });
     return res;
@@ -1232,6 +1241,7 @@ details.grp{margin:2px 0 0}
       its.forEach((x) => { x.raw.forEach((q) => del.add(q)); if (x.removal) rem.push(x.removal); });
       cms.forEach((c) => { for (let q = c.a; q < c.b; q++) del.add(q); rem.push([c.a, c.b - 1]); });
       rem.sort((a, b) => a[0] - b[0]).forEach(([a, b]) => r.collapse(del, a, b));
+      its.forEach((x) => { if (x.subs) Object.keys(x.subs).forEach((q) => { r.chars[q].ch = x.subs[q]; }); });
       const keep = new Map();
       r.chars.forEach((c, q) => { if (!c.slot) return; if (!keep.has(c.slot)) keep.set(c.slot, []); if (!del.has(q)) keep.get(c.slot).push(c.ch); });
       keep.forEach((arr, slot) => { const nv = arr.join(''); if (nv !== sget(slot)) sset(slot, nv); });

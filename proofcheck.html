@@ -204,7 +204,14 @@ details.grp{margin:2px 0 0}
 .dock .field>span{display:block;margin-bottom:4px;font-size:12.5px;color:var(--ink2)}
 .dock input,.dock select{width:100%;min-height:36px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:var(--paper)}
 .cpick{margin:0 0 10px}
-.cpick summary{cursor:pointer;font-size:13px;font-weight:600;min-height:32px;display:flex;align-items:center}
+.cpick>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:40px;padding:0 14px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);font-size:13.5px;font-weight:600;cursor:pointer;user-select:none}
+.cpick>summary::-webkit-details-marker{display:none}
+.cpick>summary::after{content:'▼';font-size:11px;margin-left:10px}
+.cpick[open]>summary::after{content:'▲'}
+.cpick>summary:hover{background:var(--hl)}
+.cpick>summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.cpick[open]>summary{margin-bottom:2px}
+.cpname{font-size:13px;color:var(--ink2);font-weight:600;min-width:0}
 .cprow{display:flex;gap:6px;align-items:center;margin-top:6px}
 .dock .cprow input.cpcol{width:40px;min-height:34px;padding:0;border:1px solid var(--line);border-radius:0;background:transparent;cursor:pointer;flex:none}
 .dock .cprow input.cphex{width:92px;min-height:34px;padding:0 4px;border:0;border-bottom:1px solid var(--ink);border-radius:0;background:transparent;font-size:13px;text-transform:uppercase;flex:none}
@@ -231,6 +238,7 @@ details.grp{margin:2px 0 0}
     <div class="actions">
       <span class="busy" id="busy" hidden>처리 중</span>
       <label class="btn" for="fileInput"><span class="ic" data-icon="folder"></span>열기</label>
+      <button class="btn" id="btnReset" type="button" disabled title="처음 열었을 때 상태로 되돌립니다(편집·색 변경·정리·선택·검색 모두 초기화)"><span class="ic" data-icon="undo"></span>초기화</button>
       <input id="fileInput" type="file" accept=".hwpx,.hwp" hidden>
       <button class="btn primary" id="btnExport" type="button" disabled><span class="ic" data-icon="download"></span>내려받기</button>
     </div>
@@ -256,6 +264,9 @@ details.grp{margin:2px 0 0}
           <div class="cprow">
             <input class="cpcol" id="cpColor" type="color" value="#ff0000" aria-label="색상표에서 고르기">
             <input class="cphex" id="cpHex" type="text" value="#FF0000" maxlength="7" spellcheck="false" autocomplete="off" aria-label="HEX 색 코드" placeholder="#RRGGBB">
+            <span class="cpname" id="cpName" aria-live="polite"></span>
+          </div>
+          <div class="cprow">
             <button class="btn sm" id="cpApply" type="button">적용</button>
             <button class="btn sm" id="cpBlack" type="button">검정으로</button>
           </div>
@@ -1153,7 +1164,8 @@ details.grp{margin:2px 0 0}
   // 부호 바로 뒤에 글자가 붙어 있을 때, 조사·어미로 보이면 붙여 두고 새 단어면 한 칸 띄운다(애매하면 띄우지 않는다)
   const JOSA1 = '이가을를은는의에로와과도만들께랑나라인임며고서다요죠네군면니게던든';
   const JOSA_W = /^(처럼|만큼|보다|부터|까지|마다|조차|밖에|뿐|씩|쯤|께서|에서|에게|한테|으로|이라|입니다|이다|이었|였|지만|지요|네요)/;
-  const colorName = (hex) => { const c = String(hex || '').toUpperCase(); return c === '#FF0000' ? '빨강' : c === '#008000' ? '초록' : (isBlackish(c) ? '검정' : c); };
+  const COLOR_NAMES = { '#FF0000': '빨강', '#008000': '초록', '#00FF00': '연두', '#0000FF': '파랑', '#FFFF00': '노랑', '#FFA500': '주황', '#800080': '보라', '#FF00FF': '자홍', '#00FFFF': '하늘', '#808080': '회색', '#FFFFFF': '흰색', '#FFC0CB': '분홍', '#A52A2A': '갈색' };
+  const colorName = (hex) => { const c = String(hex || '').toUpperCase(); return COLOR_NAMES[c] || (isBlackish(c) ? '검정' : c); };
   const isRejText = (t) => /^\(@\s*수정\s*[xX×✕]\s*\)$/.test(t);
   function pchars(p) {
     const out = [];
@@ -1424,7 +1436,7 @@ details.grp{margin:2px 0 0}
     classify, kindOf, protRes, markTextOf, runChecks, clean, preview, load, save, reportCsv,
     isBlankP, makeBlank, strip, isBlackish, isEndMark, normalizeFormat, periodIssues, stripComments, commentSpans, paraAlign,
     ensureSlot, splitParagraph, splitAtBreak, roundQuotes, SB_RE, AUTO_ROUND_QUOTES, snapshot, compareRows, diffChars, charsOfSegs, segsOfPara,
-    scanMarks, applyMarks, scanColors, applyUncolor, colorRanges,
+    scanMarks, applyMarks, scanColors, applyUncolor, colorRanges, colorName,
   };
 });
 
@@ -1569,12 +1581,17 @@ details.grp{margin:2px 0 0}
     state.cleaned = false; state.dirty = false; state.log = []; state.page = 0; state.menuFor = null;
     state.snap = E.snapshot(ctx.section); state.edMode = 'edit'; state.cmp = null; state.cmpPage = 0; state.cmpOnly = true; state.undoStack = []; state.lastOp = null;
     state.chgText = new Set(); state.chgSpace = new Set(); state.preview = null; state.shown = {}; state.seen = new Set();
-    state.mk = newMk(name); state.cl = newCl(); state.focusEl = null;
+    state.mk = newMk(name); state.cl = newCl(); state.focusEl = null; state.cp.sel = null;
+    state.q = ''; state.hitPos = -1; state.hits = []; { const q = $('#q'), qc = $('#qClear'); if (q) q.value = ''; if (qc) qc.hidden = true; }
     recompute(); analyze();
-    $('#btnExport').disabled = false;
+    $('#btnExport').disabled = false; $('#btnReset').disabled = false;
     $('#fileChip').hidden = false; $('#fileName').textContent = name; $('#fileCount').textContent = `문단 ${nf(state.rows.length)}`;
     $('#titleIn').value = state.title;
-    renderAll(); schedulePreview();
+    renderAll(); schedulePreview(); cpHint();
+    // 열면 항상 1쪽 맨 위부터 보이게(이전 파일의 스크롤 위치가 남지 않도록)
+    ['#paneEditor', '#paneSide', '#sideList'].forEach((s) => { const el = $(s); if (el) el.scrollTop = 0; });
+    try { window.scrollTo(0, 0); } catch (e) { /* 지원하지 않는 환경 */ }
+    if (mq('(max-width:899px)')) setView('edit');
   }
 
   // ───────── 분석 ─────────
@@ -1635,10 +1652,10 @@ details.grp{margin:2px 0 0}
       busy(false);
     }, 20);
   }
-  function revertOriginal() {
+  function revertOriginal(msg) {
     if (!state.buf) return;
     busy(true);
-    mount(state.buf, state.name).then(() => toast('원본을 다시 불러왔습니다. 편집한 내용은 사라졌습니다.')).catch((e) => toast(e.message, 'err')).finally(() => busy(false));
+    mount(state.buf, state.name).then(() => toast(msg || '원본을 다시 불러왔습니다. 편집한 내용은 사라졌습니다.')).catch((e) => toast(e.message, 'err')).finally(() => busy(false));
   }
 
   // ───────── 저장 ─────────
@@ -1839,6 +1856,12 @@ details.grp{margin:2px 0 0}
     });
     return { ranges, total };
   }
+  const cname = (hex) => E.colorName(hex);
+  const josaRo = (w) => { const c = String(w).charCodeAt(String(w).length - 1) - 0xAC00; return c >= 0 && c < 11172 && c % 28 !== 0 && c % 28 !== 8 ? '으로' : '로'; };
+  function cpName() {      // 색 코드 옆에 색 이름(파랑 등)을 보여 준다
+    const v = normHex($('#cpHex').value), n = v ? cname(v) : '', el = $('#cpName');
+    el.textContent = !$('#cpHex').value.trim() ? '' : !v ? '#RRGGBB 형식이 아닙니다' : (n !== v ? n : '');
+  }
   function cpHint() {
     const n = state.cp.sel ? state.cp.sel.total : 0;
     $('#cpHint').textContent = n ? `선택한 글자 ${nf(n)}자 — 색을 고르고 [적용]을 누르세요.` : '편집 화면에서 색을 바꿀 글자를 드래그로 선택하세요. 실수로 검정이 된 글자를 되살릴 때 씁니다.';
@@ -1852,7 +1875,7 @@ details.grp{margin:2px 0 0}
     cpHint();
   }
   function renderRecent() {
-    $('#cpRecent').replaceChildren(...state.cp.recent.map((c) => h('button', { type: 'button', class: 'cpsw', title: c, 'aria-label': '최근 쓴 색 ' + c, style: 'background:' + c, onclick: () => { $('#cpHex').value = c; $('#cpColor').value = c.toLowerCase(); } })));
+    $('#cpRecent').replaceChildren(...state.cp.recent.map((c) => h('button', { type: 'button', class: 'cpsw', title: cname(c), 'aria-label': '최근 쓴 색 ' + cname(c), style: 'background:' + c, onclick: () => { $('#cpHex').value = c; $('#cpColor').value = c.toLowerCase(); cpName(); } })));
   }
   function applySelColor(input) {
     const hex = normHex(input), sel = state.cp.sel;
@@ -1869,17 +1892,17 @@ details.grp{margin:2px 0 0}
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(state.cp.recent)); } catch (e) { /* 이번 방문에만 */ }
     state.cp.sel = null; const gs = window.getSelection(); if (gs) gs.removeAllRanges();
     recompute(); renderEditor(); renderRecent(); cpHint(); reanalyze();
-    toast(`${nf(res.changed)}자의 색을 ${hex}로 바꿨습니다.` + (res.skipped ? ` (${res.skipped}곳은 건너뜀)` : ''), '', { label: '되돌리기', fn: undoLast });
+    toast(`${nf(res.changed)}자의 색을 ${cname(hex)}${josaRo(cname(hex))} 바꿨습니다.` + (res.skipped ? ` (${res.skipped}곳은 건너뜀)` : ''), '', { label: '되돌리기', fn: undoLast });
   }
   function initColorPicker() {
     const col = $('#cpColor'), hex = $('#cpHex');
     try { state.cp.recent = (JSON.parse(localStorage.getItem(RECENT_KEY) || '[]') || []).filter((c) => /^#[0-9A-F]{6}$/.test(c)).slice(0, 6); } catch (e) { state.cp.recent = []; }
-    col.addEventListener('input', () => { hex.value = col.value.toUpperCase(); });
-    hex.addEventListener('input', () => { const v = normHex(hex.value); if (v) col.value = v.toLowerCase(); });
+    col.addEventListener('input', () => { hex.value = col.value.toUpperCase(); cpName(); });
+    hex.addEventListener('input', () => { const v = normHex(hex.value); if (v) col.value = v.toLowerCase(); cpName(); });
     $('#cpApply').addEventListener('click', () => applySelColor(hex.value));
     $('#cpBlack').addEventListener('click', () => applySelColor('#000000'));
     document.addEventListener('selectionchange', onSelChange);
-    renderRecent(); cpHint();
+    renderRecent(); cpHint(); cpName();
   }
   function enterAt(sp) {
     const row = sp.closest('.row'); if (!row) return;
@@ -2340,6 +2363,14 @@ details.grp{margin:2px 0 0}
   $('#btnClean').addEventListener('click', runClean);
   initColorPicker();
   $('#btnCsv').addEventListener('click', exportCsv);
+  const rs = $('#btnReset'); let rsArmed = false;     // 초기화: 처음 열었을 때 상태로(고친 내용이 있으면 한 번 더 확인)
+  rs.addEventListener('click', () => {
+    if (!state.ctx) return;
+    const label = rs.lastChild;
+    if ((state.dirty || state.cleaned) && !rsArmed) { rsArmed = true; label.textContent = '고친 내용이 사라집니다. 한 번 더'; rs.classList.add('warn'); setTimeout(() => { rsArmed = false; label.textContent = '초기화'; rs.classList.remove('warn'); }, 4000); return; }
+    rsArmed = false; label.textContent = '초기화'; rs.classList.remove('warn');
+    revertOriginal('처음 열었을 때 상태로 초기화했습니다.');
+  });
   const rv = $('#btnRevert'); let armed = false;
   rv.addEventListener('click', () => {
     const label = rv.lastChild;

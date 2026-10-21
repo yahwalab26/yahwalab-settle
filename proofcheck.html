@@ -54,6 +54,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 .btn.primary:hover{background:var(--ink2);border-color:var(--ink2)}
 .btn.block{display:flex;width:100%}
 .btn.sm{min-height:30px;padding:0 10px;font-size:12px}
+ .expwrap{position:relative}
+ .expmenu{position:absolute;right:0;top:calc(100% + 6px);z-index:40;width:268px;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+ .expmenu h3{margin:0 0 6px;font:600 13px/1.4 var(--ui)}
+ .expmenu label{display:flex;align-items:flex-start;gap:8px;min-height:32px;padding:4px 0;font-size:13px;cursor:pointer}
+ .expmenu label input{width:16px;height:16px;margin-top:2px;flex:none;accent-color:var(--ink)}
+ .expmenu label small{display:block;color:var(--mute);font-size:12px}
+ .expmenu .exprow{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 .btn[disabled]{opacity:.4;cursor:not-allowed}
 .btn.warn{border-color:var(--red);color:var(--red)}
 .busy{color:var(--mute);font-size:12.5px}
@@ -239,8 +246,17 @@ details.grp{margin:2px 0 0}
       <span class="busy" id="busy" hidden>처리 중</span>
       <label class="btn" for="fileInput"><span class="ic" data-icon="folder"></span>열기</label>
       <button class="btn" id="btnReset" type="button" disabled title="처음 열었을 때 상태로 되돌립니다(편집·색 변경·정리·선택·검색 모두 초기화)"><span class="ic" data-icon="undo"></span>초기화</button>
-      <input id="fileInput" type="file" accept=".hwpx,.hwp" hidden>
-      <button class="btn primary" id="btnExport" type="button" disabled><span class="ic" data-icon="download"></span>내려받기</button>
+      <input id="fileInput" type="file" accept=".hwpx,.docx,.hwp" hidden>
+      <div class="expwrap">
+        <button class="btn primary" id="btnExport" type="button" disabled aria-haspopup="true"><span class="ic" data-icon="download"></span>내려받기</button>
+        <div class="expmenu" id="expMenu" role="dialog" aria-label="내려받을 파일 고르기" hidden>
+          <h3>내려받을 파일 고르기</h3>
+          <label><input type="checkbox" id="expHwpx"><span>정리본 .hwpx<small id="expHwpxNote"></small></span></label>
+          <label><input type="checkbox" id="expDocx"><span>정리본 .docx<small id="expDocxNote"></small></span></label>
+          <label><input type="checkbox" id="expCsv"><span>변경 리포트 .csv</span></label>
+          <div class="exprow"><button class="btn sm" id="expCancel" type="button">닫기</button><button class="btn sm primary" id="expGo" type="button">내려받기</button></div>
+        </div>
+      </div>
     </div>
   </header>
   <nav class="mtabs" role="tablist" aria-label="화면">
@@ -1232,12 +1248,13 @@ details.grp{margin:2px 0 0}
       }
       const [A, B] = m;
       if (A === '' || B === '') { bad('내용이 빈 부호 — 슬래시만 지움'); continue; }
-      const k0 = B === '삭제' ? '삭제' : B === '추가' ? '추가' : B === '이동' ? '이동' : '교체';
-      const rj = sp.findIndex(([ca, cb], j) => isRejText(s.slice(ca, cb)) && !claimed.has(j) && ((ca > b && only(s.slice(b + 1, ca))) || (cb <= a && only(s.slice(cb, a)))));
+      const k0 = B === '삭제' ? '삭제' : B === '추가' ? '추가' : B === '이동' ? '이동' : /^수정\s*[xX×✕]$/.test(B.trim()) ? '수정X' : '교체';
+      const rj = k0 === '수정X' ? -1 : sp.findIndex(([ca, cb], j) => isRejText(s.slice(ca, cb)) && !claimed.has(j) && ((ca > b && only(s.slice(b + 1, ca))) || (cb <= a && only(s.slice(cb, a)))));
       if (rj >= 0) claimed.add(rj);
       const po = a + 1 + A.length, raw = new Set(), rng = (x, y) => { for (let q = x; q <= y; q++) raw.add(q); };
       let kind, removal = null;
-      if (rj >= 0) { kind = '수정X 유지'; raw.add(a); if (k0 === '추가') { rng(a, b); removal = [a, b]; } else rng(po, b); }
+      if (k0 === '수정X') { kind = '수정X 유지'; raw.add(a); rng(po, b); }   // /원문(수정X)/ : 부호 안의 수정X → 원문만 남기고 /·(수정X) 삭제
+      else if (rj >= 0) { kind = '수정X 유지'; raw.add(a); if (k0 === '추가') { rng(a, b); removal = [a, b]; } else rng(po, b); }
       else if (k0 === '삭제') { kind = '삭제'; rng(a, b); removal = [a, b]; }
       else if (k0 === '추가') { kind = '추가'; raw.add(a); rng(po, b); }
       else if (k0 === '이동') { kind = '이동'; raw.add(a); rng(po, b); }   // /A(이동)/ : 원문 A만 남기고 슬래시·(이동)을 지운다(실제 옮기기는 사람이)
@@ -1253,6 +1270,7 @@ details.grp{margin:2px 0 0}
       if (del.size > raw.size) notes.push('앞뒤 공백 정리');
       if (subs) notes.push('뒤 공백 추가');
       else if (glued && josa && kind === '추가') notes.push('주의: 뒤 글자와 붙음(조사로 보여 띄우지 않음)');
+      if (k0 === '수정X') notes.push('작가 (수정X) 표기');
       if (rj >= 0) notes.push('작가 (@수정X)');
       add({ kind, reason: '', color, raw, removal, subs, before: b4, after: af, auto: true, note: notes.join(' · ') });
     }
@@ -1389,19 +1407,424 @@ details.grp{margin:2px 0 0}
     descendants(hdr, 'charPr').forEach((c) => { if (kids(c, 'italic').length) out.add(c.getAttribute('id')); });
     return out;
   }
-  async function load(buf, { JSZip, DOMParser }) {
+  async function load(buf, { JSZip, DOMParser, XMLSerializer }) {
     const zip = await JSZip.loadAsync(buf);
-    if (!zip.file('Contents/section0.xml') || !zip.file('Contents/header.xml')) throw new Error('hwpx 형식이 아닙니다(Contents/section0.xml 없음).');
+    if (zip.file('word/document.xml') && !zip.file('Contents/section0.xml')) return loadDocx(zip, { DOMParser, XMLSerializer });
+    if (!zip.file('Contents/section0.xml') || !zip.file('Contents/header.xml')) throw new Error('hwpx 또는 docx 형식이 아닙니다.');
     const parse = async (name) => new DOMParser().parseFromString(await zip.file(name).async('string'), 'application/xml');
     const sectionDoc = await parse('Contents/section0.xml');
     const headerDoc = await parse('Contents/header.xml');
     if (sectionDoc.getElementsByTagName('parsererror').length) throw new Error('본문 XML을 읽을 수 없습니다.');
     const section = sectionDoc.documentElement, header = headerDoc.documentElement;
-    return { zip, names: Object.keys(zip.files), sectionDoc, headerDoc, section, header, colors: readColors(header), italics: readItalics(header), headerModified: false };
+    return { format: 'hwpx', zip, names: Object.keys(zip.files), sectionDoc, headerDoc, section, header, colors: readColors(header), italics: readItalics(header), headerModified: false };
   }
   const serialize = (XMLSerializer, node) => XML_DECL + new XMLSerializer().serializeToString(node).replace(/^\s*<\?xml[^?]*\?>\s*/, '');
 
+  // ───────── docx 읽기·쓰기 ─────────
+  // docx 는 hwpx 모양의 내부 모델(section + header)로 바꿔 같은 엔진으로 점검·정리하고, 저장할 때 docx 로 되돌린다.
+  // 표·그림·필드 등 엔진이 다루지 않는 요소는 원본 요소를 보관했다가 제자리에 되돌려 놓는다(docx → docx).
+  const NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const NS_HH = 'http://www.hancom.co.kr/hwpml/2011/head';
+  const NS_HC = 'http://www.hancom.co.kr/hwpml/2011/core';
+  const NS_HS = 'http://www.hancom.co.kr/hwpml/2011/section';
+  const W_PPR_ORDER = ['pStyle', 'keepNext', 'keepLines', 'pageBreakBefore', 'framePr', 'widowControl', 'numPr', 'suppressLineNumbers', 'pBdr', 'shd', 'tabs', 'suppressAutoHyphens', 'kinsoku', 'wordWrap', 'overflowPunct', 'topLinePunct', 'autoSpaceDE', 'autoSpaceDN', 'bidi', 'adjustRightInd', 'snapToGrid', 'spacing', 'ind', 'contextualSpacing', 'mirrorIndents', 'suppressOverlap', 'jc', 'textDirection', 'textAlignment', 'textboxTightWrap', 'outlineLvl', 'divId', 'cnfStyle', 'rPr', 'sectPr', 'pPrChange'];
+  const W_RPR_ORDER = ['rStyle', 'rFonts', 'b', 'bCs', 'i', 'iCs', 'caps', 'smallCaps', 'strike', 'dstrike', 'outline', 'shadow', 'emboss', 'imprint', 'noProof', 'snapToGrid', 'vanish', 'webHidden', 'color', 'spacing', 'w', 'kern', 'position', 'sz', 'szCs', 'highlight', 'u', 'effect', 'bdr', 'shd', 'fitText', 'vertAlign', 'rtl', 'cs', 'em', 'lang', 'eastAsianLayout', 'specVanish', 'oMath'];
+  const D_FACE = '맑은 고딕';
+  const mkEl = (doc, ns, qn, attrs) => { const e = doc.createElementNS(ns, qn); for (const k of Object.keys(attrs || {})) e.setAttribute(k, String(attrs[k])); return e; };
+  const twAttr = (el, n) => el.getAttribute('w:' + n) || (el.getAttributeNS ? el.getAttributeNS(NS_W, n) : '') || '';
+  const wVal = (pr, tag, attr) => { const e = pr && kids(pr, tag)[0]; if (!e) return null; const v = twAttr(e, attr || 'val'); return v === '' ? null : v; };
+  const wOn = (pr, tag) => { const e = pr && kids(pr, tag)[0]; if (!e) return null; const v = twAttr(e, 'val').toLowerCase(); return !(v === '0' || v === 'false' || v === 'off'); };
+  const wSet = (doc, parent, name, order, attrs) => {          // 스키마 순서에 맞는 자리에 w:name 을 (다시) 만든다
+    kids(parent, name).forEach((x) => parent.removeChild(x));
+    const e = doc.createElementNS(NS_W, 'w:' + name);
+    for (const k of Object.keys(attrs || {})) e.setAttributeNS(NS_W, 'w:' + k, String(attrs[k]));
+    const at = order.indexOf(name);
+    const next = Array.from(parent.childNodes).find((n) => n.nodeType === 1 && order.indexOf(n.localName) > at);
+    parent.insertBefore(e, next || null);
+    return e;
+  };
+  const wDel = (parent, name) => kids(parent, name).forEach((x) => parent.removeChild(x));
+  const JC_IN = { left: 'LEFT', start: 'LEFT', right: 'RIGHT', end: 'RIGHT', center: 'CENTER', both: 'JUSTIFY', distribute: 'JUSTIFY', thaiDistribute: 'JUSTIFY', justify: 'JUSTIFY' };
+  const JC_OUT = { LEFT: 'left', RIGHT: 'right', CENTER: 'center', JUSTIFY: 'both', DISTRIBUTE: 'distribute', DISTRIBUTE_SPACE: 'distribute' };
+  const W_IGNORE = /^(pPr|rPr|bookmarkStart|bookmarkEnd|proofErr|comment.*|perm.*|move.*Range.*|del|moveFrom|lastRenderedPageBreak)$/;
+  const W_FLAT = ['hyperlink', 'smartTag', 'ins', 'moveTo', 'sdt', 'sdtContent', 'customXml', 'fldSimple'];
+
+  function readStyles(stDoc) {
+    const S = { m: new Map(), defR: null, defP: null, defId: null };
+    if (!stDoc) return S;
+    const root = stDoc.documentElement, dd = kids(root, 'docDefaults')[0];
+    if (dd) { const r = kids(dd, 'rPrDefault')[0], p = kids(dd, 'pPrDefault')[0]; S.defR = (r && kids(r, 'rPr')[0]) || null; S.defP = (p && kids(p, 'pPr')[0]) || null; }
+    for (const s of kids(root, 'style')) {
+      const id = twAttr(s, 'styleId');
+      S.m.set(id, { based: wVal(s, 'basedOn'), rpr: kids(s, 'rPr')[0] || null, ppr: kids(s, 'pPr')[0] || null });
+      if (twAttr(s, 'type') === 'paragraph' && twAttr(s, 'default') === '1') S.defId = id;
+    }
+    return S;
+  }
+  const styleChain = (S, id) => { const out = []; let g = 0; while (id && S.m.has(id) && g++ < 12) { const s = S.m.get(id); out.push(s); id = s.based; } return out; };
+  function effRun(S, rpr, pst, rst) {
+    const prs = [rpr].concat(styleChain(S, rst).map((s) => s.rpr), styleChain(S, pst || S.defId).map((s) => s.rpr), [S.defR]).filter(Boolean);
+    const first = (f) => { for (const r of prs) { const v = f(r); if (v !== null && v !== undefined) return v; } return null; };
+    const col = first((r) => wVal(r, 'color')), ea = first((r) => wVal(r, 'rFonts', 'eastAsia')), asc = first((r) => wVal(r, 'rFonts', 'ascii') || wVal(r, 'rFonts', 'hAnsi'));
+    const sz = parseInt(first((r) => wVal(r, 'sz')) || '20', 10) || 20;
+    const u = first((r) => wVal(r, 'u')), st = first((r) => wOn(r, 'strike'));
+    return { color: col && col.toLowerCase() !== 'auto' && /^[0-9a-fA-F]{6}$/.test(col) ? '#' + col.toUpperCase() : '#000000', i: !!first((r) => wOn(r, 'i')), b: !!first((r) => wOn(r, 'b')), sz, h: sz * 50, u: !!u && u !== 'none', s: !!st, ea: ea || asc || D_FACE, asc: asc || ea || D_FACE };
+  }
+  function effPara(S, ppr, pst, sz) {
+    const prs = [ppr].concat(styleChain(S, pst || S.defId).map((s) => s.ppr), [S.defP]).filter(Boolean);
+    const at = (tag, a) => { for (const p of prs) { const v = wVal(p, tag, a); if (v !== null) return v; } return null; };
+    const jc = at('jc') || 'left';
+    const fc = at('ind', 'firstLineChars'), fl = at('ind', 'firstLine'), hg = at('ind', 'hanging'), hgc = at('ind', 'hangingChars');
+    let intent = 0;
+    if (fc !== null) intent = Math.round(parseInt(fc, 10) * sz / 10) * 5; else if (fl !== null) intent = parseInt(fl, 10) * 5;
+    else if (hgc !== null) intent = -Math.round(parseInt(hgc, 10) * sz / 10) * 5; else if (hg !== null) intent = -parseInt(hg, 10) * 5;
+    const af = at('spacing', 'after'), ln = at('spacing', 'line'), rule = at('spacing', 'lineRule');
+    const line = ln !== null && (!rule || rule === 'auto') ? Math.round(parseInt(ln, 10) / 240 * 100) : 100;
+    return { al: JC_IN[jc] || 'LEFT', intent: intent || 0, next: af !== null ? (parseInt(af, 10) || 0) * 5 : 0, line };
+  }
+
+  async function loadDocx(zip, { DOMParser, XMLSerializer: XS }) {
+    const parse = async (name) => { const f = zip.file(name); return f ? new DOMParser().parseFromString(await f.async('string'), 'application/xml') : null; };
+    const dd = await parse('word/document.xml');
+    if (!dd || dd.getElementsByTagName('parsererror').length) throw new Error('docx 본문을 읽을 수 없습니다.');
+    const body = kids(dd.documentElement, 'body')[0];
+    if (!body) throw new Error('docx 본문(w:body)을 찾을 수 없습니다.');
+    const S = readStyles(await parse('word/styles.xml'));
+    const secDoc = new DOMParser().parseFromString(`<hs:sec xmlns:hs="${NS_HS}" xmlns:hp="${NS_HP}"/>`, 'application/xml');
+    const hdrDoc = new DOMParser().parseFromString(`<hh:head xmlns:hh="${NS_HH}" xmlns:hc="${NS_HC}" xmlns:hp="${NS_HP}"><hh:refList><hh:fontfaces itemCnt="7"/><hh:charProperties itemCnt="0"/><hh:paraProperties itemCnt="0"/></hh:refList></hh:head>`, 'application/xml');
+    const sec = secDoc.documentElement, hdr = hdrDoc.documentElement;
+    const ff = descendants(hdr, 'fontfaces')[0], cp = descendants(hdr, 'charProperties')[0], pps = descendants(hdr, 'paraProperties')[0];
+    for (const lang of Object.keys(LANG_ATTR)) ff.appendChild(mkEl(hdrDoc, NS_HH, 'hh:fontface', { lang, fontCnt: 0 }));
+    const fontId = (lang, face) => {
+      const g = kids(ff, 'fontface').find((x) => x.getAttribute('lang') === lang);
+      let f = kids(g, 'font').find((x) => x.getAttribute('face') === face);
+      if (!f) { f = mkEl(hdrDoc, NS_HH, 'hh:font', { id: kids(g, 'font').length, face, type: 'TTF', isEmbedded: 0 }); g.appendChild(f); g.setAttribute('fontCnt', kids(g, 'font').length); }
+      return f.getAttribute('id');
+    };
+    const dx = { doc: dd, refs: [], rprs: [], pprs: [], sectPr: null }, notes = [];
+    const ser = (n) => (n ? new (XS || XMLSerializer)().serializeToString(n) : '');
+    const cpMap = new Map(), ppMap = new Map();
+    const charPr = (key, r, rpr) => {
+      if (cpMap.has(key)) return cpMap.get(key);
+      const id = String(cpMap.size);
+      const c = mkEl(hdrDoc, NS_HH, 'hh:charPr', { id, height: r.h, textColor: r.color, oc: r.color, oh: r.h, oea: r.ea, oas: r.asc, oi: r.i ? 1 : 0, ob: r.b ? 1 : 0, ul: r.u ? 1 : 0, sk: r.s ? 1 : 0, dr: rpr ? dx.rprs.push(rpr.cloneNode(true)) - 1 : -1 });
+      const fr = mkEl(hdrDoc, NS_HH, 'hh:fontRef', {});
+      for (const [lang, attr] of Object.entries(LANG_ATTR)) fr.setAttribute(attr, fontId(lang, (lang === 'LATIN' || lang === 'OTHER' || lang === 'SYMBOL') ? r.asc : r.ea));
+      c.appendChild(fr);
+      if (r.i) c.appendChild(mkEl(hdrDoc, NS_HH, 'hh:italic', {}));
+      if (r.b) c.appendChild(mkEl(hdrDoc, NS_HH, 'hh:bold', {}));
+      cp.appendChild(c); cp.setAttribute('itemCnt', kids(cp, 'charPr').length);
+      cpMap.set(key, id); return id;
+    };
+    const paraPr = (key, q, ppr) => {
+      if (ppMap.has(key)) return ppMap.get(key);
+      const id = String(ppMap.size);
+      const pp = mkEl(hdrDoc, NS_HH, 'hh:paraPr', { id, dp: ppr ? dx.pprs.push(ppr.cloneNode(true)) - 1 : -1, oal: q.al, oin: q.intent, onx: q.next, oln: q.line });
+      pp.appendChild(mkEl(hdrDoc, NS_HH, 'hh:align', { horizontal: q.al, vertical: 'BASELINE' }));
+      pp.appendChild(mkEl(hdrDoc, NS_HH, 'hh:breakSetting', { breakNonLatinWord: 'BREAK_WORD' }));
+      const sw = mkEl(hdrDoc, NS_HP, 'hp:switch', {});
+      for (const [nm, k] of [['hp:case', 1], ['hp:default', 2]]) {
+        const box = mkEl(hdrDoc, NS_HP, nm, {}), m = mkEl(hdrDoc, NS_HH, 'hh:margin', {});
+        m.appendChild(mkEl(hdrDoc, NS_HC, 'hc:intent', { value: Math.round(q.intent / 2 * k), unit: 'HWPUNIT' }));
+        m.appendChild(mkEl(hdrDoc, NS_HC, 'hc:next', { value: Math.round(q.next / 2 * k), unit: 'HWPUNIT' }));
+        box.appendChild(m); box.appendChild(mkEl(hdrDoc, NS_HH, 'hh:lineSpacing', { type: 'PERCENT', value: q.line, unit: 'HWPUNIT' }));
+        sw.appendChild(box);
+      }
+      pp.appendChild(sw);
+      pps.appendChild(pp); pps.setAttribute('itemCnt', kids(pps, 'paraPr').length);
+      ppMap.set(key, id); return id;
+    };
+    const base = effRun(S, null, null, null);
+    charPr('C|||', base, null); paraPr('P||', effPara(S, null, null, base.sz), null);
+    const refCtrl = (parent, el, attr) => parent.appendChild(mkEl(secDoc, NS_HP, 'hp:ctrl', { [attr || 'docxRef']: dx.refs.push(el.cloneNode(true)) - 1 }));
+    let nLink = 0, nDel = 0, nTbl = 0;
+    const convP = (wp) => {
+      const ppr = kids(wp, 'pPr')[0], pst = wVal(ppr, 'pStyle');
+      const be = effRun(S, null, pst, null);
+      const pid = paraPr('P|' + ser(ppr) + '|' + (pst || ''), effPara(S, ppr, pst, be.sz), ppr);
+      const hp = mkEl(secDoc, NS_HP, 'hp:p', { paraPrIDRef: pid, styleIDRef: '0' });
+      const addRun = (r) => {
+        const rpr = kids(r, 'rPr')[0], rst = wVal(rpr, 'rStyle');
+        const cid = charPr('C|' + ser(rpr) + '|' + (pst || '') + '|' + (rst || ''), effRun(S, rpr, pst, rst), rpr);
+        const hr = mkEl(secDoc, NS_HP, 'hp:run', { charPrIDRef: cid });
+        let ht = null;
+        const T = () => { if (!ht) { ht = mkEl(secDoc, NS_HP, 'hp:t', {}); hr.appendChild(ht); } return ht; };
+        for (const c of elementKids(r)) {
+          const n = c.localName;
+          if (n === 'rPr' || n === 'lastRenderedPageBreak') continue;
+          if (n === 't') T().appendChild(secDoc.createTextNode(c.textContent || ''));
+          else if (n === 'tab') T().appendChild(secDoc.createTextNode('\t'));
+          else if (n === 'cr' || (n === 'br' && !/^(page|column)$/.test(twAttr(c, 'type')))) T().appendChild(mkEl(secDoc, NS_HP, 'hp:lineBreak', {}));
+          else { ht = null; refCtrl(hr, c); }
+        }
+        hp.appendChild(hr);
+      };
+      const walk = (node) => {
+        for (const c of elementKids(node)) {
+          const n = c.localName;
+          if (n === 'r') addRun(c);
+          else if (W_FLAT.includes(n)) { if (n === 'hyperlink') nLink++; walk(c); }
+          else if (n === 'del' || n === 'moveFrom') nDel++;
+          else if (!W_IGNORE.test(n)) { const hr = mkEl(secDoc, NS_HP, 'hp:run', { charPrIDRef: '0' }); refCtrl(hr, c); hp.appendChild(hr); }
+        }
+      };
+      walk(wp);
+      if (!kids(hp, 'run').length) { const mr = ppr ? kids(ppr, 'rPr')[0] : null; hp.appendChild(mkEl(secDoc, NS_HP, 'hp:run', { charPrIDRef: charPr('C|' + ser(mr) + '|' + (pst || '') + '|', effRun(S, mr, pst, null), mr) })); }
+      return hp;
+    };
+    for (const ch of elementKids(body)) {
+      if (ch.localName === 'p') sec.appendChild(convP(ch));
+      else if (ch.localName === 'sectPr') dx.sectPr = ch.cloneNode(true);
+      else { if (ch.localName === 'tbl') nTbl++; const hp = mkEl(secDoc, NS_HP, 'hp:p', { paraPrIDRef: '0', styleIDRef: '0' }), hr = mkEl(secDoc, NS_HP, 'hp:run', { charPrIDRef: '0' }); refCtrl(hr, ch, 'docxBody'); hp.appendChild(hr); sec.appendChild(hp); }
+    }
+    if (nTbl) notes.push(`표 ${nTbl}개는 점검하지 않고 그대로 보존합니다.`);
+    if (nLink) notes.push(`하이퍼링크 ${nLink}개는 글자만 남습니다.`);
+    if (nDel) notes.push(`변경 추적의 삭제 부분 ${nDel}곳은 빠진 상태로 불러옵니다.`);
+    return { format: 'docx', zip, names: Object.keys(zip.files), sectionDoc: secDoc, headerDoc: hdrDoc, section: sec, header: hdr, colors: readColors(hdr), italics: readItalics(hdr), headerModified: false, docx: dx, notes };
+  }
+
+  /** 내부 모델 → docx. 원본이 docx 면 원본 패키지(스타일·머리글·표·그림)를 그대로 쓰고, hwpx 면 새로 만든다. */
+  async function saveDocx(ctx, rules, { JSZip, DOMParser, XMLSerializer }) {
+    pruneEmptyText(ctx.section);
+    normalizeFormat(ctx, rules);
+    const isDocx = ctx.format === 'docx', dx = ctx.docx;
+    const D = isDocx ? dx.doc : new DOMParser().parseFromString(`<w:document xmlns:w="${NS_W}" xmlns:r="${NS_R}"><w:body/></w:document>`, 'application/xml');
+    const body = kids(D.documentElement, 'body')[0];
+    Array.from(body.childNodes).forEach((n) => body.removeChild(n));
+    const hdr = ctx.header, lost = {};
+    const byId = (list, id) => list.find((x) => x.getAttribute('id') === id);
+    const cps = kids(descendants(hdr, 'charProperties')[0], 'charPr'), pps = kids(descendants(hdr, 'paraProperties')[0], 'paraPr');
+    const faces = {};
+    descendants(hdr, 'fontface').forEach((g) => { faces[g.getAttribute('lang')] = kids(g, 'font'); });
+    const faceOf = (lang, id) => { const f = (faces[lang] || []).find((x) => x.getAttribute('id') === String(id)); return f ? f.getAttribute('face') : ''; };
+    const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
+    const buildPPr = (pp) => {
+      if (!pp) return null;
+      const orig = isDocx && num(pp.getAttribute('dp')) >= 0 && pp.hasAttribute('dp');
+      const ppr = orig ? dx.pprs[num(pp.getAttribute('dp'))].cloneNode(true) : D.createElementNS(NS_W, 'w:pPr');
+      const al = (kids(pp, 'align')[0] || { getAttribute: () => 'JUSTIFY' }).getAttribute('horizontal') || 'JUSTIFY';
+      let intent = 0, next = 0;
+      const ms = descendants(pp, 'margin');
+      const m = ms.find((x) => !inCase(x)) || ms[0], mult = m && !inCase(m) ? 1 : 2;
+      if (m) { const a = kids(m, 'intent')[0], b = kids(m, 'next')[0]; intent = a ? num(a.getAttribute('value')) * mult : 0; next = b ? num(b.getAttribute('value')) * mult : 0; }
+      const ls = descendants(pp, 'lineSpacing')[0], line = ls && ls.getAttribute('type') === 'PERCENT' ? num(ls.getAttribute('value')) : null;
+      const chg = (cur, key) => !orig || String(cur) !== pp.getAttribute(key);
+      if (chg(al, 'oal')) wSet(D, ppr, 'jc', W_PPR_ORDER, { val: JC_OUT[al] || 'both' });
+      if (chg(intent, 'oin') && (orig || intent !== 0)) {
+        const old = kids(ppr, 'ind')[0], keep = {};
+        if (old) for (const a of ['left', 'right', 'start', 'end', 'leftChars', 'rightChars']) { const v = twAttr(old, a); if (v) keep[a] = v; }
+        const tw = Math.round(Math.abs(intent) / 5);
+        wSet(D, ppr, 'ind', W_PPR_ORDER, Object.assign(keep, intent < 0 ? { hanging: tw } : { firstLine: tw }));
+      }
+      if (chg(next, 'onx') || (line !== null && chg(line, 'oln'))) {
+        const old = kids(ppr, 'spacing')[0], keep = {};
+        if (old) for (const a of ['before', 'beforeLines', 'beforeAutospacing', 'after', 'afterLines', 'afterAutospacing', 'line', 'lineRule']) { const v = twAttr(old, a); if (v) keep[a] = v; }
+        if (chg(next, 'onx')) { delete keep.afterLines; delete keep.afterAutospacing; keep.after = Math.round(next / 5); }
+        if (line !== null && chg(line, 'oln')) { keep.line = Math.round(line * 240 / 100); keep.lineRule = 'auto'; }
+        wSet(D, ppr, 'spacing', W_PPR_ORDER, keep);
+      }
+      return ppr.childNodes.length ? ppr : null;
+    };
+    const buildRPr = (cid) => {
+      const c = byId(cps, cid);
+      if (!c) return null;
+      const orig = isDocx && c.hasAttribute('dr') && num(c.getAttribute('dr')) >= 0;
+      const rpr = orig ? dx.rprs[num(c.getAttribute('dr'))].cloneNode(true) : D.createElementNS(NS_W, 'w:rPr');
+      const isDx = isDocx && c.hasAttribute('dr');
+      const chg = (cur, key) => !isDx || String(cur) !== c.getAttribute(key);
+      const fr = kids(c, 'fontRef')[0], ea = fr ? faceOf('HANGUL', fr.getAttribute('hangul')) : '', asc = fr ? faceOf('LATIN', fr.getAttribute('latin')) : '';
+      if (ea && (chg(ea, 'oea') || chg(asc, 'oas'))) wSet(D, rpr, 'rFonts', W_RPR_ORDER, { ascii: asc || ea, hAnsi: asc || ea, eastAsia: ea, cs: asc || ea });
+      const h = num(c.getAttribute('height'));
+      if (h && chg(h, 'oh')) { wSet(D, rpr, 'sz', W_RPR_ORDER, { val: Math.round(h / 50) }); wSet(D, rpr, 'szCs', W_RPR_ORDER, { val: Math.round(h / 50) }); }
+      const col = (c.getAttribute('textColor') || '').toUpperCase();
+      if (chg(col, 'oc')) { if (isBlackish(col)) wDel(rpr, 'color'); else if (/^#[0-9A-F]{6}$/.test(col)) wSet(D, rpr, 'color', W_RPR_ORDER, { val: col.slice(1) }); }
+      const it = kids(c, 'italic').length ? 1 : 0, bd = kids(c, 'bold').length ? 1 : 0;
+      if (chg(it, 'oi')) { if (it) { wSet(D, rpr, 'i', W_RPR_ORDER, {}); wSet(D, rpr, 'iCs', W_RPR_ORDER, {}); } else { wDel(rpr, 'i'); wDel(rpr, 'iCs'); } }
+      if (chg(bd, 'ob')) { if (bd) { wSet(D, rpr, 'b', W_RPR_ORDER, {}); wSet(D, rpr, 'bCs', W_RPR_ORDER, {}); } else { wDel(rpr, 'b'); wDel(rpr, 'bCs'); } }
+      if (!isDx) {
+        const so = kids(c, 'strikeout')[0], un = kids(c, 'underline')[0];
+        if (so && so.getAttribute('shape') && so.getAttribute('shape') !== 'NONE') wSet(D, rpr, 'strike', W_RPR_ORDER, {});
+        if (un && un.getAttribute('type') && un.getAttribute('type') !== 'NONE') wSet(D, rpr, 'u', W_RPR_ORDER, { val: 'single' });
+      }
+      return rpr.childNodes.length ? rpr : null;
+    };
+    const wT = (text) => { const t = D.createElementNS(NS_W, 'w:t'); t.setAttribute('xml:space', 'preserve'); t.appendChild(D.createTextNode(text)); return t; };
+    const buildRun = (run) => {
+      const items = [];
+      for (const ch of elementKids(run)) {
+        if (ch.localName === 't') {
+          for (const n of Array.from(ch.childNodes)) {
+            if (n.nodeType === 3 || n.nodeType === 4) {
+              (n.nodeValue || '').split('\t').forEach((s, i) => { if (i) items.push(D.createElementNS(NS_W, 'w:tab')); if (s) items.push(wT(s)); });
+            } else if (n.nodeType === 1) {
+              if (n.localName === 'lineBreak') items.push(D.createElementNS(NS_W, 'w:br'));
+              else if (n.localName === 'tab') items.push(D.createElementNS(NS_W, 'w:tab'));
+              else if (n.localName === 'nbSpace' || n.localName === 'fwSpace') items.push(wT(' '));
+            }
+          }
+        } else if (ch.localName === 'ctrl' && ch.hasAttribute('docxRef') && isDocx) items.push(dx.refs[num(ch.getAttribute('docxRef'))].cloneNode(true));
+      }
+      if (!items.length) return null;
+      const wr = D.createElementNS(NS_W, 'w:r'), rpr = buildRPr(run.getAttribute('charPrIDRef'));
+      if (rpr) wr.appendChild(rpr);
+      items.forEach((x) => wr.appendChild(x));
+      return wr;
+    };
+    for (const nm of ['tbl', 'pic', 'container', 'equation', 'ole', 'rect', 'ellipse', 'polygon', 'curve', 'arc', 'video', 'chart', 'footNote', 'endNote']) { const n = descendants(ctx.section, nm).length; if (n) lost[nm] = n; }
+    for (const p of paragraphs(ctx.section)) {
+      const bref = isDocx ? descendants(p, 'ctrl').find((c) => c.hasAttribute('docxBody')) : null;
+      if (bref) { body.appendChild(dx.refs[num(bref.getAttribute('docxBody'))].cloneNode(true)); continue; }
+      const wp = D.createElementNS(NS_W, 'w:p'), ppr = buildPPr(byId(pps, p.getAttribute('paraPrIDRef')));
+      if (ppr) wp.appendChild(ppr);
+      for (const run of kids(p, 'run')) { const wr = buildRun(run); if (wr) wp.appendChild(wr); }
+      body.appendChild(wp);
+    }
+    // 쪽 설정
+    if (isDocx) { if (dx.sectPr) body.appendChild(dx.sectPr.cloneNode(true)); }
+    else {
+      const pg = descendants(ctx.section, 'pagePr')[0], mg = pg && kids(pg, 'margin')[0], tw = (v, d) => (v ? Math.round(num(v) / 5) : d);
+      const sp = D.createElementNS(NS_W, 'w:sectPr'), w = pg ? tw(pg.getAttribute('width'), 11906) : 11906, hh = pg ? tw(pg.getAttribute('height'), 16838) : 16838;
+      const sz = D.createElementNS(NS_W, 'w:pgSz'); sz.setAttributeNS(NS_W, 'w:w', w); sz.setAttributeNS(NS_W, 'w:h', hh); if (w > hh) sz.setAttributeNS(NS_W, 'w:orient', 'landscape'); sp.appendChild(sz);
+      const pm = D.createElementNS(NS_W, 'w:pgMar'), g = (k, d) => (mg ? tw(mg.getAttribute(k), d) : d);
+      [['top', g('top', 1440)], ['right', g('right', 1440)], ['bottom', g('bottom', 1440)], ['left', g('left', 1440)], ['header', g('header', 720)], ['footer', g('footer', 720)], ['gutter', g('gutter', 0)]].forEach(([k, v]) => pm.setAttributeNS(NS_W, 'w:' + k, v));
+      sp.appendChild(pm); body.appendChild(sp);
+    }
+    const dec = XML_DECL, xml = dec + new XMLSerializer().serializeToString(D.documentElement).replace(/^\s*<\?xml[^?]*\?>\s*/, '');
+    const out = new JSZip();
+    if (isDocx) {
+      for (const name of ['[Content_Types].xml'].concat(ctx.names.filter((n) => n !== '[Content_Types].xml' && !ctx.zip.files[n].dir))) {
+        const f = ctx.zip.file(name); if (!f) continue;
+        out.file(name, name === 'word/document.xml' ? xml : await f.async('uint8array'), { compression: 'DEFLATE', createFolders: false, date: f.date });
+      }
+    } else {
+      const face = faceOf('HANGUL', (kids(cps[0] || {}, 'fontRef')[0] || { getAttribute: () => '' }).getAttribute('hangul')) || '함초롬바탕';
+      out.file('[Content_Types].xml', `${dec}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`);
+      out.file('_rels/.rels', `${dec}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+      out.file('word/_rels/document.xml.rels', `${dec}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
+      out.file('word/styles.xml', `${dec}<w:styles xmlns:w="${NS_W}"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="${face}" w:hAnsi="${face}" w:eastAsia="${face}" w:cs="${face}"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="en-US" w:eastAsia="ko-KR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style></w:styles>`);
+      out.file('word/document.xml', xml);
+    }
+    const notes = [];
+    const LN = { tbl: '표', pic: '그림', container: '묶음 개체', equation: '수식', ole: '개체', rect: '도형', ellipse: '도형', polygon: '도형', curve: '도형', arc: '도형', video: '동영상', chart: '차트', footNote: '각주', endNote: '미주' };
+    const agg = {}; for (const k of Object.keys(lost)) agg[LN[k]] = (agg[LN[k]] || 0) + lost[k];
+    if (!isDocx && Object.keys(agg).length) notes.push('docx에 담지 못한 것: ' + Object.entries(agg).map(([k, v]) => `${k} ${v}개`).join(', ') + ' (원본 hwpx에는 그대로 있습니다)');
+    ctx.saveNotes = notes;
+    return out.generateAsync({ type: 'uint8array', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  }
+
+  /** docx 원고 → hwpx. 한글이 여는 바탕 패키지(tplBuf: 글꼴·스타일·쪽 설정)에 원고 문단을 새로 담는다. 표·그림 등은 담지 못한다. */
+  async function saveHwpxFromDocx(ctx, rules, tplBuf, { JSZip, DOMParser, XMLSerializer, title }) {
+    pruneEmptyText(ctx.section);
+    normalizeFormat(ctx, rules);
+    const dx = ctx.docx, tz = await JSZip.loadAsync(tplBuf);
+    const P = async (n) => new DOMParser().parseFromString(await tz.file(n).async('string'), 'application/xml');
+    const hd = await P('Contents/header.xml'), sd = await P('Contents/section0.xml');
+    const H = hd.documentElement, SR = sd.documentElement, M = ctx.header;
+    const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
+    // 글꼴: 모델의 글꼴 이름을 바탕 문서의 글꼴 목록에 맞춘다(없으면 추가)
+    const mFace = (lang, id) => { const g = descendants(M, 'fontface').find((x) => x.getAttribute('lang') === lang); const f = g && kids(g, 'font').find((x) => x.getAttribute('id') === String(id)); return f ? f.getAttribute('face') : '함초롬바탕'; };
+    const ffs = descendants(H, 'fontfaces')[0];
+    const tFont = (lang, face) => {
+      const g = kids(ffs, 'fontface').find((x) => x.getAttribute('lang') === lang);
+      let f = kids(g, 'font').find((x) => x.getAttribute('face') === face);
+      if (!f) { f = kids(g, 'font')[0].cloneNode(true); f.setAttribute('id', String(Math.max(...kids(g, 'font').map((x) => num(x.getAttribute('id')))) + 1)); f.setAttribute('face', face); g.appendChild(f); g.setAttribute('fontCnt', String(kids(g, 'font').length)); }
+      return f.getAttribute('id');
+    };
+    // 글자 속성
+    const cpl = descendants(H, 'charProperties')[0], baseC = kids(cpl, 'charPr')[0], cMap = {};
+    let cid = Math.max(...kids(cpl, 'charPr').map((x) => num(x.getAttribute('id')))) + 1;
+    for (const c of descendants(M, 'charPr')) {
+      const n = baseC.cloneNode(true), mfr = kids(c, 'fontRef')[0], fr = kids(n, 'fontRef')[0];
+      n.setAttribute('id', String(cid)); n.setAttribute('height', c.getAttribute('height') || '1000'); n.setAttribute('textColor', (c.getAttribute('textColor') || '#000000').toUpperCase());
+      for (const [lang, attr] of Object.entries(LANG_ATTR)) fr.setAttribute(attr, tFont(lang, mFace(lang, mfr ? mfr.getAttribute(attr) : '0')));
+      const ul = kids(n, 'underline')[0];
+      if (kids(c, 'italic').length) n.insertBefore(mkEl(hd, NS_HH, 'hh:italic', {}), ul);
+      if (kids(c, 'bold').length) n.insertBefore(mkEl(hd, NS_HH, 'hh:bold', {}), ul);
+      if (c.getAttribute('ul') === '1') ul.setAttribute('type', 'BOTTOM');
+      if (c.getAttribute('sk') === '1') kids(n, 'strikeout')[0].setAttribute('shape', 'SOLID');
+      cpl.appendChild(n); cMap[c.getAttribute('id')] = String(cid++);
+    }
+    cpl.setAttribute('itemCnt', String(kids(cpl, 'charPr').length));
+    // 문단 속성
+    const ppl = descendants(H, 'paraProperties')[0], baseP = kids(ppl, 'paraPr')[0], pMap = {};
+    let pid = Math.max(...kids(ppl, 'paraPr').map((x) => num(x.getAttribute('id')))) + 1;
+    for (const q of descendants(M, 'paraPr')) {
+      const n = baseP.cloneNode(true), al = kids(q, 'align')[0], br = kids(q, 'breakSetting')[0];
+      n.setAttribute('id', String(pid));
+      kids(n, 'align')[0].setAttribute('horizontal', al ? al.getAttribute('horizontal') : 'JUSTIFY');
+      if (br && kids(n, 'breakSetting')[0]) kids(n, 'breakSetting')[0].setAttribute('breakNonLatinWord', br.getAttribute('breakNonLatinWord') || 'KEEP_WORD');
+      const mms = descendants(q, 'margin');
+      for (const m of descendants(n, 'margin')) {
+        const src = mms.find((x) => inCase(x) === inCase(m)) || mms[0];
+        for (const k of ['intent', 'next']) { const a = src && kids(src, k)[0], b = kids(m, k)[0]; if (a && b) b.setAttribute('value', a.getAttribute('value')); }
+      }
+      const mls = descendants(q, 'lineSpacing')[0];
+      if (mls) for (const ls of descendants(n, 'lineSpacing')) { ls.setAttribute('type', mls.getAttribute('type')); ls.setAttribute('value', mls.getAttribute('value')); }
+      ppl.appendChild(n); pMap[q.getAttribute('id')] = String(pid++);
+    }
+    ppl.setAttribute('itemCnt', String(kids(ppl, 'paraPr').length));
+    // 본문
+    const first = kids(SR, 'p')[0], secRun = kids(first, 'run')[0];
+    Array.from(SR.childNodes).forEach((x) => SR.removeChild(x));
+    const lost = {}, out = [], plain = [];
+    let pending = false;
+    const lose = (k) => { lost[k] = (lost[k] || 0) + 1; };
+    for (const mp of paragraphs(ctx.section)) {
+      const bref = descendants(mp, 'ctrl').find((c) => c.hasAttribute('docxBody'));
+      if (bref) { const el = dx.refs[num(bref.getAttribute('docxBody'))]; lose(el.localName === 'tbl' ? '표' : '개체'); continue; }
+      const np = mkEl(sd, NS_HP, 'hp:p', { id: out.length ? '2147483648' : '3121190098', paraPrIDRef: pMap[mp.getAttribute('paraPrIDRef')] || '0', styleIDRef: '0', pageBreak: pending ? '1' : '0', columnBreak: '0', merged: '0' });
+      pending = false;
+      let text = '';
+      for (const mr of kids(mp, 'run')) {
+        const nr = mkEl(sd, NS_HP, 'hp:run', { charPrIDRef: cMap[mr.getAttribute('charPrIDRef')] || '0' });
+        for (const ch of elementKids(mr)) {
+          if (ch.localName === 't') {
+            const nt = mkEl(sd, NS_HP, 'hp:t', {});
+            for (const x of Array.from(ch.childNodes)) {
+              if (x.nodeType === 3 || x.nodeType === 4) {
+                (x.nodeValue || '').split('\t').forEach((s, i) => { if (i) nt.appendChild(mkEl(sd, NS_HP, 'hp:tab', { width: '4000', leader: '0', type: '1' })); if (s) { nt.appendChild(sd.createTextNode(s)); text += s; } });
+              } else if (x.nodeType === 1 && x.localName === 'lineBreak') { nt.appendChild(mkEl(sd, NS_HP, 'hp:lineBreak', {})); text += '\n'; }
+            }
+            nr.appendChild(nt);
+          } else if (ch.localName === 'ctrl' && ch.hasAttribute('docxRef')) {
+            const el = dx.refs[num(ch.getAttribute('docxRef'))];
+            if (el.localName === 'br') { if (strip(text, EDGE + '\n') === '') np.setAttribute('pageBreak', '1'); else pending = true; }
+            else if (/^(drawing|pict|object)$/.test(el.localName)) lose('그림·도형');
+          }
+        }
+        np.appendChild(nr);
+      }
+      if (!kids(np, 'run').length) np.appendChild(mkEl(sd, NS_HP, 'hp:run', { charPrIDRef: '0' }));
+      out.push(np); plain.push(text);
+    }
+    if (!out.length) { const ep = mkEl(sd, NS_HP, 'hp:p', { id: '3121190098', paraPrIDRef: '0', styleIDRef: '0', pageBreak: '0', columnBreak: '0', merged: '0' }); ep.appendChild(mkEl(sd, NS_HP, 'hp:run', { charPrIDRef: '0' })); out.push(ep); }
+    out[0].insertBefore(secRun, out[0].firstChild);
+    // 쪽 설정(원본 docx 의 용지·여백을 따른다. 없으면 바탕 문서 값)
+    const sp = dx.sectPr, pg = sp && kids(sp, 'pgSz')[0], mg = sp && kids(sp, 'pgMar')[0], pp = descendants(secRun, 'pagePr')[0], pm = pp && kids(pp, 'margin')[0];
+    if (pg && pp && twAttr(pg, 'w') && twAttr(pg, 'h')) { pp.setAttribute('width', String(num(twAttr(pg, 'w')) * 5)); pp.setAttribute('height', String(num(twAttr(pg, 'h')) * 5)); }
+    if (mg && pm) for (const k of ['top', 'bottom', 'left', 'right', 'header', 'footer', 'gutter']) if (twAttr(mg, k)) pm.setAttribute(k, String(num(twAttr(mg, k)) * 5));
+    out.forEach((x) => SR.appendChild(x));
+    const ser = (n) => XML_DECL + new XMLSerializer().serializeToString(n).replace(/^\s*<\?xml[^?]*\?>\s*/, '');
+    const z = new JSZip();
+    z.file('mimetype', 'application/hwp+zip', { compression: 'STORE' });
+    const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    for (const name of Object.keys(tz.files)) {
+      const f = tz.files[name]; if (f.dir || name === 'mimetype') continue;
+      let data;
+      if (name === 'Contents/header.xml') data = ser(H);
+      else if (name === 'Contents/section0.xml') data = ser(SR);
+      else if (name === 'Contents/content.hpf') data = (await f.async('string')).replace(/<opf:title>[^<]*<\/opf:title>/, `<opf:title>${esc(title || '')}</opf:title>`);
+      else if (name === 'Preview/PrvText.txt') data = plain.join('\r\n').slice(0, 1000);
+      else data = await f.async('uint8array');
+      z.file(name, data, { compression: 'DEFLATE', createFolders: false });
+    }
+    ctx.saveNotes = Object.keys(lost).length ? ['hwpx에 담지 못한 것: ' + Object.entries(lost).map(([k, v]) => `${k} ${v}개`).join(', ') + ' (원본 docx에는 그대로 있습니다)'] : [];
+    return z.generateAsync({ type: 'uint8array', mimeType: 'application/hwp+zip' });
+  }
+
   async function save(ctx, rules, { JSZip, DOMParser, XMLSerializer }) {
+    if (ctx.format === 'docx') throw new Error('docx 원고는 saveHwpxFromDocx 로 hwpx 저장합니다.');
     pruneEmptyText(ctx.section);
     normalizeFormat(ctx, rules);
     const out = new JSZip();
@@ -1434,7 +1857,7 @@ details.grp{margin:2px 0 0}
   return {
     DEFAULTS, LABEL, EDGE, mergeRules, parseFilename,
     iterSlots, sget, sset, ptext, paragraphs, kids, hasCtrl, hasBr, dropLineseg, pruneEmptyText,
-    classify, kindOf, protRes, markTextOf, runChecks, clean, preview, load, save, reportCsv,
+    classify, kindOf, protRes, markTextOf, runChecks, clean, preview, load, save, saveDocx, saveHwpxFromDocx, reportCsv,
     isBlankP, makeBlank, strip, isBlackish, isEndMark, normalizeFormat, periodIssues, stripComments, commentSpans, paraAlign,
     ensureSlot, splitParagraph, splitAtBreak, roundQuotes, SB_RE, AUTO_ROUND_QUOTES, snapshot, compareRows, diffChars, charsOfSegs, segsOfPara,
     scanMarks, applyMarks, scanColors, applyUncolor, colorRanges, colorName,
@@ -1506,7 +1929,7 @@ details.grp{margin:2px 0 0}
       desc: '저장할 때 파일 안에 남은 이전 저장 이력을 지웁니다.',
       keys: '이력 히스토리 발송 개인정보 이전 저장', match: () => false },
     { id: 'marks', icon: 'checklist', name: '교정 기호 반영',
-      desc: '작가 교정본(작교본)의 /…/ 교정 부호를 한꺼번에 반영합니다. /A(B)/는 B로, /A(추가)/·/A(이동)/는 A로, /A(삭제)/는 지우고(앞뒤 공백이 겹치면 한 칸으로), (@수정X)가 붙은 부호는 원문을 그대로 둡니다. 글자 색은 그대로 유지하고, (@의견) 코멘트는 고른 것만 지웁니다. 반영 전에 아래 목록에서 하나씩 확인하세요. /문장/처럼 괄호 없이 슬래시만 있는 범위(문단에 걸친 것 포함)는 슬래시만 지우고 문장은 그대로 둡니다. 짝이 맞지 않는 /는 자동으로 바꾸지 않고 슬래시만 지울지 고르게 합니다.',
+      desc: '작가 교정본(작교본)의 /…/ 교정 부호를 한꺼번에 반영합니다. /A(B)/는 B로, /A(추가)/·/A(이동)/는 A로, /A(삭제)/는 지우고(앞뒤 공백이 겹치면 한 칸으로), (@수정X)가 붙은 부호와 /A(수정X)/는 원문 A만 남깁니다. 글자 색은 그대로 유지하고, (@의견) 코멘트는 고른 것만 지웁니다. 반영 전에 아래 목록에서 하나씩 확인하세요. /문장/처럼 괄호 없이 슬래시만 있는 범위(문단에 걸친 것 포함)는 슬래시만 지우고 문장은 그대로 둡니다. 짝이 맞지 않는 /는 자동으로 바꾸지 않고 슬래시만 지울지 고르게 합니다.',
       keys: '교정 기호 부호 슬래시 작교본 반영 수정X 코멘트 삭제 추가 교체 작가 편집자', match: (r) => r === '교정 기호 반영' || r === '편집자 코멘트 삭제' },
     { id: 'colors', icon: 'type', name: '색만 칠한 글자 확인',
       desc: '교정 부호(/…/) 없이 글자색만 칠해진 부분(주로 오탈자 수정)을 문단별로 보여 줍니다. 기본은 그대로 두며, 체크한 문장만 정리할 때 글자색이 검정으로 돌아갑니다. 글자는 바뀌지 않습니다. 부호나 코멘트가 아직 남은 문단은 교정 기호 반영을 마친 뒤 다시 정리하면 목록에 나타납니다.',
@@ -1568,7 +1991,7 @@ details.grp{margin:2px 0 0}
   async function openFile(file) {
     if (!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (ext === 'hwp') { toast('hwp(구 형식)는 열 수 없습니다. 한글에서 “다른 이름으로 저장”으로 hwpx로 저장한 뒤 열어 주세요.', 'err'); return; }
+    if (ext === 'hwp') { toast('hwp(구 형식)는 열 수 없습니다. 한글에서 “다른 이름으로 저장”으로 hwpx(또는 docx)로 저장한 뒤 열어 주세요.', 'err'); return; }
     if (!window.JSZip) { toast('압축 해제 도구를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침해 주세요.', 'err'); return; }
     busy(true);
     try { await mount(await file.arrayBuffer(), file.name); }
@@ -1576,19 +1999,20 @@ details.grp{margin:2px 0 0}
     finally { busy(false); }
   }
   async function mount(buf, name) {
-    const ctx = await E.load(buf, { JSZip: window.JSZip, DOMParser: window.DOMParser });
+    const ctx = await E.load(buf, { JSZip: window.JSZip, DOMParser: window.DOMParser, XMLSerializer: window.XMLSerializer });
     state.buf = buf; state.name = name; state.ctx = ctx;
     state.title = E.parseFilename(name).title;
     state.cleaned = false; state.dirty = false; state.log = []; state.page = 0; state.menuFor = null;
     state.snap = E.snapshot(ctx.section); state.edMode = 'edit'; state.cmp = null; state.cmpPage = 0; state.cmpOnly = true; state.undoStack = []; state.lastOp = null;
     state.chgText = new Set(); state.chgSpace = new Set(); state.preview = null; state.shown = {}; state.seen = new Set();
-    state.mk = newMk(name); state.cl = newCl(); state.focusEl = null; state.cp.sel = null;
+    state.mk = newMk(name); state.cl = newCl(); state.exp = { hwpx: (ctx.format || 'hwpx') === 'hwpx', docx: ctx.format === 'docx', csv: false }; state.focusEl = null; state.cp.sel = null;
     state.q = ''; state.hitPos = -1; state.hits = []; { const q = $('#q'), qc = $('#qClear'); if (q) q.value = ''; if (qc) qc.hidden = true; }
     recompute(); analyze();
     $('#btnExport').disabled = false; $('#btnReset').disabled = false;
     $('#fileChip').hidden = false; $('#fileName').textContent = name; $('#fileCount').textContent = `문단 ${nf(state.rows.length)}`;
     $('#titleIn').value = state.title;
     renderAll(); schedulePreview(); cpHint();
+    if (ctx.notes && ctx.notes.length) toast(ctx.notes.join(' '));
     // 열면 항상 1쪽 맨 위부터 보이게(이전 파일의 스크롤 위치가 남지 않도록)
     ['#paneEditor', '#paneSide', '#sideList'].forEach((s) => { const el = $(s); if (el) el.scrollTop = 0; });
     try { window.scrollTo(0, 0); } catch (e) { /* 지원하지 않는 환경 */ }
@@ -1684,20 +2108,51 @@ details.grp{margin:2px 0 0}
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
     toast('저장했습니다.');
   }
-  async function exportHwpx() {
+  // docx 원고를 hwpx로 저장할 때 쓰는 바탕 문서(글꼴·스타일·쪽 설정만 담은 한글 패키지)
+  const HWPX_BASE_B64 = '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';
+  const hwpxBase = () => Uint8Array.from(atob(HWPX_BASE_B64), (c) => c.charCodeAt(0));
+  const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  const baseName = () => state.name.replace(/\.(hwpx|docx)$/i, '');
+  async function exportMain(kind) {            // kind: 'hwpx' | 'docx'  — 정리본을 고른 형식으로 저장
     if (!state.ctx) return;
     busy(true);
     try {
-      const bytes = await E.save(state.ctx, currentRules(), { JSZip: window.JSZip, DOMParser: window.DOMParser, XMLSerializer: window.XMLSerializer });
+      const deps = { JSZip: window.JSZip, DOMParser: window.DOMParser, XMLSerializer: window.XMLSerializer };
+      state.ctx.saveNotes = [];
+      const fromDocx = state.ctx.format === 'docx';
+      const bytes = kind === 'docx' ? await E.saveDocx(state.ctx, currentRules(), deps)
+        : fromDocx ? await E.saveHwpxFromDocx(state.ctx, currentRules(), hwpxBase(), Object.assign({ title: baseName() }, deps)) : await E.save(state.ctx, currentRules(), deps);
       renderEditor();
-      await saveFile(state.name.replace(/\.hwpx$/i, '') + '_정리본.hwpx', bytes, 'application/hwp+zip');
+      await saveFile(baseName() + '_정리본.' + kind, bytes, kind === 'docx' ? DOCX_MIME : 'application/hwp+zip');
       state.dirty = false;
-      if (!state.cleaned) toast('정리하지 않은 상태로 저장했습니다.');
+      if (state.ctx.saveNotes && state.ctx.saveNotes.length) toast(state.ctx.saveNotes.join(' '), 'err');
+      else if (!state.cleaned) toast('정리하지 않은 상태로 저장했습니다.');
     } catch (e) { toast('저장 파일을 만들지 못했습니다: ' + (e && e.message), 'err'); }
     busy(false);
   }
+  // 내려받기: 받을 파일을 고른다(정리본 hwpx·docx, 변경 리포트 csv)
+  function expOpen(on) {
+    const m = $('#expMenu'); if (!m) return;
+    const open = on === undefined ? m.hidden : on;
+    if (open && state.ctx) {
+      const fmt = state.ctx.format || 'hwpx';
+      $('#expHwpx').checked = fmt === 'hwpx' && state.exp.hwpx; $('#expDocx').checked = !!state.exp.docx;
+      $('#expHwpxNote').textContent = fmt !== 'hwpx' ? '한글 양식 기반으로 새로 만듭니다. 서식이 일부 달라질 수 있습니다' : '';
+      $('#expDocxNote').textContent = fmt === 'hwpx' ? '서식이 일부 달라질 수 있습니다' : '';
+      $('#expCsv').checked = state.exp.csv;
+    }
+    m.hidden = !open;
+  }
+  async function expGo() {
+    const want = { hwpx: $('#expHwpx').checked, docx: $('#expDocx').checked, csv: $('#expCsv').checked };
+    if (!want.hwpx && !want.docx && !want.csv) { toast('내려받을 파일을 하나 이상 골라 주세요.', 'err'); return; }
+    state.exp = want; expOpen(false);
+    if (want.hwpx) await exportMain('hwpx');
+    if (want.docx) await exportMain('docx');
+    if (want.csv) await exportCsv();
+  }
   async function exportCsv() {
-    await saveFile(state.name.replace(/\.hwpx$/i, '') + '_변경리포트.csv', E.reportCsv(state.log, state.issues.map((i) => ({ sev: i.sev, rule: i.rule, idx: i.el && state.rowIdx.has(i.el) ? (state.rowIdx.get(i.el) + 1) : '-', msg: i.msg }))), 'text/csv');
+    await saveFile(baseName() + '_변경리포트.csv', E.reportCsv(state.log, state.issues.map((i) => ({ sev: i.sev, rule: i.rule, idx: i.el && state.rowIdx.has(i.el) ? (state.rowIdx.get(i.el) + 1) : '-', msg: i.msg }))), 'text/csv');
   }
 
   // ───────── 화면 전환 ─────────
@@ -1748,8 +2203,8 @@ details.grp{margin:2px 0 0}
       pane.replaceChildren(h('div', { class: 'drop', id: 'drop' },
         icon('doccheck', 30),
         h('h1', { text: '교정고를 열어 발송 전 점검을 시작하세요' }),
-        h('p', { text: 'hwpx 파일을 이 화면에 놓거나 선택합니다. 열면 바뀔 내용을 바로 미리 보여 줍니다.' }),
-        h('label', { class: 'btn primary', for: 'fileInput' }, icon('folder'), 'hwpx 열기'),
+        h('p', { text: 'hwpx·docx 파일을 이 화면에 놓거나 선택합니다. 열면 바뀔 내용을 바로 미리 보여 줍니다.' }),
+        h('label', { class: 'btn primary', for: 'fileInput' }, icon('folder'), '파일 열기'),
         h('p', { class: 'note', text: '파일은 이 브라우저 안에서만 처리되며 어디로도 전송되지 않습니다.' })));
       return;
     }
@@ -2360,7 +2815,11 @@ details.grp{margin:2px 0 0}
 
   // ───────── 연결 ─────────
   $('#fileInput').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; openFile(f); });
-  $('#btnExport').addEventListener('click', exportHwpx);
+  $('#btnExport').addEventListener('click', (e) => { e.stopPropagation(); expOpen(); });
+  $('#expGo').addEventListener('click', expGo);
+  $('#expCancel').addEventListener('click', () => expOpen(false));
+  document.addEventListener('click', (e) => { const m = $('#expMenu'); if (m && !m.hidden && !m.contains(e.target)) expOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') expOpen(false); });
   $('#btnClean').addEventListener('click', runClean);
   initColorPicker();
   $('#btnCsv').addEventListener('click', exportCsv);

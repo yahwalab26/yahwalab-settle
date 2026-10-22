@@ -338,7 +338,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="libs/supabase-2.49.4.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.8.3'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.8.4'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -512,6 +512,7 @@ $('#vsq').onchange=e=>{if(e.target.id!=='vqf'&&e.target.id!=='vqt')return;const 
 /* ---------- 출간작: 홈페이지(yahwalab.xyz)에 보일 작품 등록. works 컬럼을 재사용하고 표지는 covers 버킷에 저장 ---------- */
 let BK=[],BKSEL=null,BKCOVER=null; /* BKCOVER: 편집 중 새로 고른 표지(520×780 JPG로 변환된 Blob) */
 const BKG=['BL','로판','현로'],BKURL=/^https:\/\/blog\.naver\.com\//;
+const bkRnd=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join(''); /* 표지 파일명용 무작위 32자(추측 방지) */
 const bkCover=p=>p?SB.storage.from('covers').getPublicUrl(p).data.publicUrl:'';
 const bkNames=id=>(WA[id]||[]).map(a=>(AUTHORS.find(x=>x.id===a)||{}).pen_name).filter(Boolean).join(', ');
 const bkMiss=w=>[!bkNames(w.id)&&'필명',!w.genre&&'장르',!w.cover_path&&'표지',!w.blog_url&&'블로그 주소'].filter(Boolean);
@@ -550,7 +551,7 @@ async function saveBook(){const w=BK.find(x=>x.id===BKSEL);if(!w)return;const m=
   if(url&&!BKURL.test(url))return say('블로그 글 주소는 https://blog.naver.com/ 으로 시작해야 합니다.','bad');
   if(pub){const miss=[!bkNames(w.id)&&'필명 연결',!genre&&'장르',!(BKCOVER||w.cover_path)&&'표지',!url&&'블로그 글 주소'].filter(Boolean);if(miss.length)return say('공개하려면 먼저 다음을 채워 주세요: '+miss.join(', '),'bad')}
   b.disabled=true;say('저장 중…');let np=null;
-  if(BKCOVER){const t=kst().toISOString().replace(/\D/g,'').slice(0,14);let up;for(let n=0;n<3;n++){np='cover-'+t+(n?'-'+n:'')+'.jpg';up=await SB.storage.from('covers').upload(np,BKCOVER,{contentType:'image/jpeg',cacheControl:'31536000'});if(!up.error||!/exist|duplicate/i.test(up.error.message))break} /* cover-연월일시분초.jpg, 같은 초에 겹치면 -1, -2 */
+  if(BKCOVER){let up;for(let n=0;n<3;n++){np='cover-'+bkRnd()+'.jpg';up=await SB.storage.from('covers').upload(np,BKCOVER,{contentType:'image/jpeg',cacheControl:'31536000'});if(!up.error||!/exist|duplicate/i.test(up.error.message))break} /* cover-무작위32자.jpg (v2.8.4부터. 예전 표지는 cover-연월일시분초.jpg 그대로) */
     if(up.error){np=null;b.disabled=false;return say('표지 업로드 실패: '+up.error.message,'bad')}}
   const patch={genre,label,release_date:rd,blog_url:url,public_listed:pub,cover_path:np||w.cover_path};
   if(pub&&!w.public_listed)patch.sort_order=Math.max(0,...bkListed().map(x=>x.sort_order||0))+1;

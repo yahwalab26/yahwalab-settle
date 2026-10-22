@@ -1943,8 +1943,13 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
   }
   const hexColor = (c) => '#' + [c & 255, (c >> 8) & 255, (c >> 16) & 255].map((x) => x.toString(16).padStart(2, '0')).join('').toUpperCase();
 
-  async function loadHwp(buf, { DOMParser, CFB, inflateRaw }) {
+  async function loadHwp(buf, deps) {     // 어느 단계에서 실패했는지 오류 문구에 남긴다
+    const st = { s: '시작' };
+    try { return await loadHwpInner(buf, deps, st); } catch (e) { throw new Error('hwp 열기 오류: ' + (e && e.message ? e.message : e) + ' (단계: ' + st.s + ')'); }
+  }
+  async function loadHwpInner(buf, { DOMParser, CFB, inflateRaw }, st) {
     if (!CFB) throw new Error('hwp를 읽는 도구(CFB)를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.');
+    st.s = 'OLE 컨테이너 읽기';
     const cf = CFB.read(buf, { type: 'array' });
     const ent = (n) => CFB.find(cf, n);
     const fhE = ent('/FileHeader');
@@ -1955,9 +1960,10 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     if (flags & (0x4 | 0x10 | 0x100 | 0x400)) throw new Error('배포용·보안(DRM) hwp는 읽을 수 없습니다.');
     const comp = !!(flags & 1);
     const inf = inflateRaw || inflateRawJs;
-    const stream = async (n) => { const e = ent(n); if (!e) return null; const b = asU8(e.content); return comp ? inf(b) : b; };
+    const stream = async (n) => { st.s = n + ' 읽기·압축 해제'; const e = ent(n); if (!e) return null; const b = asU8(e.content); return comp ? inf(b) : b; };
     const diB = await stream('/DocInfo');
     if (!diB) throw new Error('hwp 문서 정보(DocInfo)를 찾을 수 없습니다.');
+    st.s = '문서 정보 분석';
     const di = hwpRecs(diB);
     // ── 글꼴·글자 모양·문단 모양
     const idm = di.find((r) => r.tag === 17), idv = idm && dvOf(idm.d);
@@ -2022,6 +2028,7 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     for (let si = 0; ; si++) {
       const b = await stream('/BodyText/Section' + si);
       if (!b) break;
+      st.s = '본문 분석(구역 ' + si + ')';
       const recs = hwpRecs(b), groups = [];
       recs.forEach((r, i) => { if (r.tag === 66 && r.lv === 0) groups.push({ start: i, end: recs.length }); });
       groups.forEach((g, i) => { if (i + 1 < groups.length) g.end = groups[i + 1].start; });

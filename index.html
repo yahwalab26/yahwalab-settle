@@ -5,6 +5,9 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="format-detection" content="telephone=no,email=no,address=no">
 <title>야화랩 정산 사이트</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://wddixxdrndgvjgicwunu.supabase.co" crossorigin>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -338,7 +341,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="libs/supabase-2.49.4.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.8.5'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.8.6'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));

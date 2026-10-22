@@ -338,10 +338,11 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="libs/supabase-2.49.4.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.8.4'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.8.5'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const DBGS={},dbg=(w,e)=>{if(DBGS[w])return;DBGS[w]=1;try{console.warn('[정산]',w,(e&&e.message)||e)}catch(_){return}}; /* 조용히 넘기던 오류를 콘솔에 남김(같은 항목은 1번만) */
 const monVal=sel=>{const e=$(sel);if(!/^\d{4}-\d{2}$/.test(e.value))e.value=kst().toISOString().slice(0,7);return e.value}; /* 월 입력이 비어 있으면(미방문·삭제·미지원 브라우저) 이번 달로 보정 */ const PN={aladin:'알라딘',yes24:'예스24',kyobo:'교보문고',bookcube:'북큐브',ridi:'리디'},c=v=>String(v??'').trim();
 let S=null,WORKS=[],ISBN={},AUTHORS=[],WA={};
 
@@ -351,7 +352,7 @@ document.querySelectorAll('.out').forEach(b=>b.onclick=async()=>{stopIdle();drop
 $('#lf').onsubmit=async e=>{e.preventDefault();$('#le').textContent='';
   const{data,error}=await SB.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
   if(error)return $('#le').textContent='이메일 또는 비밀번호가 올바르지 않습니다.';
-  try{$('#rm').checked?localStorage.setItem('yw_email',$('#em').value.trim()):localStorage.removeItem('yw_email')}catch{}
+  try{$('#rm').checked?localStorage.setItem('yw_email',$('#em').value.trim()):localStorage.removeItem('yw_email')}catch(e){dbg('아이디 저장',e)}
   stamp();enter(data.user)};
 let ME=null,forced=false;
 /* ---------- 관리자 2단계 인증(TOTP) ---------- */
@@ -382,7 +383,7 @@ $('#mf').onsubmit=async e=>{e.preventDefault();const m=$('#me'),b=$('#mb');m.tex
 /* 로그인 기록: 로그인 성공 직후 서버 함수(log_login) 호출. 실패해도 화면 동작에는 영향 없음 */
 let LOGID='',LOGAT=0;
 function uaShort(){const u=navigator.userAgent||'',os=/iPhone|iPad|iPod/.test(u)?'iOS':/Android/.test(u)?'Android':/Windows/.test(u)?'Windows':/Mac OS X/.test(u)?'macOS':/Linux/.test(u)?'Linux':'',br=/Edg\//.test(u)?'Edge':/OPR\//.test(u)?'Opera':/SamsungBrowser/.test(u)?'Samsung':/CriOS|Chrome\//.test(u)?'Chrome':/FxiOS|Firefox\//.test(u)?'Firefox':/Safari\//.test(u)?'Safari':'',mo=/Mobi/.test(u)?' 모바일':'';return (br+(os?' · '+os:'')+mo).trim()||'알 수 없음'}
-function logLogin(){try{if(!ME||(LOGID===ME.id&&Date.now()-LOGAT<6e5))return;LOGID=ME.id;LOGAT=Date.now();SB.rpc('log_login',{p_ua:uaShort()}).then(()=>{},()=>{})}catch{}}
+function logLogin(){try{if(!ME||(LOGID===ME.id&&Date.now()-LOGAT<6e5))return;LOGID=ME.id;LOGAT=Date.now();SB.rpc('log_login',{p_ua:uaShort()}).then(()=>{},e=>dbg('로그인 기록',e))}catch(e){dbg('로그인 기록',e)}}
 async function enter(u){ME=u;const{data}=await SB.from('profiles').select('role,must_change_password').eq('id',u.id).maybeSingle();
   if(data?.must_change_password)return askPw(true);
   if(data?.role==='author'&&stale()){await SB.auth.signOut();view('login');$('#le').textContent='1시간 이상 사용이 없어 자동 로그아웃되었습니다. 다시 로그인해 주세요.';return}
@@ -391,8 +392,8 @@ async function enter(u){ME=u;const{data}=await SB.from('profiles').select('role,
   if(data?.role!=='admin')return view('denied');
   if(!await mfaGate())return;
   $('#who').textContent=u.email;$('#ver').textContent=VER;view('app');loadFresh();route();loadPeople();logLogin();
-  try{document.cookie='yw_nt=1;domain=.yahwalab.xyz;path=/;max-age=31536000;SameSite=Lax;Secure'}catch{} /* 홈페이지 버튼 클릭 집계에서 관리자 본인 제외 */}
-try{const se=localStorage.getItem('yw_email');if(se){$('#em').value=se;$('#rm').checked=true}}catch{}
+  try{document.cookie='yw_nt=1;domain=.yahwalab.xyz;path=/;max-age=31536000;SameSite=Lax;Secure'}catch(e){dbg('관리자 제외 쿠키',e)} /* 홈페이지 버튼 클릭 집계에서 관리자 본인 제외 */}
+try{const se=localStorage.getItem('yw_email');if(se){$('#em').value=se;$('#rm').checked=true}}catch(e){dbg('아이디 불러오기',e)}
 
 /* ---------- 비밀번호 설정/변경 ---------- */
 function askPw(f){forced=f;$('#ct').textContent=f?'비밀번호 설정':'비밀번호 변경';
@@ -409,7 +410,7 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
 /* ---------- 메뉴(nav) ---------- */
 $('#homelink').onclick=e=>{if(location.hash===''||location.hash==='#/home'){e.preventDefault();loadHome();scrollTo(0,0)}};
 /* 새로 접속(주소 입력·북마크·탭 복원)하면 현황에서 시작. 같은 탭의 새로고침·뒤로가기만 보던 화면 유지 */
-try{const nt=(performance.getEntriesByType('navigation')[0]||{}).type;if(!sessionStorage.getItem('yw_s')||nt==='navigate'){if(location.hash&&location.hash!=='#/home')history.replaceState(null,'',location.pathname+'#/home')}sessionStorage.setItem('yw_s','1')}catch(e){}
+try{const nt=(performance.getEntriesByType('navigation')[0]||{}).type;if(!sessionStorage.getItem('yw_s')||nt==='navigate'){if(location.hash&&location.hash!=='#/home')history.replaceState(null,'',location.pathname+'#/home')}sessionStorage.setItem('yw_s','1')}catch(e){dbg('세션 표시',e)}
 const PG=['home','authors','settle','docs','books','proof','mail','prompt','alog','llog','visit'];
 /* 영역 → 세부 메뉴. 주소(#/home 등)는 그대로이고 화면 묶음만 나눔. 영역을 누르면 그 영역에서 마지막으로 본 화면으로 감 */
 const AREAS={settle:['home','settle','authors','books'],tools:['mail','proof','prompt'],vault:['docs'],logs:['alog','llog','visit']};
@@ -424,7 +425,7 @@ function needXLSX(){if(typeof XLSX!=='undefined')return Promise.resolve();if(XLP
   XLP=new Promise((ok,no)=>{const s=document.createElement('script');s.src='libs/xlsx-0.18.5.full.min.js';s.onload=ok;s.onerror=()=>{XLP=null;s.remove();no(new Error('엑셀 기능을 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.'))};document.head.appendChild(s)});return XLP}
 const PROMPTS=[{t:'BL 웹소설 표지 일러스트 변환 (구아슈 4색)',b:"Create a single, high-quality illustration for a Korean BL web novel cover, using the uploaded photograph as the sole visual reference.\n\n**OUTPUT SPECIFICATIONS**\n- Exact aspect ratio: 2:3 vertical\n- Target resolution: 1000 × 1500 pixels\n- Output: One standalone illustration only\n- No typography, no text, no layout design\n\n**1. PRESERVE THE ORIGINAL SUBJECT**\n\nReinterpret the main subject of the uploaded photograph as a sophisticated, contemporary painterly illustration.\n\nPreserve the original subject's identity, recognizable features, overall silhouette, proportions, structural details, and spatial relationships. Maintain the essential composition of the reference image.\n\nDo not replace, redesign, invent, or omit important elements of the original subject. Do not introduce new objects or additional subjects.\n\nKeep the entire main subject within the canvas. Do not arbitrarily crop, zoom in, stretch, distort, or disproportionately enlarge it. Extend the surrounding background only when necessary to maintain the 2:3 aspect ratio.\n\n**2. STRICT COLOR PALETTE**\n\nUse the following four colors as the primary color system:\n\n- Pairing Blue: #19B5FF\n- Accent Pink: #FF3D8B\n- Deep Navy: #0E1A2B\n- Cool White: #EEF1F5\n\nUse Cool White (#EEF1F5) as the dominant background and light surface color. Use Pairing Blue (#19B5FF) as the principal chromatic accent and a defining visual element. Use Deep Navy (#0E1A2B) for dark surfaces, outlines, structural separation, and strong areas of contrast. Apply Accent Pink (#FF3D8B) sparingly to selected edges, small surface areas, or subtle color accents.\n\nMaintain a coherent, restrained palette. The blue and navy should establish the overall visual identity, while pink provides selective contrast rather than dominating the image.\n\nAllow subtle tonal variation within each specified color to create painterly texture, but do not introduce unrelated colors or shift the overall palette toward warm beige, brown, yellow, or muted vintage tones.\n\n**3. ART DIRECTION AND RENDERING STYLE**\n\nRender the image as a modern, premium editorial illustration with a refined hand-painted appearance.\n\nCombine the tactile qualities of opaque gouache painting with clean, contemporary graphic shapes.\n\nUse:\n- Visible but controlled brushstrokes\n- Subtle, natural variations in paint opacity\n- Slightly irregular painted edges\n- Layered, clearly defined color planes\n- Simplified yet recognizable forms\n- Clean silhouettes and deliberate negative space\n- Sophisticated contrast between cool white, electric blue, pink, and deep navy\n- A polished balance between painterly texture and graphic clarity\n\nThe result should feel intentionally art-directed, stylish, contemporary, and suitable for a professionally published Korean BL web novel cover.\n\nPrioritize visual clarity, elegant color relationships, and a distinctive modern mood over photorealism.\n\n**4. LIGHTING AND SHADING**\n\nTranslate the original lighting into a simplified illustrated treatment.\n\nUse controlled blocks of color and selective tonal separation to describe form. Keep highlights and shadows restrained, clean, and consistent with the chosen palette.\n\nAvoid excessive gradients, glossy 3D rendering, photographic reflections, dramatic cinematic lighting, and overly complex surface details.\n\nThe image should look like a carefully painted illustration, not a photograph with a filter applied and not a computer-generated 3D render.\n\n**5. COMPOSITION**\n\nCreate a unified, full-canvas illustration.\n\nPreserve the visual hierarchy and essential spatial arrangement of the original photograph. Keep the main subject clearly readable against its background.\n\nUse the surrounding negative space intentionally. Maintain balanced proportions and a clean composition that can be placed directly into a web novel cover design.\n\nDo not create a split-screen composition, diptych, side-by-side comparison, poster template, editorial text panel, border, decorative frame, or separate illustration area.\n\nThe entire canvas must contain one continuous illustration.\n\n**6. ABSOLUTE EXCLUSIONS — NO EXCEPTIONS**\n\nDo not generate any text or typography of any kind.\n\nNo title, subtitle, English words, letters, numbers, dates, captions, signatures, logos, watermarks, labels, or typographic marks.\n\nDo not add people, characters, faces, hands, decorative symbols, unrelated props, or invented visual elements.\n\nDo not create a poster mockup, book mockup, cover template, graphic layout, or promotional advertisement.\n\nDo not divide the image into multiple panels.\n\nDo not add excessive neon effects, glowing outlines, cyberpunk scenery, cartoon styling, flat vector icons, or generic stock-illustration aesthetics.\n\n**FINAL REQUIREMENT**\n\nGenerate only the finished illustration. The output must contain no elements other than the image itself.\n\nThe final image must preserve the recognizable subject of the uploaded photograph while transforming its visual treatment into a refined, modern, painterly illustration using the specified blue, pink, navy, and cool-white color palette.\n\nAspect ratio: 2:3 vertical. Target size: 1000 × 1500 pixels."}];
 function renderPrompts(){$('#prl').innerHTML=PROMPTS.map((p,i)=>`<div style="border-top:1px solid var(--line);padding:14px 0"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><b>${esc(p.t)}</b><button type="button" class="ghost" data-pc="${i}">복사</button></div><pre style="margin:0;white-space:pre-wrap;word-break:break-word;font:inherit;font-size:13px;line-height:1.7;max-height:380px;overflow:auto;padding:12px;border:1px solid var(--line)">${esc(p.b)}</pre></div>`).join('')}
-$('#prl').onclick=async e=>{const b=e.target.closest('[data-pc]');if(!b)return;const t=PROMPTS[+b.dataset.pc].b,o=b.textContent;try{await navigator.clipboard.writeText(t)}catch(_){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(__){}a.remove()}b.textContent='복사됨';setTimeout(()=>b.textContent=o,1200)};
+$('#prl').onclick=async e=>{const b=e.target.closest('[data-pc]');if(!b)return;const t=PROMPTS[+b.dataset.pc].b,o=b.textContent;let ok=true;try{await navigator.clipboard.writeText(t)}catch(_){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{ok=document.execCommand('copy')}catch(e){ok=false;dbg('복사 대체',e)}a.remove()}b.textContent=ok?'복사됨':'복사 실패';setTimeout(()=>b.textContent=o,1200)};
 function route(){const r=location.hash.replace(/^#\/?/,'')||'home',id=PG.includes(r)?r:'home';
   PG.forEach(x=>$('#pg-'+x).hidden=x!==id);setNav(id);
   document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle();if(id==='docs')loadDocs();if(id==='alog')loadLogs();if(id==='llog')loadLoginLogs();if(id==='visit')loadVisit();if(id==='prompt')renderPrompts();if(id==='books')loadBooks()}
@@ -535,7 +536,7 @@ function drawBooks(){const on=bkListed(),off=BK.filter(w=>!w.public_listed).sort
   <h2><small>(03)</small>홈페이지 출간작 등록</h2><p class="k" style="font-size:12px;margin:0 0 8px;text-align:center">공개로 저장한 작품이 홈페이지 출간작이 됩니다. 위에서부터 이 순서로 보이며, ⠿ 손잡이를 끌어 순서를 바꿉니다.<br>저장하면 홈페이지에 자동으로 반영을 요청하며, 반영까지 1~2분 걸립니다.</p><div class="row" style="gap:10px;margin-bottom:8px"><button class="ghost" id="bkrp">홈페이지에 다시 반영</button><span id="bkpub" class="${BKP.c}" role="status">${esc(BKP.t)}</span></div>${tbl(on.map(row).join(''),'홈페이지 출간작 등록')}
   <div id="bke"></div>`;drawBookEdit()}
 function drawBookEdit(){const el=$('#bke'),w=BK.find(x=>x.id===BKSEL);if(!el)return;if(!w){el.innerHTML='';return}
-  const cv=BKCOVER?URL.createObjectURL(BKCOVER):bkCover(w.cover_path),opt=(v,cur)=>`<option ${v===cur?'selected':''}>${v}</option>`;
+  const cv=BKCOVER?URL.createObjectURL(BKCOVER):bkCover(w.cover_path),opt=(v,cur)=>`<option ${v===cur?'selected':''}>${esc(v)}</option>`;
   el.innerHTML=`<h2><small>(04)</small>편집</h2><div class="card" style="text-align:left"><h3 style="margin:0 0 4px">${esc(w.title)}</h3><p class="k" style="margin:0 0 14px">${esc(bkNames(w.id)||'필명 미연결 — 작가 탭에서 작품에 필명을 연결해 주세요.')}</p>
   <div class="row" style="align-items:flex-start;justify-content:flex-start;gap:18px"><div style="flex:0 0 130px"><div id="bkpvw" style="width:130px;aspect-ratio:2/3;background:#f2f2f2;border:1px solid var(--line);overflow:hidden">${cv?`<img src="${cv}" alt="표지 미리보기" style="width:100%;height:100%;object-fit:cover;display:block">`:'<div class="k" style="padding:60px 8px;text-align:center">표지 없음</div>'}</div><button class="ghost" id="bkcp" style="margin-top:8px;width:130px">표지 선택</button><input type="file" id="bkcx" accept="image/jpeg,image/png,image/webp" hidden></div>
   <div style="flex:1 1 240px;min-width:0"><div class="row" style="justify-content:flex-start;gap:10px"><label class="k" for="bkg">장르</label><select id="bkg" style="width:auto"><option value="">미지정</option>${BKG.map(g=>opt(g,w.genre)).join('')}</select><label class="k" for="bkl">레이블</label><select id="bkl" style="width:auto"><option value="">미지정</option>${['트루비','야화랩'].map(g=>opt(g,w.label)).join('')}</select></div>
@@ -572,7 +573,7 @@ let BKD=null;
 const bkGrip=e=>e.target.closest&&e.target.closest('.bkg');
 async function bkDragEnd(e,cancel){const d=BKD;if(!d||e.pointerId!==d.pid)return;BKD=null;
   d.rows.forEach(r=>r.classList.remove('bk-it','bk-ib'));d.tr.classList.remove('bk-drag');d.tr.style.transform='';
-  try{d.g.releasePointerCapture(d.pid)}catch(_){}
+  try{d.g.releasePointerCapture(d.pid)}catch(e){dbg('드래그 해제',e)}
   if(cancel||d.t===d.i)return;
   const me=d.tr.dataset.wid,ids=d.rows.map(r=>r.dataset.wid).filter(x=>x!==me);ids.splice(d.t,0,me);
   const by=Object.fromEntries(BK.map(w=>[String(w.id),w])),ch=ids.map((id,k)=>({id,o:k+1})).filter(x=>(by[x.id]||{}).sort_order!==x.o);
@@ -582,7 +583,7 @@ async function bkDragEnd(e,cancel){const d=BKD;if(!d||e.pointerId!==d.pid)return
   await loadBooks();if(!er)bkPublish()}
 $('#pg-books').addEventListener('pointerdown',e=>{const g=bkGrip(e);if(!g||BKD||(e.pointerType==='mouse'&&e.button!==0))return;
   const tr=g.closest('tr'),rows=[...tr.parentNode.querySelectorAll('tr[data-on]')];if(rows.length<2)return;
-  e.preventDefault();try{g.setPointerCapture(e.pointerId)}catch(_){}
+  e.preventDefault();try{g.setPointerCapture(e.pointerId)}catch(e){dbg('드래그 시작',e)}
   const i=rows.indexOf(tr);
   BKD={g,tr,rows,i,t:i,pid:e.pointerId,sy:e.clientY+scrollY,mids:rows.map(r=>{const b=r.getBoundingClientRect();return b.top+scrollY+b.height/2})};
   tr.classList.add('bk-drag')});
@@ -658,7 +659,7 @@ $('#pwb2').onclick=()=>askPw(false);
 
 /* ---------- 작가 자동 로그아웃 (1시간 미사용) ---------- */
 const IDLE=60*60*1000;let LA=Date.now(),LW=0,IT=null;
-const stamp=()=>{try{localStorage.setItem('yw_la',String(Date.now()))}catch{}};
+const stamp=()=>{try{localStorage.setItem('yw_la',String(Date.now()))}catch(e){dbg('활동 시각 저장',e)}};
 const stale=()=>{try{return Date.now()-Number(localStorage.getItem('yw_la')||0)>IDLE}catch{return false}};
 ['click','keydown','touchstart','scroll','mousemove'].forEach(ev=>addEventListener(ev,()=>{LA=Date.now();if(LA-LW>10000){LW=LA;stamp()}},{passive:true,capture:true}));
 async function idleOut(msg){stopIdle();dropEmbeds();await SB.auth.signOut();closeLay();view('login');$('#le').textContent=msg}
@@ -912,7 +913,7 @@ $('#pc').onclick=e=>{const b=e.target.closest('button');if(b){DP=b.dataset.p;dra
 $('#dt').onchange=async e=>{const t=e.target.closest('select[data-wl]');if(!t||!t.value)return;const{error}=await SB.from('works').update({label:t.value}).eq('id',t.dataset.wl);if(error)return alert(error.message);loadHome()};
 
 /* ---------- 오류 알림(관리자 메일) ---------- */
-let LR=0;async function reportErr(w,m){if(Date.now()-LR<6e4)return;LR=Date.now();try{await SB.functions.invoke('admin-author',{body:{action:'report_error',where:w,message:String(m).slice(0,300)}})}catch{}}
+let LR=0;async function reportErr(w,m){if(Date.now()-LR<6e4)return;LR=Date.now();try{await SB.functions.invoke('admin-author',{body:{action:'report_error',where:w,message:String(m).slice(0,300)}})}catch(e){dbg('오류 보고 전송',e)}}
 addEventListener('unhandledrejection',e=>reportErr('예상치 못한 오류',e.reason?.message||e.reason));
 addEventListener('error',e=>reportErr('화면 오류',e.message));
 
@@ -920,7 +921,7 @@ addEventListener('error',e=>reportErr('화면 오류',e.message));
 let PEOPLE=[];
 const cpy=async(t,b)=>{await navigator.clipboard.writeText(t);const o=b.textContent;b.textContent='복사됨';setTimeout(()=>b.textContent=o,1200)};
 async function call(body){const{data,error}=await SB.functions.invoke('admin-author',{body});
-  if(error){let m=error.message;try{m=(await error.context.json()).error||m}catch{}return{error:m}}return{data}}
+  if(error){let m=error.message;try{m=(await error.context.json()).error||m}catch(e){dbg('서버 오류 본문 읽기',e)}return{error:m}}return{data}}
 let STAT={},PLOADED=false;
 async function loadPeople(){const[,p,pr]=await Promise.all([loadRefs(),SB.from('persons').select('id,name_masked,phone_masked,created_at').order('created_at',{ascending:false}),SB.from('profiles').select('person_id,must_change_password').eq('role','author')]);
   PEOPLE=p.data||[];STAT={};(pr.data||[]).forEach(x=>{if(x.person_id)STAT[x.person_id]=x.must_change_password});PLOADED=true;renderPeople();loadDec()}

@@ -6,7 +6,7 @@
 | supabase-2.49.4.js | @supabase/supabase-js@2.49.4 `dist/umd/supabase.js` | jUF0uRUmS8BKt37t01qaZ88H9yV1mbGYnqLeuFWLcdV+x1P4fl0yP9DGtaEhFPZcwSom7u16GkLEH9QJZOqOkw== |
 | xlsx-0.18.5.full.min.js | xlsx@0.18.5 `dist/xlsx.full.min.js` | dmg3LCjBPHZnQp5/F/+nnTa+miPJxUXB6vtk42YjBBKayDNagxGEeIdWApkYPOf3Z3pm3k62Knjzp7lMeTEtFQ== |
 | html2canvas-1.4.1.min.js | html2canvas@1.4.1 `dist/html2canvas.min.js` | fPU6BHNpsyIhr8yyMpTLLxAbkaK8ArIBcmZIRiBLiDhjeqvXolaEmDGmELFuX9I4xDcaKKcJl+TKZLqruBbmWA== |
-| jspdf-2.5.1.umd.min.js | jspdf@2.5.1 `dist/jspdf.umd.min.js` | hXObxz7ZqoyhxET78+XR34Xu2qFGrJJ2I2bE5w4SM8eFaFEkW2xcGRVUss360fYelwRSid/jT078kbNvmoW0QA== |
+| jspdf-4.2.1.umd.min.js | jspdf@4.2.1 `dist/jspdf.umd.min.js` | sha512-YyAXyvnmjTbR4bHQRLzex3CuINCDlQnBqoSYyjJwTP2x9jDLuKDzy7aKUl0hgx3uhcl7xzg32agn5vlie6HIlQ== |
 
 (무결성 값은 각 패키지 압축 파일(.tgz) 전체의 값이며 `npm view <패키지>@<버전> dist.integrity` 로 확인됩니다.)
 

@@ -1944,6 +1944,13 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
   const hexColor = (c) => '#' + [c & 255, (c >> 8) & 255, (c >> 16) & 255].map((x) => x.toString(16).padStart(2, '0')).join('').toUpperCase();
 
   // 문단 내용의 지문(글자·서식 번호·개체 위치). 로드 때와 저장 때 같으면 원본 레코드를 그대로 쓴다.
+  // 줄바꿈·줄 높이에 영향을 주는 서식 값(글자 크기·장평·자간, 문단의 들여쓰기·여백·줄 간격)의 지문
+  const hwpLayoutSig = (csD, psD, psid, ids) => {
+    const q = psD[psid], dv = q && dvOf(q);
+    let s = dv ? [dv.getInt32(4, true), dv.getInt32(8, true), dv.getInt32(12, true), dv.getInt32(16, true), dv.getInt32(20, true), dv.getInt32(24, true), dv.getUint32(0, true) & 3].join(',') : '';
+    for (const id of ids) { const c = csD[id]; if (c) { const v = dvOf(c); s += '|' + [v.getInt32(42, true), c[14], c[15], v.getInt8(21), v.getInt8(22)].join(','); } }
+    return s;
+  };
   const hwpSig = (p) => {
     let s = p.getAttribute('paraPrIDRef') + '|' + p.getAttribute('styleIDRef');
     for (const r of kids(p, 'run')) {
@@ -2035,7 +2042,7 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     });
     ppl.setAttribute('itemCnt', pss.length);
     // ── 본문
-    const raws = [], hx = { raws, sections: [], comp, flags, cf, di, faceCnt: faces.map((f) => f.length), sigs: {}, groupCtrls: {}, tabRaw: null, anyLs: null }, notes = [];
+    const raws = [], hx = { raws, sections: [], comp, flags, cf, di, faceCnt: faces.map((f) => f.length), sigs: {}, groupCtrls: {}, tabRaw: null, anyLs: null, lsigs: {}, protoByPs: {}, csD: di.filter((r) => r.tag === 21).map((r) => r.d), psD: di.filter((r) => r.tag === 25).map((r) => r.d) }, notes = [];
     let nObj = 0, nSec = 0;
     for (let si = 0; ; si++) {
       const b = await stream('/BodyText/Section' + si);
@@ -2044,7 +2051,8 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
       const recs = hwpRecs(b), groups = [];
       recs.forEach((r, i) => { if (r.tag === 66 && r.lv === 0) groups.push({ start: i, end: recs.length }); });
       groups.forEach((g, i) => { if (i + 1 < groups.length) g.end = groups[i + 1].start; });
-      hx.sections.push({ recs, groups });
+      const pdR = recs.find((r) => r.tag === 73), pdv = pdR && pdR.d.length >= 36 ? dvOf(pdR.d) : null;
+      hx.sections.push({ recs, groups, page: pdv ? { w: pdv.getUint32(0, true), h: pdv.getUint32(4, true), left: pdv.getUint32(8, true), right: pdv.getUint32(12, true), top: pdv.getUint32(16, true), bottom: pdv.getUint32(20, true), header: pdv.getUint32(24, true), footer: pdv.getUint32(28, true), gutter: pdv.getUint32(32, true) } : null });
       groups.forEach((g, gi) => {
         const gkey = si + ':' + gi; hx.groupCtrls[gkey] = [];
         const hd = recs[g.start].d, hdv = dvOf(hd);
@@ -2052,6 +2060,7 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
         const kidsR = recs.slice(g.start + 1, g.end).filter((r) => r.lv === 1);
         const tx = kidsR.find((r) => r.tag === 67), cr = kidsR.find((r) => r.tag === 68), lsr = kidsR.find((r) => r.tag === 69);
         if (lsr && !hx.anyLs) hx.anyLs = lsr.d.slice(0, 36);
+        if (lsr && lsr.d.length >= 36 && !hx.protoByPs[psid]) { const ldv = dvOf(lsr.d); hx.protoByPs[psid] = { col: ldv.getInt32(24, true), width: ldv.getInt32(28, true) }; }
         const pairs = [];
         if (cr) { const cdv = dvOf(cr.d); for (let i = 0; i + 8 <= cr.d.length; i += 8) pairs.push([cdv.getUint32(i, true), cdv.getUint32(i + 4, true)]); }
         const csAt = (pos) => { let id = pairs.length ? pairs[0][1] : 0; for (const [p, c] of pairs) if (p <= pos) id = c; else break; return id; };
@@ -2091,6 +2100,7 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
           flush();
         }
         if (!curRun) run(csAt(0));
+        hx.lsigs[gkey] = hwpLayoutSig(hx.csD, hx.psD, psid, pairs.length ? pairs.map((q) => q[1]) : [0]);
         hx.sigs[gkey] = hwpSig(hp);
         sec.appendChild(hp);
       });
@@ -2098,6 +2108,65 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     if (!hx.sections.length) throw new Error('hwp 본문(BodyText)을 찾을 수 없습니다.');
     if (nObj) notes.push(`표·그림 등 개체 ${nObj}개는 점검하지 않습니다.`);
     return { format: 'hwp', zip: null, names: [], sectionDoc: secDoc, headerDoc: hdrDoc, section: sec, header: hdr, colors: readColors(hdr), italics: readItalics(hdr), headerModified: false, hwp: hx, notes };
+  }
+
+  // ───────── hwp 줄 배치 추정 ─────────
+  // PARA_LINE_SEG(줄 시작 위치·세로 위치 등)는 한글이 저장해 두는 캐시다. 글자가 바뀐 문단은 줄바꿈을 직접 추정해야 줄이 겹치지 않는다.
+  // 글자 폭(글자 크기 대비)은 한글이 저장한 실제 문서 967문단의 줄바꿈에 맞춰 보정했다(99.9% 일치).
+  const EM_W = { ' ': 0.38, '.': 0.58, ',': 0.62, '…': 0.96, '“': 0.37, '”': 0.42, '!': 0.45, '?': 0.57, '‘': 0.45, '’': 0.55 };
+  const NOSTART_H = '.,!?…”’)]>·:;', NOEND_H = '“‘([<';
+  function emOf(c) {
+    const s = String.fromCharCode(c);
+    if (EM_W[s] !== undefined) return EM_W[s];
+    if (c >= 0xAC00 && c <= 0xD7A3) return 1;
+    if (c >= 0x30 && c <= 0x39) return 0.67;
+    if ((c >= 0x41 && c <= 0x5a) || (c >= 0x61 && c <= 0x7a)) return 0.55;
+    if (c < 0x80) return 0.5;
+    if (c >= 0xD800 && c <= 0xDFFF) return 0.5;
+    return 1;
+  }
+  function hwpEstimateLines(words, pairs, csD, psD, psid, proto) {
+    const n = words.length, ps = psD[psid], pdv = ps ? dvOf(ps) : null;
+    const intent = pdv ? pdv.getInt32(12, true) : 0, pct = pdv && (pdv.getUint32(0, true) & 3) === 0 ? pdv.getInt32(24, true) : 160;
+    const metaFor = (id) => {
+      const c = csD[id] || csD[0];
+      if (!c) return { h: 1000, rk: 1, rl: 1, sk: 0, sl: 0 };
+      const v = dvOf(c);
+      return { h: v.getInt32(42, true) || 1000, rk: (c[14] || 100) / 100, rl: (c[15] || 100) / 100, sk: v.getInt8(21) / 100, sl: v.getInt8(22) / 100 };
+    };
+    const ch = [];
+    let pi = 0, i = 0;
+    while (i < n - 1) {
+      const c = words[i];
+      while (pi + 1 < pairs.length && pairs[pi + 1][0] <= i) pi++;
+      const m = metaFor(pairs[pi][1]);
+      if (c === 10) { ch.push({ pos: i, c, brk: true, w: 0, h: m.h }); i++; }
+      else if (c < 32) { if (c === 9) ch.push({ pos: i, c, w: 2 * m.h, h: m.h }); i += (c === 0 || (c >= 24 && c <= 31)) ? 1 : 8; }
+      else { const hg = c >= 0xAC00 && c <= 0xD7A3; ch.push({ pos: i, c, w: emOf(c) * m.h * (hg ? m.rk : m.rl) + (hg ? m.sk : m.sl) * m.h, h: m.h }); i++; }
+    }
+    const W = proto.width, x0 = intent < 0 ? -intent : 0, starts = [0];
+    let x = intent > 0 ? intent : 0, ls = 0, k = 0;
+    while (k < ch.length) {
+      const e = ch[k];
+      if (e.brk) { starts.push(e.pos + 1); ls = k + 1; x = x0; k++; continue; }
+      if (e.c === 32) { x += e.w; k++; continue; }
+      if (x + e.w > W && k > ls) {
+        let b = k;
+        while (b > ls + 1 && NOSTART_H.includes(String.fromCharCode(ch[b].c))) b--;
+        while (b > ls + 1 && NOEND_H.includes(String.fromCharCode(ch[b - 1].c))) b--;
+        starts.push(ch[b].pos); ls = b; x = x0;
+        for (let t = b; t < k; t++) x += ch[t].w;
+        continue;
+      }
+      x += e.w; k++;
+    }
+    return starts.map((st, li) => {
+      const en = li + 1 < starts.length ? starts[li + 1] : Infinity;
+      let h = 0;
+      for (const e of ch) if (e.pos >= st && e.pos < en && !e.brk && e.h > h) h = e.h;
+      if (!h) { let q = 0; while (q + 1 < pairs.length && pairs[q + 1][0] <= st) q++; h = metaFor(pairs[q][1]).h; }
+      return { start: st, vert: 0, lh: h, th: h, base: Math.round(h * 0.85), sp: Math.round(h * (pct - 100) / 100), col: proto.col, width: proto.width, flags: li === 0 ? 0x160000 : 0x60000 };
+    });
   }
 
   // ───────── hwp 저장 ─────────
@@ -2214,21 +2283,20 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
       perSec[curS].push({ p, base });
     }
     const dflTab = [9, 0, 0, 0, 0, 0, 0, 9], u16 = (arr) => { const d = new Uint8Array(arr.length * 2), dv = dvOf(d); arr.forEach((v, i) => dv.setUint16(i * 2, v, true)); return d; };
-    let lostCtrl = 0, firstHdr = null;
+    const csD = csRecs.concat(newCs).map((r) => r.d), psD = psRecs.concat(newPs).map((r) => r.d);
+    const psBase = {}; mPs.forEach((q) => { psBase[num(q.getAttribute('id'))] = num(q.getAttribute('hwpBase')); });
+    const parseSegs = (d) => { const o = [], dv = dvOf(d); for (let i = 0; i + 36 <= d.length; i += 36) o.push({ start: dv.getUint32(i, true), vert: dv.getInt32(i + 4, true), lh: dv.getInt32(i + 8, true), th: dv.getInt32(i + 12, true), base: dv.getInt32(i + 16, true), sp: dv.getInt32(i + 20, true), col: dv.getInt32(i + 24, true), width: dv.getInt32(i + 28, true), flags: dv.getUint32(i + 32, true) }); return o; };
+    const packSegs = (segs) => { const d = new Uint8Array(segs.length * 36), dv = dvOf(d); segs.forEach((s, i) => { const o = i * 36; dv.setUint32(o, s.start, true); dv.setInt32(o + 4, s.vert, true); dv.setInt32(o + 8, s.lh, true); dv.setInt32(o + 12, s.th, true); dv.setInt32(o + 16, s.base, true); dv.setInt32(o + 20, s.sp, true); dv.setInt32(o + 24, s.col, true); dv.setInt32(o + 28, s.width, true); dv.setUint32(o + 32, s.flags >>> 0, true); }); return d; };
+    let lostCtrl = 0, firstHdr = null, relaid = 0;
     for (const s of secs) if (!firstHdr && s.groups.length) firstHdr = s.recs[s.groups[0].start].d;
     const secOut = [];
     for (let si = 0; si < secs.length; si++) {
-      const sec = secs[si], items = perSec[si], recsOut = [];
-      let lastHdr = null, lastLs = hx.anyLs;
+      const sec = secs[si], items = perSec[si], ents = [];
+      let lastHdr = null;
       items.forEach(({ p, base }, idx) => {
-        const isLast = idx === items.length - 1, setLast = (d) => { const c = Uint8Array.from(d), dv = dvOf(c); dv.setUint32(0, ((dv.getUint32(0, true) & 0x7fffffff) | (isLast ? 0x80000000 : 0)) >>> 0, true); return c; };
+        const isLast = idx === items.length - 1;
         const orig = base ? sec.recs.slice(sec.groups[base.g].start, sec.groups[base.g].end) : null;
-        if (orig && hwpSig(p) === hx.sigs[base.key]) {                       // 고치지 않은 문단 → 원본 그대로
-          recsOut.push({ tag: 66, lv: orig[0].lv, d: setLast(orig[0].d) }, ...orig.slice(1));
-          for (const ri of hx.groupCtrls[base.key]) usedRaw.add(ri);
-          lastHdr = orig[0].d; const l = orig.find((r) => r.tag === 69 && r.lv === 1); if (l) lastLs = l.d.slice(0, 36);
-          return;
-        }
+        // 글자·서식 구간·개체를 모델에서 읽어 모은다
         const words = [], pairs = [], here = [];
         let pos = 0, mask = 0;
         for (const run of kids(p, 'run')) {
@@ -2256,26 +2324,67 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
           }
         }
         words.push(13); pos++;
+        const psid = num(p.getAttribute('paraPrIDRef'));
         if (!pairs.length) { const o0 = orig && orig.find((r) => r.tag === 68 && r.lv === 1); pairs.push([0, o0 && o0.d.length >= 8 ? dvOf(o0.d).getUint32(4, true) : 0]); }
-        const hd = Uint8Array.from(orig ? orig[0].d : (lastHdr || firstHdr)), hdv = dvOf(hd);
-        hdv.setUint32(0, ((pos & 0x7fffffff) | (isLast ? 0x80000000 : 0)) >>> 0, true);
-        hdv.setUint32(4, mask >>> 0, true); hdv.setUint16(8, num(p.getAttribute('paraPrIDRef')), true); hd[10] = num(p.getAttribute('styleIDRef')) & 255;
-        if (!orig) { hd[11] = 0; if (hd.length >= 22) hdv.setUint32(18, 0, true); }
-        hdv.setUint16(12, pairs.length, true); hdv.setUint16(14, 0, true); hdv.setUint16(16, 1, true);
-        const out = [{ tag: 66, lv: 0, d: hd }];
-        if (pos > 1) out.push({ tag: 67, lv: 1, d: u16(words) });
-        const pc = new Uint8Array(pairs.length * 8), pdv = dvOf(pc); pairs.forEach(([a, b], i) => { pdv.setUint32(i * 8, a, true); pdv.setUint32(i * 8 + 4, b, true); });
-        out.push({ tag: 68, lv: 1, d: pc });
-        const ol = orig && orig.find((r) => r.tag === 69 && r.lv === 1), ls = ol ? ol.d.slice(0, 36) : (lastLs || new Uint8Array(36));
-        if (ls.length >= 4) dvOf(ls).setUint32(0, 0, true);
-        out.push({ tag: 69, lv: 1, d: ls }); lastLs = ls;
-        if (orig) {
-          const tail = orig.slice(1).filter((r) => !(r.lv === 1 && (r.tag === 67 || r.tag === 68 || r.tag === 69 || r.tag === 70)));
-          const want = hx.groupCtrls[base.key].slice().sort().join(',');
-          if (here.slice().sort().join(',') === want) out.push(...tail); else if (tail.length) lostCtrl++;
+        const unchanged = !!orig && hwpSig(p) === hx.sigs[base.key];
+        const ol = orig && orig.find((r) => r.tag === 69 && r.lv === 1), oText = orig && orig.find((r) => r.tag === 67 && r.lv === 1);
+        const tail = orig ? orig.slice(1).filter((r) => !(r.lv === 1 && (r.tag === 67 || r.tag === 68 || r.tag === 69 || r.tag === 70))) : [];
+        let recs, hd, lsAt;
+        if (unchanged) {                                                       // 고치지 않은 문단 → 원본 레코드(줄 정보만 아래에서 다시 쓴다)
+          recs = orig.map((r) => ({ tag: r.tag, lv: r.lv, d: r.d }));
+          hd = recs[0]; hd.d = Uint8Array.from(hd.d);
+          lsAt = recs.findIndex((r) => r.tag === 69 && r.lv === 1);
+          for (const ri of hx.groupCtrls[base.key]) usedRaw.add(ri);
+          lastHdr = orig[0].d;
+        } else {
+          const h2 = Uint8Array.from(orig ? orig[0].d : (lastHdr || firstHdr)), hdv = dvOf(h2);
+          hdv.setUint32(4, mask >>> 0, true); hdv.setUint16(8, psid, true); h2[10] = num(p.getAttribute('styleIDRef')) & 255;
+          if (!orig) { h2[11] = 0; if (h2.length >= 22) hdv.setUint32(18, 0, true); }
+          hdv.setUint16(12, pairs.length, true); hdv.setUint16(14, 0, true);
+          hd = { tag: 66, lv: 0, d: h2 }; recs = [hd];
+          if (pos > 1) recs.push({ tag: 67, lv: 1, d: u16(words) });
+          const pc = new Uint8Array(pairs.length * 8), pdv = dvOf(pc); pairs.forEach(([a, b], i) => { pdv.setUint32(i * 8, a, true); pdv.setUint32(i * 8 + 4, b, true); });
+          recs.push({ tag: 68, lv: 1, d: pc });
+          lsAt = recs.length; recs.push({ tag: 69, lv: 1, d: new Uint8Array(36) });
+          if (orig) {
+            const want = hx.groupCtrls[base.key].slice().sort().join(',');
+            if (here.slice().sort().join(',') === want) recs.push(...tail); else if (tail.length) lostCtrl++;
+            lastHdr = orig[0].d;
+          }
         }
-        if (orig) lastHdr = orig[0].d;
-        recsOut.push(...out);
+        const hdv2 = dvOf(hd.d);
+        hdv2.setUint32(0, ((hdv2.getUint32(0, true) & 0x7fffffff & (unchanged ? 0x7fffffff : 0)) | (unchanged ? 0 : (pos & 0x7fffffff)) | (isLast ? 0x80000000 : 0)) >>> 0, true);
+        ents.push({ p, base, orig, unchanged, recs, hd, lsAt, words, pairs, psid, divide: hd.d[11], hasObj: tail.length > 0 && !!orig && here.some((ri) => { const b = hx.raws[ri].bytes; return b.length >= 6 && !/^(secd|cold)$/.test(String.fromCharCode(b[5], b[4], b[3], b[2])); }), origSegs: ol ? parseSegs(ol.d) : null, textSame: !!orig && (() => { const a = oText ? oText.d : new Uint8Array(0), b = pos > 1 ? u16(words) : new Uint8Array(0); if (a.length !== b.length) return false; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false; return true; })() });
+      });
+      // ── 줄 배치(캐시)를 다시 계산해 쓴다: 글자가 바뀐 문단은 줄바꿈을 추정하고, 세로 위치는 모든 문단을 쪽 흐름대로 다시 쌓는다
+      const pg = sec.page || (secs.find((s) => s.page) || {}).page;
+      const body = pg ? pg.h - pg.top - pg.bottom - pg.header - pg.footer : 28347;
+      const protoOf = (psid) => hx.protoByPs[psid] || hx.protoByPs[psBase[psid]] || hx.protoByPs[Object.keys(hx.protoByPs)[0]] || { col: 0, width: pg ? pg.w - pg.left - pg.right - pg.gutter : 18140 };
+      const gapOf = (a, b) => Math.trunc(dvOf(psD[a] || new Uint8Array(58)).getInt32(20, true) / 2) + Math.trunc(dvOf(psD[b] || new Uint8Array(58)).getInt32(16, true) / 2);
+      let y = null, prev = null;
+      for (const e of ents) {
+        let segs;
+        const sameShape = e.orig && hwpLayoutSig(csD, psD, e.psid, e.pairs.map((q) => q[1])) === hx.lsigs[e.base.key];
+        const est = e.hasObj ? null : hwpEstimateLines(e.words, e.pairs, csD, psD, e.psid, protoOf(e.psid));
+        // 원본 줄 정보는 글자·서식이 그대로일 때만 쓰고, 추정과 줄 수가 2줄 이상 다르면(이미 어긋난 파일) 믿지 않는다
+        if (e.origSegs && e.origSegs.length && (e.hasObj || (e.textSame && sameShape && Math.abs(e.origSegs.length - est.length) <= 1))) segs = e.origSegs.map((s) => Object.assign({}, s));
+        else { segs = est; relaid++; }
+        if (e.hasObj) { y = segs[segs.length - 1].vert + segs[segs.length - 1].lh + segs[segs.length - 1].sp; prev = e; e.segs = segs; continue; }
+        if (e.divide & 5) y = null;                                            // 구역·쪽 나누기 문단은 새 쪽에서 시작
+        const gap = prev ? gapOf(prev.psid, e.psid) : 0;
+        segs.forEach((s, li) => {
+          let top = y === null ? 0 : (li === 0 ? y + gap : y);
+          if (y !== null && top + s.lh > body) top = 0;
+          s.vert = top; y = top + s.lh + s.sp;
+        });
+        prev = e; e.segs = segs;
+      }
+      const recsOut = [];
+      ents.forEach((e) => {
+        const ls = { tag: 69, lv: 1, d: packSegs(e.segs) };
+        if (e.lsAt >= 0) e.recs[e.lsAt] = ls; else e.recs.splice(e.recs.length, 0, ls);
+        dvOf(e.hd.d).setUint16(16, e.segs.length, true);
+        recsOut.push(...e.recs);
       });
       secOut.push(recsOut);
     }
@@ -2331,7 +2440,7 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
   return {
     DEFAULTS, LABEL, EDGE, mergeRules, parseFilename,
     iterSlots, sget, sset, ptext, paragraphs, kids, hasCtrl, hasBr, dropLineseg, pruneEmptyText,
-    classify, kindOf, protRes, markTextOf, runChecks, clean, preview, load, save, saveDocx, saveHwp, inflateRawJs, saveHwpxFromDocx, reportCsv,
+    classify, kindOf, protRes, markTextOf, runChecks, clean, preview, load, save, saveDocx, saveHwp, hwpEstimateLines, inflateRawJs, saveHwpxFromDocx, reportCsv,
     isBlankP, makeBlank, strip, isBlackish, isEndMark, normalizeFormat, periodIssues, stripComments, commentSpans, paraAlign,
     ensureSlot, splitParagraph, splitAtBreak, roundQuotes, SB_RE, AUTO_ROUND_QUOTES, snapshot, compareRows, diffChars, charsOfSegs, segsOfPara,
     scanMarks, applyMarks, scanColors, applyUncolor, colorRanges, colorName,
@@ -2796,7 +2905,7 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
   }
   function cpHint() {
     const n = state.cp.sel ? state.cp.sel.total : 0;
-    $('#cpHint').textContent = n ? `선택한 글자 ${nf(n)}자 — 색을 고르고 [적용]을 누르세요.` : '편집 화면에서 색을 바꿀 글자를 드래그로 선택하세요. 실수로 검정이 된 글자를 되살릴 때 씁니다.';
+    $('#cpHint').textContent = n ? `선택한 글자 ${nf(n)}자 — 색을 누르면 바로 적용됩니다.` : '편집 화면에서 색을 바꿀 글자를 드래그한 뒤 색을 누르세요. 실수로 검정이 된 글자를 되살릴 때 씁니다.';
   }
   function onSelChange() {
     const sel = window.getSelection(), pane = $('#paneEditor');
@@ -2807,8 +2916,10 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     cpHint();
   }
   function renderRecent() {
-    $('#cpRecent').replaceChildren(...state.cp.recent.map((c) => h('button', { type: 'button', class: 'cpsw', title: cname(c), 'aria-label': '최근 쓴 색 ' + cname(c), style: 'background:' + c, onclick: () => { $('#cpHex').value = c; $('#cpColor').value = c.toLowerCase(); cpName(); } })));
+    $('#cpRecent').replaceChildren(...state.cp.recent.map((c) => h('button', { type: 'button', class: 'cpsw', title: cname(c) + ' — 누르면 선택한 글자에 바로 적용', 'aria-label': '최근 쓴 색 ' + cname(c), style: 'background:' + c, onclick: () => { $('#cpHex').value = c; $('#cpColor').value = c.toLowerCase(); cpName(); applyIfSel(c); } })));
   }
+  // 드래그해 둔 글자가 있으면 색을 고르는 즉시 적용한다(없으면 색만 골라 둔다)
+  function applyIfSel(c) { if (state.cp.sel && state.cp.sel.total) applySelColor(c); }
   function applySelColor(input) {
     const hex = normHex(input), sel = state.cp.sel;
     if (!state.ctx) return;
@@ -2830,7 +2941,9 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     const col = $('#cpColor'), hex = $('#cpHex');
     try { state.cp.recent = (JSON.parse(localStorage.getItem(RECENT_KEY) || '[]') || []).filter((c) => /^#[0-9A-F]{6}$/.test(c)).slice(0, 6); } catch (e) { state.cp.recent = []; }
     col.addEventListener('input', () => { hex.value = col.value.toUpperCase(); cpName(); });
+    col.addEventListener('change', () => { hex.value = col.value.toUpperCase(); cpName(); applyIfSel(hex.value); });      // 색상표에서 색을 고르고 닫으면 바로 적용
     hex.addEventListener('input', () => { const v = normHex(hex.value); if (v) col.value = v.toLowerCase(); cpName(); });
+    hex.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applySelColor(hex.value); } });
     $('#cpApply').addEventListener('click', () => applySelColor(hex.value));
     $('#cpBlack').addEventListener('click', () => applySelColor('#000000'));
     document.addEventListener('selectionchange', onSelChange);

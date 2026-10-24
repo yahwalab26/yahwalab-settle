@@ -231,7 +231,20 @@ details.grp{margin:2px 0 0}
 .cpgrid .cpsw:hover{outline:2px solid var(--ink2);outline-offset:1px}
 .cpgrid .cpsw.on{outline:2px solid var(--ink);outline-offset:1px}
 .cpgrid .cpsw:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-.cprow .cpeye{margin-left:auto;flex:none}
+.cpbtn{width:40px;height:34px;padding:0;border:1px solid var(--ink);border-radius:0;cursor:pointer;flex:none;background:#ff0000}
+.cpbtn[aria-expanded=true]{outline:2px solid var(--ink);outline-offset:1px}
+.cppop{margin-top:8px;width:100%;max-width:260px}
+.cppop[hidden]{display:none}
+.cpsv{position:relative;height:150px;cursor:crosshair;touch-action:none;border:1px solid var(--line);background-color:#f00;background-image:linear-gradient(to top,#000,rgba(0,0,0,0)),linear-gradient(to right,#fff,rgba(255,255,255,0))}
+.cpsv:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.cpknob{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border:2px solid #fff;outline:1px solid #000;border-radius:50%;pointer-events:none}
+.cppoprow{display:flex;gap:8px;align-items:center;margin-top:8px}
+.cpeye{flex:none;width:34px;height:34px;padding:0;display:grid;place-items:center;border:1px solid var(--ink);border-radius:0;background:var(--paper);color:var(--ink);cursor:pointer}
+.cpeye:hover{background:var(--hl)}
+.cpeye:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.dock .cppop input.cphue{flex:1;min-width:0;height:16px;min-height:0;padding:0;margin:0;border:1px solid var(--line);border-radius:0;-webkit-appearance:none;appearance:none;background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.cphue::-webkit-slider-thumb{-webkit-appearance:none;width:8px;height:20px;background:#fff;border:1px solid var(--ink);border-radius:0;cursor:pointer}
+.cphue::-moz-range-thumb{width:6px;height:18px;background:#fff;border:1px solid var(--ink);border-radius:0;cursor:pointer}
 .cphint{margin:6px 0 0;font-size:12px;color:var(--mute);line-height:1.5}
 .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 
@@ -287,10 +300,16 @@ details.grp{margin:2px 0 0}
         <details class="cpick" id="cpick" open>
           <summary>선택한 글자에 색 지정</summary>
           <div class="cprow">
-            <input class="cpcol" id="cpColor" type="color" value="#ff0000" aria-label="색상표에서 고르기" title="색상표에서 고르기">
+            <button class="cpbtn" id="cpOpen" type="button" aria-expanded="false" aria-controls="cpPop" aria-label="색상표 열기" title="색상표 열기"></button>
             <input class="cphex" id="cpHex" type="text" value="#FF0000" maxlength="7" spellcheck="false" autocomplete="off" aria-label="HEX 색 코드" placeholder="#RRGGBB">
             <span class="cpname" id="cpName" aria-live="polite"></span>
-            <button class="btn sm cpeye" id="cpEye" type="button" title="화면의 아무 곳에서나 색을 찍어 가져옵니다">스포이드</button>
+          </div>
+          <div class="cppop" id="cpPop" role="group" aria-label="색상표" hidden>
+            <div class="cpsv" id="cpSV" tabindex="0" role="slider" aria-label="채도와 밝기(방향키로 조절)"><i class="cpknob" id="cpKnob"></i></div>
+            <div class="cppoprow">
+              <button class="cpeye" id="cpEye" type="button" aria-label="스포이드" title="스포이드 — 화면 어디서든 색을 찍어 가져옵니다"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg></button>
+              <input class="cphue" id="cpHue" type="range" min="0" max="360" step="1" value="0" aria-label="색상 종류">
+            </div>
           </div>
           <div class="cpgroup"><div class="cplabel">기본 색</div><div class="cpgrid" id="cpBase"></div></div>
           <div class="cpgroup" id="cpDocWrap" hidden><div class="cplabel">문서에 쓰인 색</div><div class="cpgrid" id="cpDoc"></div></div>
@@ -2931,7 +2950,47 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     cpHint();
   }
   const CP_BASE = ['#FF0000', '#FFA500', '#FFFF00', '#00FF00', '#008000', '#00FFFF', '#0000FF', '#800080', '#FF00FF', '#FFC0CB', '#A52A2A', '#808080', '#000000'];
-  function setCpColor(c) { $('#cpHex').value = c; $('#cpColor').value = c.toLowerCase(); cpName(); renderRecent(); }
+  // ── 색상표(직접 만든 색 고르개: 채도·밝기 네모 + 색상 막대 + 스포이드). 브라우저 기본 색상표는 스포이드가 막혀 있는 환경이 있어 직접 만들었다.
+  const clamp01 = (x) => Math.min(1, Math.max(0, x));
+  const hsv2hex = (h, s, v) => { const f = (n) => { const k = (n + h / 60) % 6; return Math.round((v - v * s * Math.max(0, Math.min(k, 4 - k, 1))) * 255).toString(16).padStart(2, '0'); }; return ('#' + f(5) + f(3) + f(1)).toUpperCase(); };
+  const hex2hsv = (hex) => {
+    const n = parseInt(hex.slice(1), 16), r = ((n >> 16) & 255) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255, mx = Math.max(r, g, b), d = mx - Math.min(r, g, b);
+    let h = 0;
+    if (d) { h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
+    return { h, s: mx ? d / mx : 0, v: mx };
+  };
+  function paintCp() {            // 큰 색 견본·네모·막대 위치를 현재 색에 맞춘다
+    const { h, s, v } = state.cp.hsv, hex = normHex($('#cpHex').value) || hsv2hex(h, s, v);
+    $('#cpOpen').style.background = hex;
+    $('#cpSV').style.backgroundColor = hsv2hex(h, 1, 1);
+    $('#cpKnob').style.left = (s * 100) + '%'; $('#cpKnob').style.top = ((1 - v) * 100) + '%';
+    $('#cpHue').value = String(Math.round(h));
+  }
+  function syncCpFromHex(c) { const n = hex2hsv(c); if (n.s === 0 || n.v === 0) n.h = state.cp.hsv.h; state.cp.hsv = n; paintCp(); }
+  function setCpColor(c) { $('#cpHex').value = c; syncCpFromHex(c); cpName(); renderRecent(); }
+  function cpFromHsv() { const { h, s, v } = state.cp.hsv; $('#cpHex').value = hsv2hex(h, s, v); cpName(); paintCp(); }
+  function cpCommit() { renderRecent(); applyIfSel(normHex($('#cpHex').value)); }       // 색을 고르면(손을 떼면) 바로 적용
+  function initCpPicker() {
+    const sv = $('#cpSV'), hue = $('#cpHue'), open = $('#cpOpen'), pop = $('#cpPop');
+    state.cp.hsv = hex2hsv('#FF0000');
+    open.addEventListener('click', () => { pop.hidden = !pop.hidden; open.setAttribute('aria-expanded', String(!pop.hidden)); });
+    const fromPt = (e) => { const r = sv.getBoundingClientRect(); state.cp.hsv = { h: state.cp.hsv.h, s: clamp01((e.clientX - r.left) / (r.width || 1)), v: 1 - clamp01((e.clientY - r.top) / (r.height || 1)) }; cpFromHsv(); };
+    let down = false;
+    sv.addEventListener('pointerdown', (e) => { down = true; try { sv.setPointerCapture(e.pointerId); } catch (x) { /* 지원하지 않는 환경 */ } e.preventDefault(); fromPt(e); });
+    sv.addEventListener('pointermove', (e) => { if (down) fromPt(e); });
+    const up = () => { if (!down) return; down = false; cpCommit(); };
+    sv.addEventListener('pointerup', up); sv.addEventListener('pointercancel', up);
+    sv.addEventListener('keydown', (e) => {
+      const st = e.shiftKey ? 0.1 : 0.02, d = { ArrowLeft: [-st, 0], ArrowRight: [st, 0], ArrowUp: [0, st], ArrowDown: [0, -st] }[e.key];
+      if (d) { e.preventDefault(); const c = state.cp.hsv; state.cp.hsv = { h: c.h, s: clamp01(c.s + d[0]), v: clamp01(c.v + d[1]) }; cpFromHsv(); }
+      else if (e.key === 'Enter') { e.preventDefault(); cpCommit(); }
+    });
+    hue.addEventListener('input', () => { const c = state.cp.hsv; state.cp.hsv = { h: +hue.value, s: c.s, v: c.v }; cpFromHsv(); });
+    hue.addEventListener('change', cpCommit);
+    $('#cpEye').addEventListener('click', pickEye);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !pop.hidden) { pop.hidden = true; open.setAttribute('aria-expanded', 'false'); open.focus(); } });
+  }
+
   function swatchBtn(c, kind) {
     const on = normHex($('#cpHex').value) === c;
     return h('button', { type: 'button', class: 'cpsw' + (on ? ' on' : ''), title: cname(c) + ' (' + c + ') — 누르면 선택한 글자에 바로 적용', 'aria-label': kind + ' ' + cname(c), style: 'background:' + c, onclick: () => { setCpColor(c); applyIfSel(c); } });
@@ -2943,23 +3002,6 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     $('#cpDocWrap').hidden = !used.length;
     $('#cpRecent').replaceChildren(...state.cp.recent.map((c) => swatchBtn(c, '최근 쓴 색')));
     $('#cpRecWrap').hidden = !state.cp.recent.length;
-  }
-  const rgb2hex = (s) => { const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(s || ''); return m ? '#' + [m[1], m[2], m[3]].map((x) => (+x).toString(16).padStart(2, '0')).join('').toUpperCase() : null; };
-  async function pickEye() {      // 스포이드: 화면 어디서든 색을 찍어 가져온다(Chrome·Edge). 지원하지 않는 브라우저는 편집 화면의 글자를 눌러 그 글자 색을 가져온다
-    if (window.EyeDropper) {
-      try { const r = await new window.EyeDropper().open(), c = String(r.sRGBHex || '').toUpperCase(); if (/^#[0-9A-F]{6}$/.test(c)) { setCpColor(c); applyIfSel(c); } }
-      catch (e) { if (!e || e.name !== 'AbortError') toast('스포이드를 쓸 수 없습니다: ' + (e && e.message ? e.message : e), 'err'); }
-      return;
-    }
-    const pane = $('#paneEditor'); if (!pane) return;
-    toast('색을 가져올 글자를 편집 화면에서 누르세요.');
-    const block = (e) => e.preventDefault();
-    const once = (e) => {
-      e.preventDefault(); e.stopPropagation();
-      pane.removeEventListener('mousedown', block, true); pane.removeEventListener('click', once, true);
-      const c = rgb2hex(getComputedStyle(e.target).color); if (c) { setCpColor(c); applyIfSel(c); }
-    };
-    pane.addEventListener('mousedown', block, true); pane.addEventListener('click', once, true);
   }
 
   // 드래그해 둔 글자가 있으면 색을 고르는 즉시 적용한다(없으면 색만 골라 둔다)
@@ -2981,13 +3023,28 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     recompute(); renderEditor(); renderRecent(); cpHint(); reanalyze();
     toast(`${nf(res.changed)}자의 색을 ${cname(hex)}${josaRo(cname(hex))} 바꿨습니다.` + (res.skipped ? ` (${res.skipped}곳은 건너뜀)` : ''), '', { label: '되돌리기', fn: undoLast });
   }
+  const rgb2hex = (s) => { const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(s || ''); return m ? '#' + [m[1], m[2], m[3]].map((x) => (+x).toString(16).padStart(2, '0')).join('').toUpperCase() : null; };
+  async function pickEye() {      // 스포이드: 화면 어디서든 색을 찍어 가져온다(Chrome·Edge). 지원하지 않는 브라우저는 편집 화면의 글자를 눌러 그 글자 색을 가져온다
+    if (window.EyeDropper) {
+      try { const r = await new window.EyeDropper().open(), c = String(r.sRGBHex || '').toUpperCase(); if (/^#[0-9A-F]{6}$/.test(c)) { setCpColor(c); applyIfSel(c); } }
+      catch (e) { if (!e || e.name !== 'AbortError') toast('스포이드를 쓸 수 없습니다: ' + (e && e.message ? e.message : e), 'err'); }
+      return;
+    }
+    const pane = $('#paneEditor'); if (!pane) return;
+    toast('이 브라우저는 화면 스포이드를 지원하지 않습니다. 색을 가져올 글자를 편집 화면에서 누르세요.');
+    const block = (e) => e.preventDefault();
+    const once = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      pane.removeEventListener('mousedown', block, true); pane.removeEventListener('click', once, true);
+      const c = rgb2hex(getComputedStyle(e.target).color); if (c) { setCpColor(c); applyIfSel(c); }
+    };
+    pane.addEventListener('mousedown', block, true); pane.addEventListener('click', once, true);
+  }
   function initColorPicker() {
-    const col = $('#cpColor'), hex = $('#cpHex');
+    const hex = $('#cpHex');
     try { state.cp.recent = (JSON.parse(localStorage.getItem(RECENT_KEY) || '[]') || []).filter((c) => /^#[0-9A-F]{6}$/.test(c)).slice(0, 6); } catch (e) { state.cp.recent = []; }
-    col.addEventListener('input', () => { hex.value = col.value.toUpperCase(); cpName(); renderRecent(); });
-    col.addEventListener('change', () => { hex.value = col.value.toUpperCase(); cpName(); applyIfSel(hex.value); });      // 색상표에서 색을 고르고 닫으면 바로 적용
-    hex.addEventListener('input', () => { const v = normHex(hex.value); if (v) col.value = v.toLowerCase(); cpName(); renderRecent(); });
-    $('#cpEye').addEventListener('click', pickEye);
+    initCpPicker();
+    hex.addEventListener('input', () => { const v = normHex(hex.value); if (v) syncCpFromHex(v); cpName(); renderRecent(); });
     hex.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applySelColor(hex.value); } });
     $('#cpApply').addEventListener('click', () => applySelColor(hex.value));
     $('#cpBlack').addEventListener('click', () => applySelColor('#000000'));

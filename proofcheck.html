@@ -60,6 +60,8 @@ button,input,select,textarea{font:inherit;color:inherit}
  .expmenu label{display:flex;align-items:flex-start;gap:8px;min-height:32px;padding:4px 0;font-size:13px;cursor:pointer}
  .expmenu label input{width:16px;height:16px;margin-top:2px;flex:none;accent-color:var(--ink)}
  .expmenu label small{display:block;color:var(--mute);font-size:12px}
+ .expmenu label>span{min-width:0}
+ .expmenu .expn{display:block;overflow-wrap:anywhere}
  .expmenu .exprow{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 .btn[disabled]{opacity:.4;cursor:not-allowed}
 .btn.warn{border-color:var(--red);color:var(--red)}
@@ -222,8 +224,14 @@ details.grp{margin:2px 0 0}
 .cprow{display:flex;gap:6px;align-items:center;margin-top:6px}
 .dock .cprow input.cpcol{width:40px;min-height:34px;padding:0;border:1px solid var(--line);border-radius:0;background:transparent;cursor:pointer;flex:none}
 .dock .cprow input.cphex{width:92px;min-height:34px;padding:0 4px;border:0;border-bottom:1px solid var(--ink);border-radius:0;background:transparent;font-size:13px;text-transform:uppercase;flex:none}
-.cprecent{display:flex;gap:6px;margin-top:6px;min-height:0}
-.cprecent .cpsw{width:22px;height:22px;padding:0;border:1px solid var(--line);cursor:pointer}
+.cpgroup{margin-top:8px}
+.cplabel{margin:0 0 4px;font-size:12px;color:var(--mute);font-weight:600}
+.cpgrid{display:flex;flex-wrap:wrap;gap:6px}
+.cpgrid .cpsw{width:26px;height:26px;padding:0;border:1px solid var(--line);border-radius:0;cursor:pointer}
+.cpgrid .cpsw:hover{outline:2px solid var(--ink2);outline-offset:1px}
+.cpgrid .cpsw.on{outline:2px solid var(--ink);outline-offset:1px}
+.cpgrid .cpsw:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.cprow .cpeye{margin-left:auto;flex:none}
 .cphint{margin:6px 0 0;font-size:12px;color:var(--mute);line-height:1.5}
 .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 
@@ -251,10 +259,10 @@ details.grp{margin:2px 0 0}
         <button class="btn primary" id="btnExport" type="button" disabled aria-haspopup="true"><span class="ic" data-icon="download"></span>내려받기</button>
         <div class="expmenu" id="expMenu" role="dialog" aria-label="내려받을 파일 고르기" hidden>
           <h3>내려받을 파일 고르기</h3>
-          <label><input type="checkbox" id="expHwpx"><span>정리본 .hwpx<small id="expHwpxNote"></small></span></label>
-          <label><input type="checkbox" id="expDocx"><span>정리본 .docx<small id="expDocxNote"></small></span></label>
-          <label><input type="checkbox" id="expHwp"><span>정리본 .hwp<small id="expHwpNote"></small></span></label>
-          <label><input type="checkbox" id="expCsv"><span>변경 리포트 .csv</span></label>
+          <label><input type="checkbox" id="expHwpx"><span><span class="expn" id="expHwpxName">정리본 .hwpx</span><small id="expHwpxNote"></small></span></label>
+          <label><input type="checkbox" id="expDocx"><span><span class="expn" id="expDocxName">정리본 .docx</span><small id="expDocxNote"></small></span></label>
+          <label><input type="checkbox" id="expHwp"><span><span class="expn" id="expHwpName">정리본 .hwp</span><small id="expHwpNote"></small></span></label>
+          <label><input type="checkbox" id="expCsv"><span><span class="expn" id="expCsvName">변경 리포트 .csv</span><small>변경 리포트</small></span></label>
           <div class="exprow"><button class="btn sm" id="expCancel" type="button">닫기</button><button class="btn sm primary" id="expGo" type="button">내려받기</button></div>
         </div>
       </div>
@@ -276,18 +284,21 @@ details.grp{margin:2px 0 0}
             <option value="mode2">지문 사이 빈 줄 있음</option>
             <option value="mode3">지문은 붙이고 대사·속마음만 한 줄 띄움</option>
           </select></label>
-        <details class="cpick" id="cpick">
+        <details class="cpick" id="cpick" open>
           <summary>선택한 글자에 색 지정</summary>
           <div class="cprow">
-            <input class="cpcol" id="cpColor" type="color" value="#ff0000" aria-label="색상표에서 고르기">
+            <input class="cpcol" id="cpColor" type="color" value="#ff0000" aria-label="색상표에서 고르기" title="색상표에서 고르기">
             <input class="cphex" id="cpHex" type="text" value="#FF0000" maxlength="7" spellcheck="false" autocomplete="off" aria-label="HEX 색 코드" placeholder="#RRGGBB">
             <span class="cpname" id="cpName" aria-live="polite"></span>
+            <button class="btn sm cpeye" id="cpEye" type="button" title="화면의 아무 곳에서나 색을 찍어 가져옵니다">스포이드</button>
           </div>
+          <div class="cpgroup"><div class="cplabel">기본 색</div><div class="cpgrid" id="cpBase"></div></div>
+          <div class="cpgroup" id="cpDocWrap" hidden><div class="cplabel">문서에 쓰인 색</div><div class="cpgrid" id="cpDoc"></div></div>
+          <div class="cpgroup" id="cpRecWrap" hidden><div class="cplabel">최근 쓴 색</div><div class="cpgrid" id="cpRecent" aria-label="최근 쓴 색"></div></div>
           <div class="cprow">
             <button class="btn sm" id="cpApply" type="button">적용</button>
             <button class="btn sm" id="cpBlack" type="button">검정으로</button>
           </div>
-          <div class="cprecent" id="cpRecent" aria-label="최근 쓴 색"></div>
           <p class="cphint" id="cpHint"></p>
         </details>
         <button class="btn primary block" id="btnClean" type="button" disabled>정리하기</button>
@@ -2593,7 +2604,7 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     $('#btnExport').disabled = false; $('#btnReset').disabled = false;
     $('#fileChip').hidden = false; $('#fileName').textContent = name; $('#fileCount').textContent = `문단 ${nf(state.rows.length)}`;
     $('#titleIn').value = state.title;
-    renderAll(); schedulePreview(); cpHint();
+    renderAll(); schedulePreview(); cpHint(); renderRecent();
     if (ctx.notes && ctx.notes.length) toast(ctx.notes.join(' '));
     // 열면 항상 1쪽 맨 위부터 보이게(이전 파일의 스크롤 위치가 남지 않도록)
     ['#paneEditor', '#paneSide', '#sideList'].forEach((s) => { const el = $(s); if (el) el.scrollTop = 0; });
@@ -2695,6 +2706,9 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
   const hwpxBase = () => Uint8Array.from(atob(HWPX_BASE_B64), (c) => c.charCodeAt(0));
   const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
   const baseName = () => state.name.replace(/\.(hwpx|docx|hwp)$/i, '');
+  // 내려받는 파일 이름: {작품명}_교정.{확장자} (작품명은 화면의 작품명 칸, 비어 있으면 원본 파일명)
+  const workName = () => (String(state.title || '').replace(/[\\/:*?"<>|\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim() || baseName());
+  const outName = (ext) => workName() + '_교정고.' + ext;
   async function exportMain(kind) {            // kind: 'hwpx' | 'docx'  — 정리본을 고른 형식으로 저장
     if (!state.ctx) return;
     busy(true);
@@ -2703,9 +2717,9 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
       state.ctx.saveNotes = [];
       const fromDocx = state.ctx.format !== 'hwpx';
       const bytes = kind === 'hwp' ? await E.saveHwp(state.ctx, currentRules(), { CFB: window.CFB }) : kind === 'docx' ? await E.saveDocx(state.ctx, currentRules(), deps)
-        : fromDocx ? await E.saveHwpxFromDocx(state.ctx, currentRules(), hwpxBase(), Object.assign({ title: baseName() }, deps)) : await E.save(state.ctx, currentRules(), deps);
+        : fromDocx ? await E.saveHwpxFromDocx(state.ctx, currentRules(), hwpxBase(), Object.assign({ title: workName() }, deps)) : await E.save(state.ctx, currentRules(), deps);
       renderEditor();
-      await saveFile(baseName() + '_정리본.' + kind, bytes, kind === 'docx' ? DOCX_MIME : kind === 'hwp' ? 'application/x-hwp' : 'application/hwp+zip');
+      await saveFile(outName(kind), bytes, kind === 'docx' ? DOCX_MIME : kind === 'hwp' ? 'application/x-hwp' : 'application/hwp+zip');
       state.dirty = false;
       if (state.ctx.saveNotes && state.ctx.saveNotes.length) toast(state.ctx.saveNotes.join(' '), 'err');
       else if (!state.cleaned) toast('정리하지 않은 상태로 저장했습니다.');
@@ -2719,6 +2733,7 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     if (open && state.ctx) {
       const fmt = state.ctx.format || 'hwpx';
       $('#expHwp').checked = fmt === 'hwp' && !!state.exp.hwp; $('#expHwp').disabled = fmt !== 'hwp';
+      for (const k of ['Hwp', 'Hwpx', 'Docx', 'Csv']) $('#exp' + k + 'Name').textContent = outName(k.toLowerCase());
       $('#expHwpNote').textContent = fmt === 'hwp' ? '원본 hwp를 직접 고쳐 저장합니다. 한글에서 열어 확인해 주세요' : 'hwp 원고를 열었을 때만 선택할 수 있습니다';
       $('#expHwpx').checked = !!state.exp.hwpx; $('#expDocx').checked = !!state.exp.docx;
       $('#expHwpxNote').textContent = fmt !== 'hwpx' ? '한글 양식 기반으로 새로 만듭니다. 서식이 일부 달라질 수 있습니다' : '';
@@ -2737,7 +2752,7 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     if (want.csv) await exportCsv();
   }
   async function exportCsv() {
-    await saveFile(baseName() + '_변경리포트.csv', E.reportCsv(state.log, state.issues.map((i) => ({ sev: i.sev, rule: i.rule, idx: i.el && state.rowIdx.has(i.el) ? (state.rowIdx.get(i.el) + 1) : '-', msg: i.msg }))), 'text/csv');
+    await saveFile(workName() + '_교정고_리포트.csv', E.reportCsv(state.log, state.issues.map((i) => ({ sev: i.sev, rule: i.rule, idx: i.el && state.rowIdx.has(i.el) ? (state.rowIdx.get(i.el) + 1) : '-', msg: i.msg }))), 'text/csv');
   }
 
   // ───────── 화면 전환 ─────────
@@ -2915,9 +2930,38 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
     state.cp.sel = sel.isCollapsed ? null : segRangesOf(rg);     // 편집 화면에서 커서만 놓으면 선택 해제
     cpHint();
   }
-  function renderRecent() {
-    $('#cpRecent').replaceChildren(...state.cp.recent.map((c) => h('button', { type: 'button', class: 'cpsw', title: cname(c) + ' — 누르면 선택한 글자에 바로 적용', 'aria-label': '최근 쓴 색 ' + cname(c), style: 'background:' + c, onclick: () => { $('#cpHex').value = c; $('#cpColor').value = c.toLowerCase(); cpName(); applyIfSel(c); } })));
+  const CP_BASE = ['#FF0000', '#FFA500', '#FFFF00', '#00FF00', '#008000', '#00FFFF', '#0000FF', '#800080', '#FF00FF', '#FFC0CB', '#A52A2A', '#808080', '#000000'];
+  function setCpColor(c) { $('#cpHex').value = c; $('#cpColor').value = c.toLowerCase(); cpName(); renderRecent(); }
+  function swatchBtn(c, kind) {
+    const on = normHex($('#cpHex').value) === c;
+    return h('button', { type: 'button', class: 'cpsw' + (on ? ' on' : ''), title: cname(c) + ' (' + c + ') — 누르면 선택한 글자에 바로 적용', 'aria-label': kind + ' ' + cname(c), style: 'background:' + c, onclick: () => { setCpColor(c); applyIfSel(c); } });
   }
+  function renderRecent() {      // 기본 색 · 문서에 쓰인 색 · 최근 쓴 색 견본
+    const used = state.ctx ? Array.from(new Set(Object.values(state.ctx.colors || {}).map((c) => String(c || '').toUpperCase()).filter((c) => /^#[0-9A-F]{6}$/.test(c) && !E.isBlackish(c)))) : [];
+    $('#cpBase').replaceChildren(...CP_BASE.map((c) => swatchBtn(c, '기본 색')));
+    $('#cpDoc').replaceChildren(...used.map((c) => swatchBtn(c, '문서에 쓰인 색')));
+    $('#cpDocWrap').hidden = !used.length;
+    $('#cpRecent').replaceChildren(...state.cp.recent.map((c) => swatchBtn(c, '최근 쓴 색')));
+    $('#cpRecWrap').hidden = !state.cp.recent.length;
+  }
+  const rgb2hex = (s) => { const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(s || ''); return m ? '#' + [m[1], m[2], m[3]].map((x) => (+x).toString(16).padStart(2, '0')).join('').toUpperCase() : null; };
+  async function pickEye() {      // 스포이드: 화면 어디서든 색을 찍어 가져온다(Chrome·Edge). 지원하지 않는 브라우저는 편집 화면의 글자를 눌러 그 글자 색을 가져온다
+    if (window.EyeDropper) {
+      try { const r = await new window.EyeDropper().open(), c = String(r.sRGBHex || '').toUpperCase(); if (/^#[0-9A-F]{6}$/.test(c)) { setCpColor(c); applyIfSel(c); } }
+      catch (e) { if (!e || e.name !== 'AbortError') toast('스포이드를 쓸 수 없습니다: ' + (e && e.message ? e.message : e), 'err'); }
+      return;
+    }
+    const pane = $('#paneEditor'); if (!pane) return;
+    toast('색을 가져올 글자를 편집 화면에서 누르세요.');
+    const block = (e) => e.preventDefault();
+    const once = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      pane.removeEventListener('mousedown', block, true); pane.removeEventListener('click', once, true);
+      const c = rgb2hex(getComputedStyle(e.target).color); if (c) { setCpColor(c); applyIfSel(c); }
+    };
+    pane.addEventListener('mousedown', block, true); pane.addEventListener('click', once, true);
+  }
+
   // 드래그해 둔 글자가 있으면 색을 고르는 즉시 적용한다(없으면 색만 골라 둔다)
   function applyIfSel(c) { if (state.cp.sel && state.cp.sel.total) applySelColor(c); }
   function applySelColor(input) {
@@ -2940,9 +2984,10 @@ var t=r||{};var i=t.boundary||"SheetJS";i="------="+i;var n=["MIME-Version: 1.0"
   function initColorPicker() {
     const col = $('#cpColor'), hex = $('#cpHex');
     try { state.cp.recent = (JSON.parse(localStorage.getItem(RECENT_KEY) || '[]') || []).filter((c) => /^#[0-9A-F]{6}$/.test(c)).slice(0, 6); } catch (e) { state.cp.recent = []; }
-    col.addEventListener('input', () => { hex.value = col.value.toUpperCase(); cpName(); });
+    col.addEventListener('input', () => { hex.value = col.value.toUpperCase(); cpName(); renderRecent(); });
     col.addEventListener('change', () => { hex.value = col.value.toUpperCase(); cpName(); applyIfSel(hex.value); });      // 색상표에서 색을 고르고 닫으면 바로 적용
-    hex.addEventListener('input', () => { const v = normHex(hex.value); if (v) col.value = v.toLowerCase(); cpName(); });
+    hex.addEventListener('input', () => { const v = normHex(hex.value); if (v) col.value = v.toLowerCase(); cpName(); renderRecent(); });
+    $('#cpEye').addEventListener('click', pickEye);
     hex.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applySelColor(hex.value); } });
     $('#cpApply').addEventListener('click', () => applySelColor(hex.value));
     $('#cpBlack').addEventListener('click', () => applySelColor('#000000'));

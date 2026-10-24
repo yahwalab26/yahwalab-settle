@@ -91,7 +91,7 @@ html,body{height:auto}
 .acc .none{color:var(--mute)}
 .acc .opt{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:38px;padding:0 10px;border:0;border-bottom:1px solid var(--line2);background:transparent;cursor:pointer;text-align:left;font-size:14px;color:var(--ink2)}
 .acc .opt:last-child{border-bottom:0}
-.acc .opt.on{color:var(--ink);font-weight:600}
+.acc .opt.on{color:var(--ink)}
 .acc .opt.on::after{content:"✓"}
 .acc .opt:hover{background:var(--hl)}
 </style>
@@ -105,10 +105,10 @@ html,body{height:auto}
 <div class="form">
 <div class="sec"><h2>글 종류</h2><div class="seg2" id="types" role="group" aria-label="글 종류"></div></div>
 <div class="sec" id="fields">
-<div class="field" data-for="pub"><span>플랫폼</span><details class="acc" id="platacc"><summary><b id="platcur" class="none">선택해 주세요</b></summary><div id="plats"></div></details></div>
+<div class="field" data-for="pub"><span>플랫폼</span><details class="acc" id="platacc"><summary><span id="platcur" class="none">선택해 주세요</span></summary><div id="plats"></div></details></div>
 <label class="field" data-for="pub"><span>작가명</span><input id="snsauthor" autocomplete="off"></label>
 <label class="field" data-for="pub"><span>작품명</span><input id="snstitle" autocomplete="off"></label>
-<label class="field" data-for="pub"><span>키워드</span><textarea id="snskw" placeholder="예: #BL #현대물 #재회물"></textarea></label>
+<label class="field" data-for="pub"><span>키워드</span><textarea id="snskw" placeholder="예: BL, 현대물, 재회물 (쉼표로 구분하면 #이 자동으로 붙습니다)"></textarea></label>
 <label class="field" data-for="pub"><span>공감 글귀</span><textarea id="snsquote"></textarea></label>
 <label class="field" data-for="pub"><span>URL</span><input id="snsurl" type="url" autocomplete="off" placeholder="https://"></label>
 </div>
@@ -123,19 +123,25 @@ html,body{height:auto}
 /* 글 종류를 늘릴 때: TYPES에 [키,이름] 추가 → 입력칸에 data-for="키" → build()에 분기 추가 */
 var TYPES=[["pub","출간작"]];
 var cur="pub",PLAT="";
-var PLATS=["리디","교보문고","알라딘","예스24","북큐브"];
+var PLATS=["리디북스","교보문고","알라딘","예스24","북큐브"];
 var ID={"플랫폼":"platacc","작가명":"snsauthor","작품명":"snstitle","키워드":"snskw","공감글귀":"snsquote","URL":"snsurl"};
 var INPUTS=["snsauthor","snstitle","snskw","snsquote","snsurl"];
 var $=function(s){return document.querySelector(s)};
 var DOCK='<p class="need" hidden></p><button class="btn primary block" data-act="copy">SNS 글 복사</button><div class="btnrow"><button class="btn sm" data-act="clear">입력 비우기</button></div>';
 document.querySelectorAll("[data-dock]").forEach(function(d){d.innerHTML=DOCK});
 function ph(name){return "\u0001"+name+"\u0002"}
+/* 키워드: #이 하나라도 있으면 입력 그대로, 없으면 쉼표로 나눠 #을 붙임(태그 안 공백은 제거) */
+function tags(v){
+  v=v.trim();
+  if(!v||v.indexOf("#")>=0)return v;
+  return v.split(/[,，]/).map(function(s){return s.replace(/\s+/g,"")}).filter(Boolean).map(function(s){return "#"+s}).join(" ");
+}
 function build(){
   var miss=[];
   function need(v,name){if(v)return v;if(miss.indexOf(name)<0)miss.push(name);return ph(name)}
   var b="";
   if(cur==="pub"){
-    var p=need(PLAT,"플랫폼"),a=need($("#snsauthor").value.trim(),"작가명"),t=need($("#snstitle").value.trim(),"작품명"),k=need($("#snskw").value.trim(),"키워드"),q=need($("#snsquote").value.trim(),"공감글귀"),u=need($("#snsurl").value.trim(),"URL");
+    var p=need(PLAT,"플랫폼"),a=need($("#snsauthor").value.trim(),"작가명"),t=need($("#snstitle").value.trim(),"작품명"),k=need(tags($("#snskw").value),"키워드"),q=need($("#snsquote").value.trim(),"공감글귀"),u=need($("#snsurl").value.trim(),"URL");
     b="["+p+"] "+a+" <"+t+"> 출간 ✨\n\n"+k+"\n\n"+q+"\n\n⬇️그들의 이야기 확인하기⬇️\n🎶"+u;
   }
   return{b:b,miss:miss};

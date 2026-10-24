@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko"><head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-wQjNT32WdSjFH6CVMdS/ZWf+cjTmOqT37TQwCTh3n5A='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co https://github.com https://raw.githubusercontent.com; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-HekXWl9F87896TZ/+sLSRyAwgzF5sGKuCwDQmGbNlDY='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co https://github.com https://raw.githubusercontent.com; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="format-detection" content="telephone=no,email=no,address=no">
@@ -342,7 +342,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="libs/supabase-2.49.4.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.9.2'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.10.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -1007,6 +1007,7 @@ const decode=b=>{try{return new TextDecoder('utf-8',{fatal:true}).decode(b).repl
 const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
 
 const num=v=>{const s=c(v).replace(/,/g,'');if(s==='')return null;const n=Number(s);if(isNaN(n))throw `숫자가 아님: ${s}`;return Math.round(n)};
+const tt=v=>{const s=c(v),m=s.match(/^=T\("([\s\S]*)"\)$/);return m?m[1].replace(/""/g,'"'):s};   // 리디 파일의 =T("…") 텍스트 보호 표기 풀기
 const isbn=v=>c(v).replace(/^=T\("?/,'').replace(/"?\)$/,'').replace(/\.0$/,'');
 function dt(v){let y,mo,d,h=0,mi=0,s=0;
   if(typeof v==='number'){const D=new Date(Math.round((v-25569)*864e5));[y,mo,d,h,mi,s]=[D.getUTCFullYear(),D.getUTCMonth()+1,D.getUTCDate(),D.getUTCHours(),D.getUTCMinutes(),D.getUTCSeconds()]}
@@ -1016,6 +1017,7 @@ function dt(v){let y,mo,d,h=0,mi=0,s=0;
   return{ts:`${date}T${p(h)}:${p(mi)}:${p(s)}+09:00`,date,month:`${y}-${p(mo)}-01`}}
 
 function detect(rows){for(let i=0;i<Math.min(rows.length,10);i++){const h=rows[i].map(c);
+  if(h.includes('기준일')&&h.includes('도서 ID')&&h.includes('판매액')&&h.includes('정산액'))return['ridi',i];     // 리디북스 판매내역조회(일·도서별 집계)
   if(h.includes('판매/취소일시')&&h.includes('ItemId'))return['aladin',i];
   if(h.includes('출판사정산액')&&h.includes('판매서점'))return['yes24',i];
   if(h.includes('정산대상금액')&&h.includes('판매유형')&&h.includes('판매처'))return['bookcube',i];
@@ -1031,6 +1033,17 @@ function parse(rows,p,hi){
         const q=num(g(r,'부수')),gr=num(g(r,'판매액')),nt=num(g(r,'정산액'));if(q==null||gr==null||nt==null)throw '부수 · 판매액 · 정산액 중 빈 값이 있습니다';const rf=q<0||gr<0||nt<0;
         L.push({isbn:'t:'+t,title:t,author:c(g(r,'저자')),granularity:'transaction',line_type:rf?'refund':'sale',agg:true,channel:c(g(r,'판매처')),sale_method:c(g(r,'판매유형')),
           quantity:q,list_price:num(g(r,'정가')),sale_price:q?Math.round(Math.abs(gr)/Math.abs(q)):null,gross_amount:gr,net_amount:nt,raw});return}
+      if(p==='ridi'){Object.keys(raw).forEach(k=>raw[k]=tt(raw[k]));const t=tt(g(r,'제목')).replace(/\s+/g,' ');
+        if(!t){if(c(g(r,'도서 ID'))===''&&c(g(r,'판매액'))==='')return;throw '제목 없음'}
+        const day=dt(g(r,'기준일')),sq=num(g(r,'판매권')),cq=num(g(r,'취소권')),sg=num(g(r,'판매액')),cg=num(g(r,'취소액')),nt=num(g(r,'정산액'));
+        if(sq==null||sg==null||nt==null)throw '판매권 · 판매액 · 정산액 중 빈 값이 있습니다';
+        if(!sq&&!cq&&!sg&&!cg&&!nt)return;                                                    // 실적 없는 행은 건너뜀
+        const q=sq-Math.abs(cq||0),gr=sg-Math.abs(cg||0);                                     // 판매에서 취소를 뺀 순수 판매(취소는 절댓값으로 차감)
+        if(gr>0&&nt>gr*1.01)throw `정산액(${nt})이 판매액(${gr})보다 큽니다 — 파일 양식을 확인하세요`;
+        const iv=isbn(g(r,'전자책ISBN13'))||isbn(g(r,'종이책ISBN13')),rf=q<0||gr<0||nt<0;
+        L.push({isbn:/^\d{13}$/.test(iv)?iv:'t:'+t,title:t,author:tt(g(r,'저자')),pub:tt(g(r,'출판사')),granularity:'transaction',agg:true,line_type:rf?'refund':'sale',
+          sold_at:day.ts,sale_date:day.date,sale_month:day.month,channel:c(g(r,'판매처')),sale_method:'',quantity:q,list_price:num(g(r,'전자책정가')),
+          sale_price:q?Math.round(Math.abs(gr)/Math.abs(q)):null,gross_amount:gr,net_amount:nt,raw});return}
       if(p==='kyobo'){const rv=g(r,'판매기간'),per=c(rv);
         if(per==='합계'){total=num(g(r,'판매금액'));return}
         const day=typeof rv==='number'||/^\d{4}[-./]\d{1,2}[-./]\d{1,2}/.test(per)?dt(rv):null;       // 새 양식: 날짜(엑셀 날짜값) → 일 단위

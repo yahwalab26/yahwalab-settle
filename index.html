@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko"><head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-vFX7So2L+/dt4TDqogJyOzb7Q/LkPc8VFcXiQIrL1Vs='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co https://github.com https://raw.githubusercontent.com; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-7OyDJDRUgvDCa5Ti9qQ8Kfj6rztgxgl1lA5qVCbMEX0='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co https://github.com https://raw.githubusercontent.com; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="format-detection" content="telephone=no,email=no,address=no">
@@ -208,7 +208,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <h2><small>(02)</small>계약 정산 비율</h2><div id="rtl"></div>
   <h2><small>(03)</small>정산 통계</h2><div id="stt"></div>
   <h2><small>(04)</small>일일 정산 현황</h2>
-  <p class="k" style="text-align:center;margin:0 0 12px;font-size:12px;line-height:1.9">정산 내역은 매일 00시~01시에 업데이트되므로, 전일까지의 판매 내역만 확인할 수 있습니다.<br>(※ 본 정산 현황은 미확정 금액입니다. 취소분 등으로 인하여 실제 정산액과 차이가 있을 수 있습니다.)</p>
+  <p class="k" style="text-align:center;margin:0 0 12px;font-size:12px;line-height:1.9">정산 내역은 매일 00시~01시에 업데이트되므로, 전일까지의 판매 내역만 확인할 수 있습니다.<br>리디북스는 플랫폼 정산 내역 제공 기준에 따라 판매일로부터 이틀 후(익익일) 정산 내역이 업데이트됩니다.<br>(※ 본 정산 현황은 미확정 금액입니다. 취소분 등으로 인하여 실제 정산액과 차이가 있을 수 있습니다.)</p>
   <div class="card dsc" style="text-align:left;padding-top:8px">
     <div class="fr"><label class="fl" for="sf">정산 기간</label><div class="row" style="justify-content:flex-start"><input id="sf" type="date" style="width:auto"><span>~</span><input id="se" type="date" style="width:auto">
       <span id="sdq" class="row" style="gap:6px"><button type="button" class="ghost" data-q="y">어제</button><button type="button" class="ghost" data-q="yy">그제</button><button type="button" class="ghost" data-q="tm">이번 달</button><button type="button" class="ghost" data-q="lm">저번 달</button></span></div>
@@ -273,7 +273,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <div class="card" style="text-align:left;margin-top:24px"><b>업로드 이력 · 정산 데이터 관리</b>
     <p class="k" style="margin:4px 0 10px">잘못 올린 파일은 이력에서 되돌릴 수 있습니다.</p>
     <div class="tw"><table><caption class="sr-only">업로드 이력</caption><thead><tr><th>일시</th><th>플랫폼</th><th class="hm">파일</th><th class="r">건수</th><th class="cc">되돌리기</th></tr></thead><tbody id="ul"></tbody></table></div>
-    <div class="row" style="justify-content:flex-start;margin-top:16px"><select id="rs" style="width:auto" aria-label="초기화 범위"><option value="">전체 플랫폼</option><option value="ridi">리디</option><option value="kyobo">교보문고</option><option value="aladin">알라딘</option><option value="yes24">예스24</option><option value="bookcube">북큐브</option></select><button class="ghost" id="rb" style="border-color:var(--bad);color:var(--bad)">정산 데이터 초기화</button></div></div>
+    <div class="row" style="justify-content:flex-start;margin-top:16px"><select id="rs" style="width:auto" aria-label="초기화 범위"><option value="">전체 플랫폼</option><option value="ridi">리디북스</option><option value="kyobo">교보문고</option><option value="aladin">알라딘</option><option value="yes24">예스24</option><option value="bookcube">북큐브</option></select><button class="ghost" id="rb" style="border-color:var(--bad);color:var(--bad)">정산 데이터 초기화</button></div></div>
 
   </div>
   <div class="pg" id="pg-settle" hidden>
@@ -343,12 +343,12 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="libs/supabase-2.49.4.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.11.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.11.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 const DBGS={},dbg=(w,e)=>{if(DBGS[w])return;DBGS[w]=1;try{console.warn('[정산]',w,(e&&e.message)||e)}catch(_){return}}; /* 조용히 넘기던 오류를 콘솔에 남김(같은 항목은 1번만) */
-const monVal=sel=>{const e=$(sel);if(!/^\d{4}-\d{2}$/.test(e.value))e.value=kst().toISOString().slice(0,7);return e.value}; /* 월 입력이 비어 있으면(미방문·삭제·미지원 브라우저) 이번 달로 보정 */ const PN={aladin:'알라딘',yes24:'예스24',kyobo:'교보문고',bookcube:'북큐브',ridi:'리디'},c=v=>String(v??'').trim();
+const monVal=sel=>{const e=$(sel);if(!/^\d{4}-\d{2}$/.test(e.value))e.value=kst().toISOString().slice(0,7);return e.value}; /* 월 입력이 비어 있으면(미방문·삭제·미지원 브라우저) 이번 달로 보정 */ const PN={aladin:'알라딘',yes24:'예스24',kyobo:'교보문고',bookcube:'북큐브',ridi:'리디북스'},pnm=n=>n==='리디'?'리디북스':n,c=v=>String(v??'').trim();
 let S=null,WORKS=[],ISBN={},AUTHORS=[],WA={};
 
 /* ---------- 인증 ---------- */
@@ -634,7 +634,7 @@ async function loadRates(){const el=$('#rtl');if(!el)return;
   el.innerHTML=`<div class="tw"><table class="vm"><caption class="sr-only">계약 작품별 현재 작가 비율</caption><thead><tr><th>작품</th><th class="r">현재 작가 비율</th></tr></thead><tbody>${Object.entries(RT).map(([k,L])=>{const on=L.filter(r=>rateOn(r,t)),b=on.find(r=>r.kind==='base'&&!r.platform_code)||on[0],x=on.some(r=>r.kind==='special');
     return `<tr><td><button class="lnk" data-rk="${esc(k)}">${esc(L[0].title)}</button></td><td class="r">${b?`<b>${pct(b.author_rate)}</b>${x?'<div class="k" style="font-size:11.5px">특약</div>':''}`:'<span class="k">-</span>'}</td></tr>`}).join('')}</tbody></table></div>`}
 $('#rtl').onclick=e=>{const b=e.target.closest('[data-rk]');if(!b)return;const L=RT[b.dataset.rk];if(!L)return;const f=L[0],sh=Number(f.share_ratio),t=iso(kst());
-  openLay(`<h3 id="lt" style="margin:0 0 4px">${esc(f.title)}</h3><p class="k" style="margin:0 0 14px">${esc(f.pen_name)}${sh<1?` · 공동 작가 지분 ${pct(sh)}`:''}</p><div class="tw"><table class="vm"><caption class="sr-only">${esc(f.title)} 계약 비율</caption><thead><tr><th>구분</th><th>플랫폼</th><th>적용 기간</th><th class="r">작가 비율</th></tr></thead><tbody>${L.map(r=>`<tr><td>${KD[r.kind]||esc(r.kind)}</td><td>${r.platform_code?esc(r.platform_name||r.platform_code):'전체'}</td><td>${r.effective_from} ~ ${r.effective_to||'계속'}${rateOn(r,t)?'<div class="ok" style="font-size:11.5px;font-weight:700">적용 중</div>':''}</td><td class="r"><b>${pct(r.author_rate)}</b></td></tr>`).join('')}</tbody></table></div>`)};
+  openLay(`<h3 id="lt" style="margin:0 0 4px">${esc(f.title)}</h3><p class="k" style="margin:0 0 14px">${esc(f.pen_name)}${sh<1?` · 공동 작가 지분 ${pct(sh)}`:''}</p><div class="tw"><table class="vm"><caption class="sr-only">${esc(f.title)} 계약 비율</caption><thead><tr><th>구분</th><th>플랫폼</th><th>적용 기간</th><th class="r">작가 비율</th></tr></thead><tbody>${L.map(r=>`<tr><td>${KD[r.kind]||esc(r.kind)}</td><td>${r.platform_code?esc(pnm(r.platform_name||r.platform_code)):'전체'}</td><td>${r.effective_from} ~ ${r.effective_to||'계속'}${rateOn(r,t)?'<div class="ok" style="font-size:11.5px;font-weight:700">적용 중</div>':''}</td><td class="r"><b>${pct(r.author_rate)}</b></td></tr>`).join('')}</tbody></table></div>`)};
 const bars=(rows,color)=>{const mx=Math.max(...rows.map(r=>r.v),1);return rows.map(r=>`<div class="bar"><div class="bl">${esc(r.l)}</div><div style="flex:1;min-width:0">${r.t!==undefined?`<div class="bn">${esc(r.t)||'&nbsp;'}</div>`:''}<div class="bt" style="display:flex;align-items:center">${(()=>{const pc=Math.max(r.v/mx*100,0),sm=pc<35;return `<div class="bf" style="width:${pc}%;background:${color};flex:none">${sm?'':w0(r.v)}</div>${sm?`<span style="padding-left:8px;font-size:12px;font-weight:600;white-space:nowrap">${w0(r.v)}</span>`:''}`})()}</div></div></div>`).join('')};
 async function loadStats(){const t=kst(),m0=mon1(t.getUTCFullYear(),t.getUTCMonth()-5);
   const[a,b]=await Promise.all([SB.rpc('author_sales_summary',{p_from:iso(addD(t,-5)),p_to:iso(addD(t,-1)),p_unit:'day'}),SB.rpc('author_sales_summary',{p_from:iso(m0),p_to:iso(t),p_unit:'month'})]);
@@ -649,7 +649,7 @@ let PLS=[],PSEL=new Set(['all']);
 const drawChips=()=>{const el=$('#pchips');   // 버튼은 한 번만 만들고 선택 상태만 갱신(깜빡임·잔상 방지)
   if(el.children.length!==PLS.length+1)el.innerHTML=[{code:'all',name:'전체'},...PLS].map(p=>`<button type="button" class="chp" data-c="${p.code}" aria-pressed="false">${esc(p.name)}</button>`).join('');
   el.querySelectorAll('.chp').forEach(b=>b.setAttribute('aria-pressed',String(PSEL.has(b.dataset.c))))};
-async function initSearch(){const{data}=await SB.from('platforms').select('code,name').eq('is_active',true);PLS=[...(data||[]),...((data||[]).some(p=>p.code==='ridi')?[]:[{code:'ridi',name:'리디'}])].sort((a,b)=>{const o=['리디','교보문고','알라딘','예스24','북큐브'],r=n=>{const i=o.indexOf(n);return i<0?99:i};return r(a.name)-r(b.name)||a.name.localeCompare(b.name,'ko')});drawChips();
+async function initSearch(){const{data}=await SB.from('platforms').select('code,name').eq('is_active',true);PLS=[...(data||[]),...((data||[]).some(p=>p.code==='ridi')?[]:[{code:'ridi',name:'리디북스'}])].map(p=>({...p,name:pnm(p.name)})).sort((a,b)=>{const o=['리디북스','교보문고','알라딘','예스24','북큐브'],r=n=>{const i=o.indexOf(n);return i<0?99:i};return r(a.name)-r(b.name)||a.name.localeCompare(b.name,'ko')});drawChips();
   const t=kst(),y=iso(addD(t,-1));$('#sf').max=$('#se').max=y;$('#sf').value=iso(mon1(t.getUTCFullYear(),t.getUTCMonth()))>y?y:iso(mon1(t.getUTCFullYear(),t.getUTCMonth()));$('#se').value=y}
 $('#pchips').onclick=e=>{const c=e.target.closest('[data-c]')?.dataset.c;if(!c)return;if(c==='all')PSEL=new Set(['all']);else{PSEL.delete('all');PSEL.has(c)?PSEL.delete(c):PSEL.add(c);if(!PSEL.size)PSEL=new Set(['all'])}drawChips()};
 $('#sdq').onclick=e=>{const q=e.target.dataset.q;if(!q)return;const t=kst(),y=addD(t,-1),Y=t.getUTCFullYear(),M=t.getUTCMonth();let f,g;
@@ -659,7 +659,7 @@ $('#sgo').onclick=async()=>{const f=$('#sf').value,e=$('#se').value;if(!f||!e||f
   const{data,error}=await SB.rpc('author_sales_search',{p_from:f,p_to:e,p_titles:ti.length?ti:null,p_platforms:PSEL.has('all')?null:[...PSEL]});
   if(error)return $('#sres').innerHTML=`<p class="bad" style="text-align:center">${esc(error.message)}</p>`;
   const R=data||[],sm=k=>R.reduce((a,r)=>a+Number(r[k]||0),0);
-  $('#sres').innerHTML=`<p class="k" style="margin:0 0 8px">${f} ~ ${e} · 총 ${R.length}건${R.length>=2000?' (최대 2,000건까지 표시)':''}</p><div class="tw sc"><table class="rt"><caption class="sr-only">일일 정산 현황</caption><thead><tr><th class="cc">판매일</th><th class="cc">플랫폼</th><th>작품명</th><th class="r">수량</th><th class="r">판매액</th><th class="r">수익액</th><th class="r">예상정산액</th></tr></thead><tbody>${R.map(r=>`<tr><td class="cc">${r.sale_date||r.sale_month.slice(0,7)+' (월 합계)'}</td><td class="cc">${esc(r.platform_name)}</td><td>${esc(r.title)}</td><td class="r">${r.quantity}</td><td class="r">${w0(r.gross_amount)}</td><td class="r">${r.net_amount==null?'-':w0(r.net_amount)}</td><td class="r">${r.author_amount==null?'-':w0(r.author_amount)}</td></tr>`).join('')||'<tr><td colspan="7" class="k em">조회된 내역이 없습니다.</td></tr>'}</tbody><tfoot><tr><td colspan="3"><b>합계</b></td><td class="r"><b>${sm('quantity')}</b></td><td class="r"><b>${w0(sm('gross_amount'))}</b></td><td class="r"><b>${w0(sm('net_amount'))}</b></td><td class="r"><b>${w0(sm('author_amount'))}</b></td></tr></tfoot></table></div>`};
+  $('#sres').innerHTML=`<p class="k" style="margin:0 0 8px">${f} ~ ${e} · 총 ${R.length}건${R.length>=2000?' (최대 2,000건까지 표시)':''}</p><div class="tw sc"><table class="rt"><caption class="sr-only">일일 정산 현황</caption><thead><tr><th class="cc">판매일</th><th class="cc">플랫폼</th><th>작품명</th><th class="r">수량</th><th class="r">판매액</th><th class="r">수익액</th><th class="r">예상정산액</th></tr></thead><tbody>${R.map(r=>`<tr><td class="cc">${r.sale_date||r.sale_month.slice(0,7)+' (월 합계)'}</td><td class="cc">${esc(pnm(r.platform_name))}</td><td>${esc(r.title)}</td><td class="r">${r.quantity}</td><td class="r">${w0(r.gross_amount)}</td><td class="r">${r.net_amount==null?'-':w0(r.net_amount)}</td><td class="r">${r.author_amount==null?'-':w0(r.author_amount)}</td></tr>`).join('')||'<tr><td colspan="7" class="k em">조회된 내역이 없습니다.</td></tr>'}</tbody><tfoot><tr><td colspan="3"><b>합계</b></td><td class="r"><b>${sm('quantity')}</b></td><td class="r"><b>${w0(sm('gross_amount'))}</b></td><td class="r"><b>${w0(sm('net_amount'))}</b></td><td class="r"><b>${w0(sm('author_amount'))}</b></td></tr></tfoot></table></div>`};
 $('#pwb2').onclick=()=>askPw(false);
 
 /* ---------- 작가 자동 로그아웃 (1시간 미사용) ---------- */
@@ -678,7 +678,7 @@ document.querySelectorAll('.xb[data-x]').forEach(b=>b.onclick=()=>{const i=$('#'
 $('#em').addEventListener('input',e=>{if(e.isTrusted&&/^(insert(?!Replacement)|delete)/.test(e.inputType||'')){$('#pw').value='';syncX()}});   // 자동완성은 제외, 직접 입력·삭제 시에만
 setTimeout(syncX,0);
 /* ---------- 현황 ---------- */
-let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',ridi:'리디',kyobo:'교보문고',aladin:'알라딘',yes24:'예스24',bookcube:'북큐브'};
+let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',ridi:'리디북스',kyobo:'교보문고',aladin:'알라딘',yes24:'예스24',bookcube:'북큐브'};
 const man=n=>n>=1e4?(n/1e4).toFixed(1)+'만':Math.round(n).toLocaleString('ko-KR'),sum=(a,k)=>a.reduce((t,r)=>t+Number(r[k]),0);
 let WR=[],DY=[],CT=[],LV='야화랩',SALES=[];const vis=l=>LV==='야화랩'||l==='트루비';
 async function loadHome(ev){const m=$('#dm');monVal('#dm');const t=kst(),mon=iso(addD(t,-((t.getUTCDay()+6)%7)));
@@ -764,7 +764,7 @@ async function openWork(id){const w=WORKS.find(x=>x.id===id)||{title:'',label:nu
   <p id="wri" class="k" style="font-size:13px;margin:8px 0 0">${(r=>r?`계약 만료일 <b>${r.date}</b> (D-${r.d}) · 자동 연장 시 갱신일 <b>${r.next}</b> · 해지 통보 마감 <b>${r.notice}</b> (${r.dn<0?'기한 경과':'D-'+r.dn})`:'계약 시작일을 입력하면 만료일(시작일+3년−1일)과 해지 통보 마감일을 알려드립니다. (3년 계약, 만료 3개월 전까지 해지 의사가 없으면 1년 자동 연장)')(renewal(w.contract_start))}</p>
   <h4 style="margin:22px 0 2px">계약 비율</h4><p class="k" style="font-size:12px;margin:0 0 8px">적용 순서: 특약 → 플랫폼 개별 → 기본(전체). ${fs&&fs[0]?`첫 판매: <b>${fs[0].sale_date||fs[0].sale_month}</b> — `:''}기본 계약의 시작일은 첫 판매일보다 앞서야 이전 판매도 계산됩니다. 작가 비율은 5% 단위(예: 70, 75, 80)로 입력하세요.</p>
   <table><caption class="sr-only">계약 비율</caption><thead><tr><th>구분</th><th>플랫폼</th><th>기간</th><th class="r">작가 비율</th><th class="hm">메모</th><th></th></tr></thead><tbody>${mine.map(c=>`<tr><td>${KD[c.kind]}</td><td>${c.platform_code?PN[c.platform_code]:'전체'}</td><td>${c.effective_from} ~ ${c.effective_to||'계속'}</td><td class="r">${pct(c.author_rate)}</td><td class="hm">${esc(c.note||'')}</td><td><button class="ghost" data-ce="${c.id}">수정</button><button class="ghost" data-cd="${c.id}">삭제</button></td></tr>`).join('')||'<tr><td colspan="6" class="k em">등록된 계약이 없습니다. 아래에서 추가하세요.</td></tr>'}</tbody></table>
-  <div class="row" style="justify-content:flex-start;gap:8px;margin-top:12px"><select id="ctk" aria-label="구분" style="width:auto"><option value="base">기본</option><option value="special">특약</option></select><select id="ctp" aria-label="플랫폼" style="width:auto"><option value="">전체 플랫폼</option><option value="ridi">리디</option><option value="kyobo">교보문고</option><option value="aladin">알라딘</option><option value="yes24">예스24</option><option value="bookcube">북큐브</option></select>
+  <div class="row" style="justify-content:flex-start;gap:8px;margin-top:12px"><select id="ctk" aria-label="구분" style="width:auto"><option value="base">기본</option><option value="special">특약</option></select><select id="ctp" aria-label="플랫폼" style="width:auto"><option value="">전체 플랫폼</option><option value="ridi">리디북스</option><option value="kyobo">교보문고</option><option value="aladin">알라딘</option><option value="yes24">예스24</option><option value="bookcube">북큐브</option></select>
   <input id="cts" type="date" aria-label="시작일" style="width:auto"><input id="cte" type="date" aria-label="종료일 (비우면 계속)" style="width:auto"><input id="ctv" type="text" inputmode="numeric" placeholder="작가 % (5 단위)" aria-label="작가 비율(%)" style="width:130px" autocomplete="off"><input id="ctn" type="text" placeholder="메모 (특약 내용)" style="flex:1 1 140px;min-width:120px"><button id="ctsv">추가</button><button class="ghost" id="ctx" hidden>취소</button></div>
   <p id="cmsg" class="k" style="margin:8px 0 0;font-size:13px;min-height:20px"></p>
   <h4 style="margin:24px 0 4px">계약서</h4><p class="k" style="font-size:12px;margin:0 0 6px">JPG · PNG · WEBP 이미지 또는 PDF (8MB 이하). 서버에서 암호화되어 저장되며 관리자만 볼 수 있습니다.</p>
@@ -874,7 +874,7 @@ function stRows(p){const m=monVal('#sm');let n=0;const det=[];
   p.W.forEach(w=>{n++;ORD.forEach((c,i)=>{const x=w.pl[c]||{q:0,lp:w.pl[Object.keys(w.pl)[0]]?.lp||0,g:0,n:0};det.push([i?'':n,i?'':w.t,i?'':(w.rd||'').replace(/-/g,'.'),PN[c],x.q,x.lp,x.g,x.n])})});return det}
 const mkSnap=p=>({month:monVal('#sm'),tax_rate:Number($('#sx').value||0),pens:[...p.pens],totals:{gross:p.gross,net:p.net,A:p.A,ded:p.ded,tax:p.tax,pay:p.pay},
   works:p.W.map(w=>({t:w.t,gross:w.gross,net:w.net,a:w.a,ded:w.ded,rate:w.rate})),detail:stRows(p),nr:p.nr});
-// 확정 당시 플랫폼 목록이 달랐던 정산서(예: 리디 추가 전)도 모든 판매처 행이 보이도록 보정 — 표시용이며 금액은 바뀌지 않음
+// 확정 당시 플랫폼 목록이 달랐던 정산서(예: 리디북스 추가 전)도 모든 판매처 행이 보이도록 보정 — 표시용이며 금액은 바뀌지 않음
 function fillPl(S){const d=S.detail||[],G=[];d.forEach(r=>{if(r[0]!==''||!G.length)G.push([]);G[G.length-1].push(r)});
   const out=[];G.forEach(g=>{const f=g[0],by={};g.forEach(r=>by[r[3]]=r);const lp=f[5]||0,names=ORD.map(c=>PN[c]),rest=g.filter(r=>!names.includes(r[3]));
     [...names.map(n=>by[n]||['','','',n,0,lp,0,0]),...rest].forEach((r,i)=>out.push(i?['','','',r[3],r[4],r[5],r[6],r[7]]:[f[0],f[1],f[2],r[3],r[4],r[5],r[6],r[7]]))});
@@ -991,7 +991,7 @@ async function loadRefs(){const[w,i,a,l]=await Promise.all([SB.from('works').sel
   WORKS=w.data||[];ISBN={};(i.data||[]).forEach(x=>{if(x.id_type==='isbn')ISBN[x.value]=x.work_id;else if(x.id_type==='title_alias')ISBN['t:'+x.value]=x.work_id});
   AUTHORS=a.data||[];WA={};(l.data||[]).forEach(x=>(WA[x.work_id]??=[]).push(x.author_id))}
 async function loadFresh(){const{data}=await SB.from('v_data_freshness').select('*').order('platform_code');
-  $('#fresh').innerHTML=(data||[]).slice().sort((a,b)=>{const o=['ridi','kyobo','aladin','yes24','bookcube'],k=c=>{const i=o.indexOf(c);return i<0?99:i};return k(a.platform_code)-k(b.platform_code)}).map(r=>`<tr><td>${esc(r.platform_name)}</td>
+  $('#fresh').innerHTML=(data||[]).slice().sort((a,b)=>{const o=['ridi','kyobo','aladin','yes24','bookcube'],k=c=>{const i=o.indexOf(c);return i<0?99:i};return k(a.platform_code)-k(b.platform_code)}).map(r=>`<tr><td>${esc(pnm(r.platform_name))}</td>
   <td>${r.last_sale_date||(r.last_sale_month?r.last_sale_month.slice(0,7):'-')}</td>
   <td>${r.last_uploaded_at?new Date(r.last_uploaded_at).toLocaleString('ko-KR'):'-'}</td></tr>`).join('')}
 
@@ -1008,7 +1008,7 @@ const decode=b=>{try{return new TextDecoder('utf-8',{fatal:true}).decode(b).repl
 const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
 
 const num=v=>{const s=c(v).replace(/,/g,'');if(s==='')return null;const n=Number(s);if(isNaN(n))throw `숫자가 아님: ${s}`;return Math.round(n)};
-const tt=v=>{const s=c(v),m=s.match(/^=T\("([\s\S]*)"\)$/);return m?m[1].replace(/""/g,'"'):s};   // 리디 파일의 =T("…") 텍스트 보호 표기 풀기
+const tt=v=>{const s=c(v),m=s.match(/^=T\("([\s\S]*)"\)$/);return m?m[1].replace(/""/g,'"'):s};   // 리디북스 파일의 =T("…") 텍스트 보호 표기 풀기
 const isbn=v=>c(v).replace(/^=T\("?/,'').replace(/"?\)$/,'').replace(/\.0$/,'');
 function dt(v){let y,mo,d,h=0,mi=0,s=0;
   if(typeof v==='number'){const D=new Date(Math.round((v-25569)*864e5));[y,mo,d,h,mi,s]=[D.getUTCFullYear(),D.getUTCMonth()+1,D.getUTCDate(),D.getUTCHours(),D.getUTCMinutes(),D.getUTCSeconds()]}

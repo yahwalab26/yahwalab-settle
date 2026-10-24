@@ -97,12 +97,17 @@ html,body{height:auto}
 <label class="field" data-for="all"><span>작가명 <i>(비우면 ‘작가님’)</i></span><input id="author" autocomplete="off"></label>
 <label class="field chk" data-for="contract"><input id="inq" type="checkbox"><span>작가 문의에 답하는 메일</span></label>
 <div class="field" id="gform" data-for="contract"><span>안내 항목</span><div id="gitems"></div><div class="gadd" id="gadd"></div></div>
-<label class="field" data-for="reject accept proof contract intro" data-sec2><span>작품명</span><input id="title" autocomplete="off"></label>
+<label class="field" data-for="reject accept proof contract intro seoji" data-sec2><span>작품명</span><input id="title" autocomplete="off"></label>
 <label class="field" data-for="accept"><span>작품 호평 코멘트 <i>(선택)</i></span><textarea id="comment"></textarea></label>
 <label class="field" data-for="proof"><span>교정 차수 <i>(숫자만, 비우면 생략)</i></span><input id="round" inputmode="numeric" autocomplete="off" placeholder="예: 1"></label>
 <label class="field" data-for="proof"><span>간단한 리뷰 <i>(선택)</i></span><textarea id="review"></textarea></label>
 <label class="field" data-for="proof"><span>기한</span><input id="deadline" type="date"></label>
-<label class="field" data-for="intro"><span>담당자 이름</span><input id="manager" autocomplete="off"></label>
+<label class="field" data-for="intro seoji"><span>담당자 이름</span><input id="manager" autocomplete="off"></label>
+<label class="field" data-for="seoji"><span>출간월 <i>(숫자만)</i></span><input id="sjmonth" inputmode="numeric" autocomplete="off" placeholder="예: 12"></label>
+<label class="field" data-for="seoji"><span>전달 기한</span><input id="sjdue" type="date"></label>
+<label class="field" data-for="seoji"><span>글자수 <i>(공백 미포함, 만 자 단위 숫자)</i></span><input id="sjchars" inputmode="decimal" autocomplete="off" placeholder="예: 10"></label>
+<label class="field" data-for="seoji"><span>통상 금액 <i>(원, 숫자)</i></span><input id="sjrange" autocomplete="off" placeholder="예: 3,000"></label>
+<label class="field" data-for="seoji"><span>제안 가격 <i>(원, 숫자)</i></span><input id="sjprice" autocomplete="off" placeholder="예: 3,200"></label>
 <label class="field" data-for="esign"><span>작가 이메일</span><input id="email" type="email" autocomplete="off" placeholder="예: name@naver.com"></label>
 <label class="field" data-for="esign"><span>완전 원고 인도일</span><input id="duedate" type="date"></label>
 <label class="field chk" data-for="esign"><input id="ext" type="checkbox" checked><span>외전 인도 일정까지 고려했다는 문구 넣기</span></label>
@@ -118,7 +123,7 @@ html,body{height:auto}
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script>
-var TYPES=[["receipt","접수"],["reject","반려"],["accept","합격"],["contract","계약 안내"],["esign","계약서 발송"],["intro","첫인사"],["proof","교정고"]];
+var TYPES=[["receipt","접수"],["reject","반려"],["accept","합격"],["contract","계약 안내"],["esign","계약서 발송"],["intro","첫인사"],["seoji","서지"],["proof","교정고"]];
 var cur="receipt",view="input",lastMiss=[];
 var GI=[],TOKRE=/\{(작품명|프로모션 접수 시기|출간 목표 월)\}/g;
 var PRE=[
@@ -146,7 +151,7 @@ function drawItems(){
 }
 
 var $=function(s){return document.querySelector(s)};
-var ID={"작가명":"author","작품명":"title","작품 호평 코멘트":"comment","기한":"deadline","프로모션 접수 시기":"promo","출간 목표 월":"release","작가 이메일":"email","완전 원고 인도일":"duedate","서명 유효기간":"valid","담당자 이름":"manager"};
+var ID={"작가명":"author","작품명":"title","작품 호평 코멘트":"comment","기한":"deadline","프로모션 접수 시기":"promo","출간 목표 월":"release","작가 이메일":"email","완전 원고 인도일":"duedate","서명 유효기간":"valid","담당자 이름":"manager","출간월":"sjmonth","기간":"sjdue","글자수":"sjchars","금액":"sjrange","가격":"sjprice"};
 var DOCK='<p class="need" hidden></p><button class="btn primary block" data-act="ca">제목과 본문 전체 복사</button><div class="btnrow"><button class="btn sm" data-act="cs">제목 복사</button><button class="btn sm" data-act="cb">본문 복사</button><button class="btn sm" data-act="clear">입력 비우기</button></div>';
 document.querySelectorAll("[data-dock]").forEach(function(d){d.innerHTML=DOCK});
 
@@ -194,6 +199,11 @@ function build(){
     var it=need(title,"작품명"),mg=need($("#manager").value.trim(),"담당자 이름");
     s="[트루비] 담당 편집자 인사드립니다.";
     b=greet+"\n<"+it+"> 작품을 담당하게 된 야화랩 "+mg+"입니다.\n\n이렇게 인사드리게 되어 무척이나 기쁜 마음인데요.\n즐거운 작업이 되실 수 있도록 최선을 다하겠습니다. 🎶\n\n출간까지의 전반적인 과정은 저와 소통해 주시면 됩니다.\n원고 인도부터 교정·교열, 프로모션 협의에 이르기까지 작품 출간과 관련한 안내 사항은 앞으로 제가 전달해 드릴 예정입니다.\n\n판매 및 정산과 관련해서도 안내드립니다.\n판매 정산서는 계약서에 명시된 내용에 따라 매월 발생한 매출 내역을 기준으로 익월 25일까지 발송해 드리며, 정산금은 익익월 말일에 지급됩니다. 단, 지급일이 공휴일인 경우 그 첫 영업일에 지급됩니다.\n아울러 출간 후 첫 일주일간의 판매량은 제가 별도로 취합하여 간략하게 전달해 드리고 있으니 참고 부탁드립니다.\n정산 사이트도 별도로 운영하고 있으며, 금주 내로 사이트 가입을 요청하는 메일이 발송될 예정입니다. 메일을 확인하신 후 비밀번호를 설정하여 이용해 주시면 됩니다.\n\n이 외에도 작품과 관련해 궁금하신 사항이나 요청하실 내용이 있다면 언제든 편하게 말씀해 주세요.\n세부적인 작품 관련 논의는 별도 메일을 통해 이어가도록 하겠습니다.\n\n앞으로 잘 부탁드립니다.\n\n감사합니다.\n\n"+mg+" 드림";
+  }else if(cur==="seoji"){
+    var st=need(title,"작품명"),sm=need($("#manager").value.trim(),"담당자 이름"),smo=need($("#sjmonth").value.replace(/\D/g,""),"출간월"),sdl=need(fmtDate($("#sjdue").value),"기간");
+    var sch=need($("#sjchars").value.replace(/[^\d.]/g,""),"글자수"),srg=need($("#sjrange").value.replace(/원/g,"").trim(),"금액"),spr=need($("#sjprice").value.replace(/원/g,"").trim(),"가격");
+    s="[트루비] <"+st+"> 서지 정보 전달 요청드립니다.";
+    b=greet+"\n트루비 "+sm+"입니다.\n\n저희 <"+st+"> 작품 "+smo+"월 출간으로 리디북스 선독점 접수하고자 합니다.\n아래 서지 정보를 작성하시어 "+sdl+"까지 전달해 주실 수 있을지 확인 부탁드립니다.\n\n-----\n\n1) 권별 가격\n> 단행본 가격은 통상적으로 공백 미포함 "+sch+"만 자 내외에 "+srg+"원 안팎으로 확인됩니다.\n저희 작품도 "+spr+"원으로 제안드리며, 혹시 다른 제안 사항 있으신 경우 말씀 부탁드립니다.\n\n2) 작품 소개글\n\n3) 작품 키워드\nhttps://ridibooks.com/keyword-finder/bl?set_id=15&page=1\n위 링크에서 작품에 맞는 키워드를 선정하셔서 전달 부탁드립니다.\n\n4) BL 가이드\n*배경/분야: \n*작품 키워드: \n\n*인물 소개\n공- \n수- \n\n*이럴 때 보세요: \n\n*공감 글귀: \n\n-----\n\n궁금하신 점 있으시다면 언제든 편히 말씀 부탁드립니다.\n\n감사합니다.\n\n"+sm+" 드림";
   }else{
     var t=need(title,"작품명"),d=need(fmtDate($("#deadline").value),"기한");
     var r=$("#round").value.replace(/\D/g,""),n=r?r+"차 ":"",rv=$("#review").value.trim();
@@ -240,7 +250,7 @@ TYPES.forEach(function(t){
   var b=document.createElement("button");b.className="sw";b.type="button";b.textContent=t[1];b.dataset.k=t[0];
   b.addEventListener("click",function(){cur=t[0];render()});$("#types").appendChild(b);
 });
-["author","title","comment","round","review","deadline","promo","release","inq","email","duedate","valid","ext","manager"].forEach(function(id){$("#"+id).addEventListener("input",render)});
+["author","title","comment","round","review","deadline","promo","release","inq","email","duedate","valid","ext","manager","sjmonth","sjdue","sjchars","sjrange","sjprice"].forEach(function(id){$("#"+id).addEventListener("input",render)});
 $("#inq").addEventListener("change",render);
 $("#ext").addEventListener("change",render);
 document.addEventListener("click",function(e){
@@ -249,7 +259,7 @@ document.addEventListener("click",function(e){
   if(a==="cs")copy(m.s,"제목을 복사했습니다.");
   else if(a==="cb")copy(m.b,"본문을 복사했습니다.");
   else if(a==="ca")copy(m.s+"\n\n"+m.b,"제목과 본문을 복사했습니다.");
-  else if(a==="clear"){["author","title","comment","round","review","deadline","promo","release","email","duedate","manager"].forEach(function(id){$("#"+id).value=""});$("#valid").value="14";$("#ext").checked=true;GI=[];$("#inq").checked=false;drawItems();render()}
+  else if(a==="clear"){["author","title","comment","round","review","deadline","promo","release","email","duedate","manager","sjmonth","sjdue","sjchars","sjrange","sjprice"].forEach(function(id){$("#"+id).value=""});$("#valid").value="14";$("#ext").checked=true;GI=[];$("#inq").checked=false;drawItems();render()}
 });
 PRE_LABEL.forEach(function(lb,i){
   var b=document.createElement("button");b.type="button";b.className="btn sm";b.textContent=lb;

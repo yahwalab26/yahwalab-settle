@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko"><head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-PQMUbF1Q7ezZd6Veqy1TfN7m4kCo18cysKPNHIG/BK0='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co https://github.com https://raw.githubusercontent.com; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-3JFgSeIHvifItsqtIZsnyJ0ORmwNaNs8GlMAH+PzSnY='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co https://github.com https://raw.githubusercontent.com; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="format-detection" content="telephone=no,email=no,address=no">
@@ -330,6 +330,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
   <div class="pg" id="pg-books" hidden></div>
   <div class="pg" id="pg-proof" hidden></div>
   <div class="pg" id="pg-mail" hidden></div>
+  <div class="pg" id="pg-tax" hidden></div>
   <div class="pg" id="pg-sns" hidden></div>
   <div class="pg" id="pg-prompt" hidden>
     <h2><small>(01)</small>프롬프트</h2>
@@ -343,7 +344,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="libs/supabase-2.49.4.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.13.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.14.0'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -416,10 +417,10 @@ $('#cf').onsubmit=async e=>{e.preventDefault();const a=$('#np').value,m=$('#ce')
 $('#homelink').onclick=e=>{if(location.hash===''||location.hash==='#/home'){e.preventDefault();loadHome();scrollTo(0,0)}};
 /* 새로 접속(주소 입력·북마크·탭 복원)하면 현황에서 시작. 같은 탭의 새로고침·뒤로가기만 보던 화면 유지 */
 try{const nt=(performance.getEntriesByType('navigation')[0]||{}).type;if(!sessionStorage.getItem('yw_s')||nt==='navigate'){if(location.hash&&location.hash!=='#/home')history.replaceState(null,'',location.pathname+'#/home')}sessionStorage.setItem('yw_s','1')}catch(e){dbg('세션 표시',e)}
-const PG=['home','authors','settle','docs','books','proof','mail','sns','prompt','alog','llog','visit'];
+const PG=['home','authors','settle','tax','docs','books','proof','mail','sns','prompt','alog','llog','visit'];
 /* 영역 → 세부 메뉴. 주소(#/home 등)는 그대로이고 화면 묶음만 나눔. 영역을 누르면 그 영역에서 마지막으로 본 화면으로 감 */
-const AREAS={settle:['home','settle','authors','books'],tools:['mail','sns','proof','prompt'],vault:['docs'],logs:['alog','llog','visit']};
-const NAVN={home:'현황',settle:'정산',authors:'작가',books:'작품',mail:'메일 작성',sns:'SNS',proof:'교정고 점검',prompt:'프롬프트',docs:'회사 자료',alog:'접근 기록',llog:'로그인 기록',visit:'방문자'};
+const AREAS={settle:['home','settle','tax','authors','books'],tools:['mail','sns','proof','prompt'],vault:['docs'],logs:['alog','llog','visit']};
+const NAVN={home:'현황',settle:'정산',authors:'작가',books:'작품',mail:'메일 작성',sns:'SNS',proof:'교정고 점검',prompt:'프롬프트',tax:'세무',docs:'회사 자료',alog:'접근 기록',llog:'로그인 기록',visit:'방문자'};
 const LASTP={};
 function setNav(id){const a=Object.keys(AREAS).find(k=>AREAS[k].includes(id));LASTP[a]=id;
   document.querySelectorAll('#nav a').forEach(x=>{x.classList.toggle('on',x.dataset.a===a);x.href='#/'+(LASTP[x.dataset.a]||AREAS[x.dataset.a][0])});
@@ -433,7 +434,7 @@ function renderPrompts(){$('#prl').innerHTML=PROMPTS.map((p,i)=>`<div style="bor
 $('#prl').onclick=async e=>{const b=e.target.closest('[data-pc]');if(!b)return;const t=PROMPTS[+b.dataset.pc].b,o=b.textContent;let ok=true;try{await navigator.clipboard.writeText(t)}catch(_){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{ok=document.execCommand('copy')}catch(e){ok=false;dbg('복사 대체',e)}a.remove()}b.textContent=ok?'복사됨':'복사 실패';setTimeout(()=>b.textContent=o,1200)};
 function route(){const r=location.hash.replace(/^#\/?/,'')||'home',id=PG.includes(r)?r:'home';
   PG.forEach(x=>$('#pg-'+x).hidden=x!==id);setNav(id);
-  document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail'||id==='sns');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='sns')openEmbed('sns','sns.html','SNS');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle();if(id==='docs')loadDocs();if(id==='alog')loadLogs();if(id==='llog')loadLoginLogs();if(id==='visit')loadVisit();if(id==='prompt')renderPrompts();if(id==='books')loadBooks()}
+  document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail'||id==='sns'||id==='tax');if(id==='proof')openEmbed('proof','proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','mailer.html','메일 작성');if(id==='sns')openEmbed('sns','sns.html','SNS');if(id==='tax')openEmbed('tax','tax.html','세무');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='home'){loadHome();loadUploads()}if(id==='settle')loadSettle();if(id==='docs')loadDocs();if(id==='alog')loadLogs();if(id==='llog')loadLoginLogs();if(id==='visit')loadVisit();if(id==='prompt')renderPrompts();if(id==='books')loadBooks()}
 addEventListener('hashchange',route);
 /* ---------- 회사 자료: 플랫폼 계약(플랫폼당 현재본 1건 + 교체 이력) · 기타 자료. 관리자 전용 ---------- */
 let DOCS=[],DCURL=null,DPLAT='',LGM='',LGT=0,LLM='',LLT=0; /* LGM: 접근 기록 조회 월, LGT: 월 전환 시 늦게 온 응답 무시용 */

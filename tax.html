@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-IqTx+jTkTnkBaseZveB4r5SPOM8cw59Cv0DnAkVPVvI='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1FGSsNPOb0lavV5ecCwUX9p43oUEqfoFHuQWqh6gA1U='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -22,7 +22,7 @@ h2{font-size:16px;margin:0;font-weight:700}
 .top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
 select{height:38px;border:1px solid var(--line);border-radius:7px;background:var(--paper);padding:0 10px;font:inherit;color:var(--ink);max-width:100%}
 select:focus,button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(136px,1fr));gap:10px;margin-bottom:16px}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:12px 14px}
 .card b{display:block;font-size:19px;margin-top:2px;font-variant-numeric:tabular-nums}
 .sec{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:16px 16px 14px;margin-bottom:14px}
@@ -46,20 +46,27 @@ button.done{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
 .note.warn{background:var(--warnbg);color:var(--warn)}.note.err{background:var(--redbg);color:var(--red)}.note.info{background:var(--hl);color:var(--ink2)}
 .gate{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:24px;text-align:center}
 .gate a{color:var(--ink);font-weight:600}
+.ck{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--line2)}
+.ck label{display:flex;gap:8px;align-items:center;cursor:pointer;min-width:230px}
+.ck input[type=checkbox]{width:18px;height:18px;accent-color:var(--ink)}
+.ck input[type=date],.ck input[type=text]{height:30px;border:1px solid var(--line);border-radius:7px;padding:0 8px;font:inherit;background:var(--paper);color:var(--ink)}
+.ck .mm{flex:1;min-width:150px}
+.ck.on b{color:var(--ok)}
+.due.done{background:var(--okbg);color:var(--ok)}
 .foot{color:var(--mute);font-size:12px;margin-top:18px;line-height:1.7}
 @media(max-width:560px){.wrap{padding:16px 12px 48px}.kv{grid-template-columns:1fr auto}.kv .k:nth-child(2){display:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><h1>세무 · 원천세와 지방소득세</h1><div class="k">작가 사업소득(3.3%) 신고에 입력할 금액과 기한 &nbsp;·&nbsp; 읽기 전용 <span id="ver"></span></div></div>
+<div class="top"><div><h1>세무 · 원천세와 지방소득세</h1><div class="k">작가 사업소득(3.3%) 신고에 입력할 금액과 기한, 신고·납부 완료 체크 &nbsp;·&nbsp; <span id="ver"></span></div></div>
 <div id="selw" hidden><label class="k" for="mon">지급월</label><br><select id="mon"></select></div></div>
 <div id="app"><div class="gate k">불러오는 중…</div></div>
 </div>
 <script src="libs/supabase-2.49.4.js"></script>
 <script>
 (function(){'use strict';
-const VER='v1.0.0';   /* 새 기능=minor, 수정·문구=patch. index.html과 별개로 관리 */
+const VER='v1.1.0';   /* 새 기능=minor, 수정·문구=patch. index.html과 별개로 관리 */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -89,7 +96,19 @@ const calc=g=>{const L=[...g.P.values()].map(p=>{const t=taxOf(p.A);return{...p,
   const act=L.filter(p=>p.A>0),S=(f)=>act.reduce((s,p)=>s+f(p),0);
   return{L,act,skip:L.filter(p=>!(p.A>0)),tot:{cnt:act.length,A:S(p=>p.A),inc:S(p=>p.t.inc),loc:S(p=>p.t.loc),all:S(p=>p.t.tot),pay:S(p=>p.pay)}}};
 /*PURE-END*/
-let G=new Map(),DRAFT=[],names={};
+let G=new Map(),DRAFT=[],names={},FIL={},busy=false;
+/* 신고·납부 완료 체크: app_settings 에 지급월마다 키 하나('tax_filings:YYYY-MM')로 저장(관리자 전용, 작가는 withholding_rate 외에는 읽을 수 없음) */
+const ITEMS=[['wh_report','원천세 신고서 제출 (홈택스)',1],['wh_pay','원천세 납부 (홈택스)',1],['local','지방소득세 신고·납부 (ETAX·위택스)',2],['stmt','간이지급명세서 제출 (홈택스)',3]];
+const fkey=k=>'tax_filings:'+k,itemOf=(k,id)=>(((FIL[k]||{}).items||{})[id])||{};
+const nDone=k=>ITEMS.filter(i=>itemOf(k,i[0]).done).length,secDone=(k,s)=>ITEMS.filter(i=>i[2]===s).every(i=>itemOf(k,i[0]).done);
+async function loadFil(){const r=await SB.from('app_settings').select('key,value').like('key','tax_filings:%');if(r.error)throw r.error;FIL={};(r.data||[]).forEach(x=>{FIL[x.key.slice(12)]=x.value||{}})}
+async function saveItem(month,id,patch){const k=fkey(month),r=await SB.from('app_settings').select('value').eq('key',k).maybeSingle();if(r.error)throw r.error;   /* 저장 직전에 다시 읽어 다른 기기의 변경을 덮어쓰지 않음 */
+  const v=(r.data&&r.data.value)||{v:1,items:{}};v.items=v.items||{};const cur=v.items[id]||{done:false,date:'',memo:'',log:[]},now=new Date().toISOString(),nx={...cur,...patch,upd:now};
+  const a=patch.done===true&&!cur.done?'완료':patch.done===false&&cur.done?'취소':(patch.date!==undefined||patch.memo!==undefined)&&(patch.date!==cur.date||patch.memo!==cur.memo)?'수정':'';
+  if(a)nx.log=[...(cur.log||[]),{a,at:now,d:nx.date||'',m:nx.memo||''}].slice(-10);
+  v.items[id]=nx;const w=await SB.from('app_settings').upsert({key:k,value:v,updated_at:now});if(w.error)throw w.error;FIL[month]=v}
+const secTag=(k,s,d,today)=>secDone(k,s)?'<span class="due done">완료 ✓</span>':dueTag(d,today);
+const chk=(k,s)=>ITEMS.filter(i=>i[2]===s).map(([id,label])=>{const it=itemOf(k,id);return`<div class="ck${it.done?' on':''}"><label><input type="checkbox" data-ck="${id}"${it.done?' checked':''}><b>${label}</b></label><input type="date" data-dt="${id}" value="${esc(it.date||'')}" aria-label="완료일"><input type="text" class="mm" data-mm="${id}" placeholder="접수번호·메모" maxlength="120" value="${esc(it.memo||'')}" aria-label="메모"><button type="button" data-sv="${id}">저장</button><span class="k" data-st="${id}">${it.upd?'기록 '+esc(it.upd.slice(0,10)):''}</span></div>`}).join('');
 $('#ver').textContent=VER;
 const ym=k=>`${+k.slice(0,4)}년 ${+k.slice(5,7)}월`;
 const dueTag=(d,today)=>{const n=dday(iso(d),today),c=n<0?'over':n<=7?'soon':'';return`<span class="due ${c}">기한 ${fmt(d)} · ${n<0?'기한 지남 ('+(-n)+'일)':n===0?'오늘까지':'D-'+n}</span>`};
@@ -111,32 +130,33 @@ function draw(key){const g=G.get(key);if(!g)return;const c=calc(g),today=iso(kst
 <div class="card"><span class="k">${ym(g.period)} 판매분 · 인원</span><b>${T.cnt}명</b></div>
 <div class="card"><span class="k">총 지급액(세전)</span><b>${won(T.A)}</b></div>
 <div class="card"><span class="k">납부할 세금(소득세+지방소득세)</span><b>${won(T.all)}</b></div>
-<div class="card"><span class="k">실지급액 합계</span><b>${won(T.pay)}</b></div></div>
+<div class="card"><span class="k">실지급액 합계</span><b>${won(T.pay)}</b></div>
+<div class="card"><span class="k">신고·납부 진행</span><b>${nDone(key)}/${ITEMS.length} 완료</b></div></div>
 
-<div class="sec"><div class="sh"><h2>1. 원천세 신고·납부 (홈택스)</h2>${dueTag(s.tax,today)}</div>
+<div class="sec"><div class="sh"><h2>1. 원천세 신고·납부 (홈택스)</h2>${secTag(key,1,s.tax,today)}</div>
 <ol class="step"><li>홈택스 &gt; 세금신고 &gt; 원천세 신고 &gt; 일반신고 &gt; <b>정기신고</b></li>
 <li>제출연월 ${s.tax.getUTCFullYear()}-${String(s.tax.getUTCMonth()+1).padStart(2,'0')}, 귀속연월·지급연월 <b>${g.y}-${String(mm).padStart(2,'0')}</b>, 원천징수신고구분 매월, 신고구분 정기</li>
 <li>소득종류 <b>사업소득</b> 체크 → <b>A25 매월징수</b> 줄에 아래 값을 입력, A30·A99에 같은 금액이 나오는지 확인</li>
 <li>환급세액·부표는 보통 0 / 없음. 신고서 제출 후 <b>납부</b>까지 해야 합니다(신고만 하면 가산세).</li></ol>
 <div class="kv"><span>인원</span><span></span><span class="v">${T.cnt}명</span>
 <span>총지급액</span><span></span><span class="v">${n0(T.A)} ${cp(T.A)}</span>
-<span>소득세</span><span></span><span class="v">${n0(T.inc)} ${cp(T.inc)}</span></div></div>
+<span>소득세</span><span></span><span class="v">${n0(T.inc)} ${cp(T.inc)}</span></div>${chk(key,1)}</div>
 
-<div class="sec"><div class="sh"><h2>2. 지방소득세 특별징수 신고·납부</h2>${dueTag(s.tax,today)}</div>
+<div class="sec"><div class="sh"><h2>2. 지방소득세 특별징수 신고·납부</h2>${secTag(key,2,s.tax,today)}</div>
 <ol class="step"><li>서울 사업장은 서울시 ETAX, 서울 밖은 위택스에서 신고·납부합니다.</li>
 <li>서울시 ETAX: 신고납부 &gt; 지방소득세 &gt; <b>특별징수분</b></li>
 <li>소득세 신고와 별도로 신고·납부해야 하며, 금액은 소득세의 10%입니다.</li></ol>
-<div class="kv"><span>지방소득세 합계</span><span></span><span class="v">${n0(T.loc)} ${cp(T.loc)}</span></div></div>
+<div class="kv"><span>지방소득세 합계</span><span></span><span class="v">${n0(T.loc)} ${cp(T.loc)}</span></div>${chk(key,2)}</div>
 
-<div class="sec"><div class="sh"><h2>3. 간이지급명세서 (사업소득)</h2>${dueTag(s.stmt,today)}</div>
+<div class="sec"><div class="sh"><h2>3. 간이지급명세서 (사업소득)</h2>${secTag(key,3,s.stmt,today)}</div>
 <ol class="step"><li>홈택스 &gt; 지급명세서·자료제출 &gt; <b>간이지급명세서(거주자의 사업소득)</b>, 제출구분 정기신고, 지급연도·지급월 <b>${g.y}년 ${mm}월</b></li>
 <li>작가별로 내국인·주민등록번호·성명, 업종구분 <b>저술가</b>, 귀속연도·월, 지급액·소득세·지방소득세를 입력합니다.</li>
 <li>주민등록번호와 전체 성명은 보안상 이 화면에 표시하지 않습니다(마스킹 이름만 표시).</li></ol>
-<div class="sh" style="margin:4px 0 6px"><span class="k">작가별 금액 (단위: 원)</span>${cp(tsv,'표 복사(엑셀용)')}</div>
+${chk(key,3)}<div class="sh" style="margin:10px 0 6px"><span class="k">작가별 금액 (단위: 원)</span>${cp(tsv,'표 복사(엑셀용)')}</div>
 <div class="scroll"><table><thead><tr><th>작가</th><th>지급액</th><th>소득세</th><th>지방소득세</th><th>계</th><th>실지급액</th><th>정산 사이트 대비</th></tr></thead><tbody>${rows}</tbody>
 <tfoot><tr><td>합계 ${T.cnt}명</td><td>${n0(T.A)}</td><td>${n0(T.inc)}</td><td>${n0(T.loc)}</td><td>${n0(T.all)}</td><td>${n0(T.pay)}</td><td></td></tr></tfoot></table></div></div>
 
-<div class="foot">계산 규칙: 소득세 = 지급액의 3%를 10원 미만 내림, 지방소득세 = 소득세의 10%를 10원 미만 내림(홈택스 입력 화면 실측). 지급월 = 판매월의 익익월, 입금일은 말일(휴일이면 앞 영업일), 신고 기한은 휴일이면 다음 영업일입니다. 세법 적용은 국세청·홈택스 안내를 최종 기준으로 확인해 주세요.</div>`}
+<div class="foot">계산 규칙: 소득세 = 지급액의 3%를 10원 미만 내림, 지방소득세 = 소득세의 10%를 10원 미만 내림(홈택스 입력 화면 실측). 지급월 = 판매월의 익익월, 입금일은 말일(휴일이면 앞 영업일), 신고 기한은 휴일이면 다음 영업일입니다. 세법 적용은 국세청·홈택스 안내를 최종 기준으로 확인해 주세요.<br>완료 체크의 메모에는 접수번호 등만 적고, 주민등록번호 같은 개인정보는 적지 마세요.</div>`}
 function fill(){const keys=[...G.keys()].sort().reverse(),today=iso(kst());
   const up=[...keys].reverse().find(k=>{const g=G.get(k);return iso(sched(g.y,g.m).stmt)>=today});
   $('#mon').innerHTML=keys.map(k=>{const g=G.get(k);return`<option value="${k}">${ym(k)} 지급분 · ${ym(g.period)} 판매분</option>`}).join('');
@@ -150,6 +170,7 @@ async function init(){
     if(a.error||b.error)return gate('데이터를 불러오지 못했습니다: '+((a.error||b.error).message||'알 수 없는 오류'));
     (b.data||[]).forEach(x=>{names[x.id]=x.name_masked});
     const all=a.data||[];DRAFT=all.filter(r=>r.status==='draft');
+    try{await loadFil()}catch(e){FIL={}}
     G=group(all.filter(r=>r.status==='confirmed'||r.status==='sent'),names);
     if(!G.size)return gate('확정된 정산이 아직 없습니다. 정산 화면에서 정산을 확정하면 이곳에 나타납니다.');
     fill()}catch(e){gate('화면을 불러오는 중 오류가 났습니다: '+String(e&&e.message||e))}}
@@ -157,6 +178,11 @@ $('#mon').addEventListener('change',e=>draw(e.target.value));
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-cp]');if(!b)return;const v=b.getAttribute('data-cp');
   try{await navigator.clipboard.writeText(v)}catch(x){const t=document.createElement('textarea');t.value=v;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(y){}t.remove()}
   const o=b.textContent;b.textContent='복사됨';b.classList.add('done');setTimeout(()=>{b.textContent=o;b.classList.remove('done')},1200)});
+async function act(id,key,patch,onFail){if(busy)return;busy=true;const st=document.querySelector('[data-st="'+id+'"]');if(st){st.className='k';st.textContent='저장 중…'}
+  try{await saveItem(key,id,patch);draw(key)}catch(e){if(onFail)onFail();const s2=document.querySelector('[data-st="'+id+'"]');if(s2){s2.className='bad';s2.textContent='저장 실패: '+String(e&&e.message||e)}}finally{busy=false}}
+document.addEventListener('change',e=>{const c=e.target.closest('[data-ck]');if(!c)return;const id=c.getAttribute('data-ck'),row=c.closest('.ck'),dt=row.querySelector('[data-dt]').value,m=row.querySelector('[data-mm]').value;
+  act(id,$('#mon').value,c.checked?{done:true,date:dt||iso(kst()),memo:m}:{done:false},()=>{c.checked=!c.checked})});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-sv]');if(!b)return;const id=b.getAttribute('data-sv'),row=b.closest('.ck');act(id,$('#mon').value,{date:row.querySelector('[data-dt]').value,memo:row.querySelector('[data-mm]').value})});
 /* 정산 사이트 안에 끼워 넣어 쓸 때 '사용 중'임을 알려 자동 로그아웃을 막음(mailer.html과 같은 방식) */
 let t0=0;['keydown','pointerdown','scroll','wheel'].forEach(ev=>addEventListener(ev,()=>{const n=Date.now();if(n-t0>5000){t0=n;try{parent!==window&&parent.postMessage({t:'yw-act'},location.origin)}catch(e){}}},{passive:true,capture:true}));
 init();

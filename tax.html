@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1lCHMHHBFsgljhuEmnmmve3Qp+j5z5VUo8Mi8zyDAOw='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-WFV2Jlb4eFWT+Iv5lqGdAoxjK/K0VDpXpeBR+4IByuo='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -66,7 +66,7 @@ button.done{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
 <script src="libs/supabase-2.49.4.js"></script>
 <script>
 (function(){'use strict';
-const VER='v1.3.0';   /* 새 기능=minor, 수정·문구=patch. index.html과 별개로 관리 */
+const VER='v1.4.0';   /* 새 기능=minor, 수정·문구=patch. index.html과 별개로 관리 */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -82,7 +82,8 @@ const off=x=>[0,6].includes(x.getUTCDay())||HOL.has(iso(x));
 const prevBiz=(y,m,d)=>{const x=new Date(Date.UTC(y,m,d));while(off(x))x.setUTCDate(x.getUTCDate()-1);return x};   /* 입금일: 휴일이면 앞 영업일 (계약서 제7조) */
 const nextBiz=(y,m,d)=>{const x=new Date(Date.UTC(y,m,d));while(off(x))x.setUTCDate(x.getUTCDate()+1);return x};   /* 신고 기한: 휴일이면 다음 영업일 */
 /* 규칙 A (홈택스 실측 확정): 소득세 = 지급액×3% 10원 미만 절사, 지방소득세 = 소득세×10% 10원 미만 절사. 정수 연산. */
-const taxOf=A=>{if(!(A>0))return{inc:0,loc:0,tot:0};const inc=Math.floor(A*3/1000)*10,loc=Math.floor(inc/100)*10;return{inc,loc,tot:inc+loc}};
+const LOCAL_MIN=1000;   /* 지방소득세 소액부징수 기준: 지방소득세가 1,000원 미만이면 징수하지 않음(사용자가 구청에 확인) */
+const taxOf=A=>{if(!(A>0))return{inc:0,loc:0,tot:0,ex:false};const inc=Math.floor(A*3/1000)*10,l0=Math.floor(inc/100)*10,ex=l0<LOCAL_MIN,loc=ex?0:l0;return{inc,loc,tot:inc+loc,ex}};
 /* 지급월 = 판매월 + 2개월 (판매월의 익익월 말일 입금) */
 const payMonth=pm=>{const y=+pm.slice(0,4),m=+pm.slice(5,7)-1+2;return{y:y+Math.floor(m/12),m:m%12}};
 const sched=(y,m)=>({pay:prevBiz(y,m+1,0),tax:nextBiz(y,m+1,10),stmt:nextBiz(y,m+2,0)});   /* m: 0부터 */
@@ -133,9 +134,10 @@ function draw(key){const g=G.get(key);if(!g)return;const c=calc(g),today=iso(kst
   if(drafts)notes+=`<div class="note warn">이 지급월에 아직 확정하지 않은 정산이 ${drafts}건 있습니다. 확정된 건만 아래에 합산했습니다.</div>`;
   if(dup.length)notes+=`<div class="note err">같은 작가의 정산이 한 달에 2건 이상 저장된 경우가 있습니다(${dup.map(p=>esc(p.name)).join(', ')}). 금액이 중복되지 않았는지 확인해 주세요.</div>`;
   if(diff.length)notes+=`<div class="note err">정산 사이트에 저장된 공제액이 신고 금액과 다른 작가가 ${diff.length}명 있습니다(표의 붉은 숫자). 작가에게서 뗀 금액과 신고·납부액이 같도록 정산 화면에서 <b>재확정</b>해 주세요.</div>`;
+  if(c.act.some(p=>p.t.ex))notes+=`<div class="note info">지방소득세가 1,000원 미만인 작가(표에 “소액” 표시)는 소액부징수로 지방소득세를 0원으로 계산했습니다. 홈택스 간이지급명세서 입력 화면은 지방소득세를 자동으로 계산하므로, 해당 작가는 지방소득세 칸을 0으로 고쳐 입력하세요.</div>`;
   if(c.skip.length)notes+=`<div class="note info">지급액이 0원 이하인 ${c.skip.length}명은 신고 대상에서 제외했습니다.</div>`;
   const tsv=['성명\t지급액\t소득세\t지방소득세\t계\t실지급액'].concat(c.act.map(p=>[nm(p),p.A,p.t.inc,p.t.loc,p.t.tot,p.pay].join('\t'))).join('\n');
-  const rows=c.act.map(p=>`<tr><td>${esc(nm(p))}</td>${RRN?`<td>${RRN[p.id]?`${esc(fmtRrn(RRN[p.id]))} ${cp(RRN[p.id],'복사')}`:'<span class="bad">미등록</span>'}</td>`:''}<td>${n0(p.A)}</td><td>${n0(p.t.inc)}</td><td>${n0(p.t.loc)}</td><td>${n0(p.t.tot)}</td><td>${n0(p.pay)}</td><td class="${p.diff?'bad':'ok'}">${p.diff?'정산 '+n0(p.site)+' ≠ '+n0(p.t.tot):'일치'}</td></tr>`).join('')||'<tr><td colspan="8" class="k" style="text-align:center">신고할 지급이 없습니다.</td></tr>';
+  const rows=c.act.map(p=>`<tr><td>${esc(nm(p))}</td>${RRN?`<td>${RRN[p.id]?`${esc(fmtRrn(RRN[p.id]))} ${cp(RRN[p.id],'복사')}`:'<span class="bad">미등록</span>'}</td>`:''}<td>${n0(p.A)}</td><td>${n0(p.t.inc)}</td><td>${n0(p.t.loc)}${p.t.ex?' <span class="k" title="소액부징수">소액</span>':''}</td><td>${n0(p.t.tot)}</td><td>${n0(p.pay)}</td><td class="${p.diff?'bad':'ok'}">${p.diff?'정산 '+n0(p.site)+' ≠ '+n0(p.t.tot):'일치'}</td></tr>`).join('')||'<tr><td colspan="8" class="k" style="text-align:center">신고할 지급이 없습니다.</td></tr>';
   $('#app').innerHTML=`${notes}
 <div class="cards">
 <div class="card"><span class="k">입금일</span><b>${fmt(s.pay)}</b></div>
@@ -157,7 +159,7 @@ function draw(key){const g=G.get(key);if(!g)return;const c=calc(g),today=iso(kst
 <div class="sec"><div class="sh"><h2>2. 지방소득세 특별징수 신고·납부</h2>${secTag(key,2,s.tax,today)}</div>
 <ol class="step"><li>서울 사업장은 서울시 ETAX, 서울 밖은 위택스에서 신고·납부합니다.</li>
 <li>서울시 ETAX: 신고납부 &gt; 지방소득세 &gt; <b>특별징수분</b></li>
-<li>소득세 신고와 별도로 신고·납부해야 하며, 금액은 소득세의 10%입니다.</li></ol>
+<li>소득세 신고와 별도로 신고·납부해야 하며, 금액은 소득세의 10%입니다. 작가별 지방소득세가 1,000원 미만이면 소액부징수로 징수하지 않으므로 합계에서 빠집니다.</li></ol>
 <div class="kv"><span>지방소득세 합계</span><span></span><span class="v">${n0(T.loc)} ${cp(T.loc)}</span></div>${chk(key,2)}</div>
 
 <div class="sec"><div class="sh"><h2>3. 간이지급명세서 (사업소득)</h2>${secTag(key,3,s.stmt,today)}</div>
@@ -168,7 +170,7 @@ ${chk(key,3)}<div class="sh" style="margin:10px 0 6px"><span class="k">작가별
 <div class="scroll"><table><thead><tr><th>작가</th>${RRN?'<th>주민등록번호</th>':''}<th>지급액</th><th>소득세</th><th>지방소득세</th><th>계</th><th>실지급액</th><th>정산 사이트 대비</th></tr></thead><tbody>${rows}</tbody>
 <tfoot><tr><td>합계 ${T.cnt}명</td>${RRN?'<td></td>':''}<td>${n0(T.A)}</td><td>${n0(T.inc)}</td><td>${n0(T.loc)}</td><td>${n0(T.all)}</td><td>${n0(T.pay)}</td><td></td></tr></tfoot></table></div></div>
 
-<div class="foot">계산 규칙: 소득세 = 지급액의 3%를 10원 미만 내림, 지방소득세 = 소득세의 10%를 10원 미만 내림(홈택스 입력 화면 실측). 지급월 = 판매월의 익익월, 입금일은 말일(휴일이면 앞 영업일), 신고 기한은 휴일이면 다음 영업일입니다. 세법 적용은 국세청·홈택스 안내를 최종 기준으로 확인해 주세요.<br>완료 체크의 메모에는 접수번호 등만 적고, 주민등록번호 같은 개인정보는 적지 마세요.</div>`}
+<div class="foot">계산 규칙: 소득세 = 지급액의 3%를 10원 미만 내림, 지방소득세 = 소득세의 10%를 10원 미만 내림, 1,000원 미만이면 소액부징수로 0(홈택스 입력 화면 실측·구청 확인). 지급월 = 판매월의 익익월, 입금일은 말일(휴일이면 앞 영업일), 신고 기한은 휴일이면 다음 영업일입니다. 세법 적용은 국세청·홈택스 안내를 최종 기준으로 확인해 주세요.<br>완료 체크의 메모에는 접수번호 등만 적고, 주민등록번호 같은 개인정보는 적지 마세요.</div>`}
 function fill(){const keys=[...G.keys()].sort().reverse(),today=iso(kst());
   const up=[...keys].reverse().find(k=>{const g=G.get(k);return iso(sched(g.y,g.m).stmt)>=today});
   $('#mon').innerHTML=keys.map(k=>{const g=G.get(k);return`<option value="${k}">${ym(k)} 지급분 · ${ym(g.period)} 판매분</option>`}).join('');

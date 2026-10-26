@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-uXIk7nqmWkkmStuLAKGxwm9JLv8pJzPUTIEPnJvfYTY='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GFCSt8cSJ6n/Oz196X6B8cQat7VeqvlsNpmQKDhWfg8='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -66,7 +66,7 @@ button.done{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
 <script src="libs/supabase-2.49.4.js"></script>
 <script>
 (function(){'use strict';
-const VER='v1.4.1';   /* 새 기능=minor, 수정·문구=patch. index.html과 별개로 관리 */
+const VER='v1.5.0';   /* 새 기능=minor, 수정·문구=patch. index.html과 별개로 관리 */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -97,7 +97,7 @@ const calc=g=>{const L=[...g.P.values()].map(p=>{const t=taxOf(p.A);return{...p,
   const act=L.filter(p=>p.A>0),S=(f)=>act.reduce((s,p)=>s+f(p),0);
   return{L,act,skip:L.filter(p=>!(p.A>0)),tot:{cnt:act.length,A:S(p=>p.A),inc:S(p=>p.t.inc),loc:S(p=>p.t.loc),all:S(p=>p.t.tot),pay:S(p=>p.pay)}}};
 /*PURE-END*/
-let G=new Map(),DRAFT=[],names={},FIL={},busy=false,REAL={},showReal=false,RRN=null,rrnTimer=0,realMsg=null,rrnMsg=null;
+let G=new Map(),DRAFT=[],names={},FIL={},busy=false,REAL={},showReal=false,RRN=null,rrnTimer=0,realMsg=null,rrnMsg=null,pMsg=null;
 const nm=p=>showReal&&REAL[p.id]?REAL[p.id]:p.name;
 /* 신고·납부 완료 체크: app_settings 에 지급월마다 키 하나('tax_filings:YYYY-MM')로 저장(관리자 전용, 작가는 withholding_rate 외에는 읽을 수 없음) */
 const ITEMS=[['wh_report','원천세 신고서 제출 (홈택스)',1],['wh_pay','원천세 납부 (홈택스)',1],['local','지방소득세 신고·납부 (ETAX·위택스)',2],['stmt','간이지급명세서 제출 (홈택스)',3]];
@@ -109,6 +109,12 @@ async function saveItem(month,id,patch){const k=fkey(month),r=await SB.from('app
   const a=patch.done===true&&!cur.done?'완료':patch.done===false&&cur.done?'취소':(patch.date!==undefined||patch.memo!==undefined)&&(patch.date!==cur.date||patch.memo!==cur.memo)?'수정':'';
   if(a)nx.log=[...(cur.log||[]),{a,at:now,d:nx.date||'',m:nx.memo||''}].slice(-10);
   v.items[id]=nx;const w=await SB.from('app_settings').upsert({key:k,value:v,updated_at:now});if(w.error)throw w.error;FIL[month]=v}
+/* 작가별 입력 현황: 간이지급명세서·지방소득세는 작가마다 입력하므로 'tax_filings:YYYY-MM'.persons[작가id].{stmt|local}={done,date}로 따로 저장 */
+async function savePerson(month,field,ids,done){const k=fkey(month),r=await SB.from('app_settings').select('value').eq('key',k).maybeSingle();if(r.error)throw r.error;
+  const v=(r.data&&r.data.value)||{v:1,items:{}};v.persons=v.persons||{};const now=new Date().toISOString(),d=iso(kst());
+  ids.forEach(id=>{const cur=v.persons[id]||{},old=cur[field]||{};cur[field]=done?{done:true,date:d,at:now}:{done:false,date:old.date||'',at:now};v.persons[id]=cur});
+  const w=await SB.from('app_settings').upsert({key:k,value:v,updated_at:now});if(w.error)throw w.error;FIL[month]=v}
+const pinfo=(k,id,f)=>((((FIL[k]||{}).persons||{})[id]||{})[f])||{};
 /* 간이지급명세서 입력용 전체 성명: 버튼을 눌렀을 때만 서버(admin-author list_people)에서 받아 오고, 성명 외 정보(연락처·주소·계좌)는 보관하지 않음 */
 async function callFn(body){const{data,error}=await SB.functions.invoke('admin-author',{body});
   if(error){let m=error.message;try{m=(await error.context.json()).error||m}catch(e){}throw new Error(m)}
@@ -137,7 +143,8 @@ function draw(key){const g=G.get(key);if(!g)return;const c=calc(g),today=iso(kst
   if(c.act.some(p=>p.t.ex))notes+=`<div class="note info">지방소득세가 1,000원 미만인 작가 ${c.act.filter(p=>p.t.ex).length}명(표에 “소액” 표시)은 소액부징수 대상이 될 수 있습니다. 작가에게서는 3.3%를 모두 공제했고 아래 금액에도 포함되어 있으며, 이 부분의 지방소득세 신고·납부는 직접 판단해 처리하세요.</div>`;
   if(c.skip.length)notes+=`<div class="note info">지급액이 0원 이하인 ${c.skip.length}명은 신고 대상에서 제외했습니다.</div>`;
   const tsv=['성명\t지급액\t소득세\t지방소득세\t계\t실지급액'].concat(c.act.map(p=>[nm(p),p.A,p.t.inc,p.t.loc,p.t.tot,p.pay].join('\t'))).join('\n');
-  const rows=c.act.map(p=>`<tr><td>${esc(nm(p))}</td>${RRN?`<td>${RRN[p.id]?`${esc(fmtRrn(RRN[p.id]))} ${cp(RRN[p.id],'복사')}`:'<span class="bad">미등록</span>'}</td>`:''}<td>${n0(p.A)}</td><td>${n0(p.t.inc)}</td><td>${n0(p.t.loc)}${p.t.ex?' <span class="k" title="지방소득세 1,000원 미만: 소액부징수 대상이 될 수 있음">소액</span>':''}</td><td>${n0(p.t.tot)}</td><td>${n0(p.pay)}</td><td class="${p.diff?'bad':'ok'}">${p.diff?'정산 '+n0(p.site)+' ≠ '+n0(p.t.tot):'일치'}</td></tr>`).join('')||'<tr><td colspan="8" class="k" style="text-align:center">신고할 지급이 없습니다.</td></tr>';
+  const ns=c.act.filter(p=>pinfo(key,p.id,'stmt').done).length,nl=c.act.filter(p=>pinfo(key,p.id,'local').done).length;
+  const rows=c.act.map(p=>`<tr><td>${esc(nm(p))}</td>${RRN?`<td>${RRN[p.id]?`${esc(fmtRrn(RRN[p.id]))} ${cp(RRN[p.id],'복사')}`:'<span class="bad">미등록</span>'}</td>`:''}<td>${n0(p.A)}</td><td>${n0(p.t.inc)}</td><td>${n0(p.t.loc)}${p.t.ex?' <span class="k" title="지방소득세 1,000원 미만: 소액부징수 대상이 될 수 있음">소액</span>':''}</td><td>${n0(p.t.tot)}</td><td>${n0(p.pay)}</td><td class="${p.diff?'bad':'ok'}">${p.diff?'정산 '+n0(p.site)+' ≠ '+n0(p.t.tot):'일치'}</td>${['stmt','local'].map(f=>{const i=pinfo(key,p.id,f);return`<td style="text-align:center"><input type="checkbox" data-pc="${f}:${esc(p.id)}"${i.done?' checked':''} title="${i.done?'입력 완료 '+esc(i.date||''):'아직 입력 전'}" aria-label="${f==='stmt'?'명세서':'지방세'} 입력 완료"></td>`}).join('')}</tr>`).join('')||'<tr><td colspan="10" class="k" style="text-align:center">신고할 지급이 없습니다.</td></tr>';
   $('#app').innerHTML=`${notes}
 <div class="cards">
 <div class="card"><span class="k">입금일</span><b>${fmt(s.pay)}</b></div>
@@ -160,15 +167,15 @@ function draw(key){const g=G.get(key);if(!g)return;const c=calc(g),today=iso(kst
 <ol class="step"><li>서울 사업장은 서울시 ETAX, 서울 밖은 위택스에서 신고·납부합니다.</li>
 <li>서울시 ETAX: 신고납부 &gt; 지방소득세 &gt; <b>특별징수분</b></li>
 <li>소득세 신고와 별도로 신고·납부해야 하며, 금액은 소득세의 10%입니다. 작가별 지방소득세가 1,000원 미만이면 소액부징수 대상이 될 수 있으나, 이 화면의 합계에는 포함되어 있습니다(작가에게서 공제한 금액 기준).</li></ol>
-<div class="kv"><span>지방소득세 합계</span><span></span><span class="v">${n0(T.loc)} ${cp(T.loc)}</span>${c.act.some(p=>p.t.ex)?`<span class="k">(참고) 1,000원 미만 소액부징수 대상</span><span></span><span class="v k" style="font-size:14px;font-weight:600">${n0(c.act.filter(p=>p.t.ex).reduce((s,p)=>s+p.t.loc,0))}원 · ${c.act.filter(p=>p.t.ex).length}명</span>`:''}</div>${chk(key,2)}</div>
+<div class="kv"><span>지방소득세 합계</span><span></span><span class="v">${n0(T.loc)} ${cp(T.loc)}</span>${c.act.some(p=>p.t.ex)?`<span class="k">(참고) 1,000원 미만 소액부징수 대상</span><span></span><span class="v k" style="font-size:14px;font-weight:600">${n0(c.act.filter(p=>p.t.ex).reduce((s,p)=>s+p.t.loc,0))}원 · ${c.act.filter(p=>p.t.ex).length}명</span>`:''}</div><div class="k" style="margin:2px 0 6px">작가별 지방소득세 입력: <b>${nl}/${T.cnt}명</b> 완료 — 아래 ‘작가별 금액’ 표의 <b>지방세 입력</b> 열에서 작가마다 체크하세요.</div>${chk(key,2)}</div>
 
 <div class="sec"><div class="sh"><h2>3. 간이지급명세서 (사업소득)</h2>${secTag(key,3,s.stmt,today)}</div>
 <ol class="step"><li>홈택스 &gt; 지급명세서·자료제출 &gt; <b>간이지급명세서(거주자의 사업소득)</b>, 제출구분 정기신고, 지급연도·지급월 <b>${g.y}년 ${mm}월</b></li>
 <li>작가별로 내국인·주민등록번호·성명, 업종구분 <b>저술가</b>, 귀속연도·월, 지급액·소득세·지방소득세를 입력합니다.</li>
 <li>전체 성명은 아래 <b>작가 실명 보기</b>를 눌러야 표시됩니다(평소에는 마스킹). 주민등록번호는 <b>주민번호 보기</b>를 누르면 60초 동안만 표시됩니다(열람 기록이 남습니다). <b>미등록</b>으로 나오는 작가는 작가 관리에서 수정 화면의 주민등록번호 칸에 입력해 두세요.</li></ol>
-${chk(key,3)}<div class="sh" style="margin:10px 0 6px"><span class="k">작가별 금액 (단위: 원)</span><span><button type="button" data-real>${showReal?'실명 숨기기':'작가 실명 보기'}</button> <button type="button" data-rrn>${RRN?'주민번호 숨기기':'주민번호 보기 (60초)'}</button> ${cp(tsv,'표 복사(엑셀용)')}</span></div>${[realMsg,rrnMsg].filter(Boolean).map(m=>`<div class="note ${m.err?'err':'info'}">${esc(m.t)}</div>`).join('')}
-<div class="scroll"><table><thead><tr><th>작가</th>${RRN?'<th>주민등록번호</th>':''}<th>지급액</th><th>소득세</th><th>지방소득세</th><th>계</th><th>실지급액</th><th>정산 사이트 대비</th></tr></thead><tbody>${rows}</tbody>
-<tfoot><tr><td>합계 ${T.cnt}명</td>${RRN?'<td></td>':''}<td>${n0(T.A)}</td><td>${n0(T.inc)}</td><td>${n0(T.loc)}</td><td>${n0(T.all)}</td><td>${n0(T.pay)}</td><td></td></tr></tfoot></table></div></div>
+<div class="k" style="margin:2px 0 6px">작가별 명세서 입력: <b>${ns}/${T.cnt}명</b> 완료 — 아래 표의 <b>명세서 입력</b> 열에서 작가마다 체크하세요.${T.cnt>0&&ns===T.cnt&&!itemOf(key,'stmt').done?' <b class="ok">모든 작가 입력이 끝났습니다. 홈택스에서 제출한 뒤 위 ‘간이지급명세서 제출’을 체크하세요.</b>':''}</div>${chk(key,3)}<div class="sh" style="margin:10px 0 6px"><span class="k">작가별 금액 (단위: 원)</span><span><button type="button" data-real>${showReal?'실명 숨기기':'작가 실명 보기'}</button> <button type="button" data-rrn>${RRN?'주민번호 숨기기':'주민번호 보기 (60초)'}</button> ${cp(tsv,'표 복사(엑셀용)')}</span></div>${[realMsg,rrnMsg,pMsg].filter(Boolean).map(m=>`<div class="note ${m.err?'err':'info'}">${esc(m.t)}</div>`).join('')}
+<div class="scroll"><table><thead><tr><th>작가</th>${RRN?'<th>주민등록번호</th>':''}<th>지급액</th><th>소득세</th><th>지방소득세</th><th>계</th><th>실지급액</th><th>정산 사이트 대비</th><th>명세서 입력 (${ns}/${T.cnt}) <button type="button" data-pall="stmt">전체</button></th><th>지방세 입력 (${nl}/${T.cnt}) <button type="button" data-pall="local">전체</button></th></tr></thead><tbody>${rows}</tbody>
+<tfoot><tr><td>합계 ${T.cnt}명</td>${RRN?'<td></td>':''}<td>${n0(T.A)}</td><td>${n0(T.inc)}</td><td>${n0(T.loc)}</td><td>${n0(T.all)}</td><td>${n0(T.pay)}</td><td></td><td style="text-align:center">${ns}/${T.cnt}</td><td style="text-align:center">${nl}/${T.cnt}</td></tr></tfoot></table></div></div>
 
 <div class="foot">계산 규칙: 소득세 = 지급액의 3%를 10원 미만 내림, 지방소득세 = 소득세의 10%를 10원 미만 내림(홈택스 입력 화면 실측). 작가에게는 3.3%를 모두 공제한 금액이 지급됩니다. 지급월 = 판매월의 익익월, 입금일은 말일(휴일이면 앞 영업일), 신고 기한은 휴일이면 다음 영업일입니다. 세법 적용은 국세청·홈택스 안내를 최종 기준으로 확인해 주세요.<br>완료 체크의 메모에는 접수번호 등만 적고, 주민등록번호 같은 개인정보는 적지 마세요.</div>`}
 function fill(){const keys=[...G.keys()].sort().reverse(),today=iso(kst());
@@ -188,7 +195,7 @@ async function init(){
     G=group(all.filter(r=>r.status==='confirmed'||r.status==='sent'),names);
     if(!G.size)return gate('확정된 정산이 아직 없습니다. 정산 화면에서 정산을 확정하면 이곳에 나타납니다.');
     fill()}catch(e){gate('화면을 불러오는 중 오류가 났습니다: '+String(e&&e.message||e))}}
-$('#mon').addEventListener('change',e=>{hideRrn();rrnMsg=null;realMsg=null;draw(e.target.value)});
+$('#mon').addEventListener('change',e=>{hideRrn();rrnMsg=null;realMsg=null;pMsg=null;draw(e.target.value)});
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-cp]');if(!b)return;const v=b.getAttribute('data-cp');
   try{await navigator.clipboard.writeText(v)}catch(x){const t=document.createElement('textarea');t.value=v;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(y){}t.remove()}
   const o=b.textContent;b.textContent='복사됨';b.classList.add('done');setTimeout(()=>{b.textContent=o;b.classList.remove('done')},1200)});
@@ -207,6 +214,12 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-real
     else{await loadRrn(act.map(p=>p.id));const n=act.filter(p=>RRN[p.id]).length;rrnMsg={t:n===act.length?`주민등록번호 ${n}명을 불러왔습니다. 60초 뒤 자동으로 숨깁니다.`:`주민등록번호 ${n}/${act.length}명만 등록되어 있습니다. 미등록 작가는 작가 관리 > 수정에서 입력해 주세요. 60초 뒤 자동으로 숨깁니다.`,err:n<act.length}}
   }catch(x){const m=hint(String(x&&x.message||x));if(isReal)realMsg={t:'실명을 불러오지 못했습니다: '+m,err:true};else rrnMsg={t:'주민등록번호를 불러오지 못했습니다: '+m,err:true}}
   busy=false;draw(key)});
+async function actP(key,field,ids,done,onFail){if(busy)return;busy=true;
+  try{await savePerson(key,field,ids,done);pMsg=null}catch(e){if(onFail)onFail();pMsg={t:'저장하지 못했습니다: '+String(e&&e.message||e),err:true}}
+  busy=false;draw(key)}
+document.addEventListener('change',e=>{const c=e.target.closest('[data-pc]');if(!c)return;const a=c.getAttribute('data-pc'),i=a.indexOf(':');actP($('#mon').value,a.slice(0,i),[a.slice(i+1)],c.checked,()=>{c.checked=!c.checked})});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-pall]');if(!b)return;const f=b.getAttribute('data-pall'),key=$('#mon').value,g=G.get(key);if(!g)return;
+  const ids=calc(g).act.map(p=>p.id),all=ids.every(id=>pinfo(key,id,f).done);actP(key,f,ids,!all)});
 /* 정산 사이트 안에 끼워 넣어 쓸 때 '사용 중'임을 알려 자동 로그아웃을 막음(mailer.html과 같은 방식) */
 let t0=0;['keydown','pointerdown','scroll','wheel'].forEach(ev=>addEventListener(ev,()=>{const n=Date.now();if(n-t0>5000){t0=n;try{parent!==window&&parent.postMessage({t:'yw-act'},location.origin)}catch(e){}}},{passive:true,capture:true}));
 init();

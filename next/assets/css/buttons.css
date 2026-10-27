@@ -1,0 +1,51 @@
+/* buttons.css — 버튼 체계(2~4세대 덮어쓰기)·칩 크기·정렬 — 뒤 규칙이 앞을 덮으므로 순서 유지
+   index.html의 <link> 순서대로 로드해야 한다(CSS는 뒤 규칙이 앞 규칙을 덮음). 순서·내용을 바꾸면 화면이 달라질 수 있음 */
+/* ---- 버튼 통일: 모든 버튼 높이 36px(모바일 44px), 상태가 바뀌어도 크기 고정 ---- */
+button{box-sizing:border-box;height:36px;min-height:0!important;padding:0 16px!important;font-size:14px!important;line-height:1;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;margin:0;flex:none}
+button.ghost{height:36px;padding:0 14px!important}
+td button.ghost,th button.ghost{margin:2px 4px 2px 0}
+button.lnk{height:auto;min-height:0!important;padding:0!important;display:inline;font-size:14px!important;line-height:1.5}
+button.ib{width:36px;padding:0!important}
+.chp{height:38px!important;padding:0 18px!important;min-width:64px;font-size:14px!important}
+.chp[aria-pressed=true]::before{content:none!important}
+.chp:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.pcs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.pcs button{height:38px!important;min-width:150px;padding:0 14px!important;border:1px solid var(--line)!important;background:#fff!important;color:var(--ink)!important;border-radius:0}
+.pcs button[aria-pressed=true]{background:var(--ink)!important;color:#fff!important;border-color:var(--ink)!important}
+.bw{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.bw button{min-width:170px}
+.fw{position:relative;display:block;width:100%}.fw input{padding-right:36px}
+.xb{position:absolute!important;right:2px;top:50%;transform:translateY(-50%);width:30px;height:30px!important;padding:0!important;background:none!important;border:0!important;color:var(--mute)!important;font-size:18px!important;line-height:1;cursor:pointer}
+.xb:hover{color:var(--ink)!important}.xb[hidden]{display:none!important}
+.vm td,.vm th{vertical-align:middle}.cc{text-align:center!important}.xs{overflow-x:auto}.xs table{min-width:680px}
+.fix{table-layout:fixed;width:100%}.fix td,.fix th{overflow-wrap:anywhere}
+@media(max-width:560px){button{height:44px}button.ghost{height:44px}button.lnk{height:auto}button.ib{width:44px}.chp,.pcs button{height:44px!important}}
+/* ===== 버튼 체계(최종): 기본 40px / 표 안 34px / 칩 40px 고정, 활성·비활성·호버에서도 크기 불변 ===== */
+button{box-sizing:border-box!important;height:40px!important;min-height:40px!important;padding:0 20px!important;border-width:1px!important;line-height:1!important;display:inline-flex!important;align-items:center;justify-content:center;white-space:nowrap!important;font-size:14px}
+button.ghost{padding:0 16px!important}
+button:disabled{opacity:.35}
+td button:not(.lnk),.lp td button:not(.lnk){height:34px!important;min-height:34px!important;padding:0 12px!important;font-size:13px}
+button.lnk{height:auto!important;min-height:0!important;padding:0!important;display:inline!important;line-height:1.4!important}
+.lx{height:34px!important;min-height:34px!important}
+#anew,#mp{width:172px;padding:0!important}
+#sm,#sx,#dm{height:40px!important;box-sizing:border-box}
+.chp{box-sizing:border-box!important;height:40px!important;width:112px!important;min-width:112px!important;padding:0 8px!important;font-size:14px!important;border-radius:999px!important}
+.chp::before{content:"✓"!important;visibility:hidden;margin-right:4px;display:inline-block}
+.chp[aria-pressed=true]::before{visibility:visible}
+.pcs{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(176px,1fr))!important;gap:8px!important}
+.pcs button{width:100%!important;min-width:0!important;height:40px!important;padding:0 8px!important;font-size:13px!important;overflow:hidden}
+.tw.sc{overflow-x:auto;-webkit-overflow-scrolling:touch}.tw.sc table.rt{min-width:680px}
+td.cc,th.cc{text-align:center!important}
+table.vm td,table.vm th{vertical-align:middle!important}
+table.vm td{height:52px;line-height:1.3}
+button.ghost.bkg{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:0 12px!important;font-size:16px;line-height:1;letter-spacing:0}
+button.ghost.bkg:active{cursor:grabbing}
+tr.bk-drag{position:relative;z-index:3;cursor:grabbing}tr.bk-drag td{background:#fff;box-shadow:0 1px 0 var(--ink),0 -1px 0 var(--ink)}
+tr.bk-it td{box-shadow:inset 0 3px 0 var(--ink)}tr.bk-ib td{box-shadow:inset 0 -3px 0 var(--ink)}
+table.sd td,table.sd th{vertical-align:middle}
+
+/* ===== 버튼 정렬·폭 정리 ===== */
+/* 모든 버튼(밑줄 링크형 .lnk 제외): 글자를 가로·세로 가운데에 */
+button:not(.lnk){display:inline-flex!important;align-items:center!important;justify-content:center!important;text-align:center!important}
+/* 칩 버튼: 고정 폭(112px)을 풀고 '글자 + 여유'로. 보이지 않는 ✓ 자리가 글자를 오른쪽으로 밀던 것도 제거 */
+.chp{width:auto!important;min-width:0!important;padding:0 12px!important}
+.chp::before,.chp[aria-pressed=true]::before{content:none!important;display:none!important;margin:0!important}

@@ -70,6 +70,8 @@ button,input,textarea{font:inherit;color:inherit}
 .lab{display:block;margin-bottom:2px;font-size:12px;color:var(--mute)}
 .sub b{font-weight:600;font-size:15px;overflow-wrap:anywhere}
 .msg{padding:18px 20px 24px;font-size:15px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all}
+.pvbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;font-size:12.5px;color:var(--mute)}
+.msgedit{display:block;width:100%;min-height:340px;border:0;outline:0;resize:vertical;background:var(--paper);color:inherit;font-size:16px}
 .ph{display:inline;padding:0 5px;border:1px solid var(--red);border-radius:5px;background:var(--redbg);color:var(--red);font-size:13.5px;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;padding:10px 16px;border-radius:8px;background:var(--ink);color:var(--onink);font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.25)}
 @media (max-width:899px){
@@ -101,7 +103,7 @@ html,body{height:auto}
 <div class="app" id="app">
 <header class="top"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg><strong>야화랩 SNS 글 작성기</strong></header>
 <main class="main">
-<section class="pane editor" aria-label="미리보기"><div class="mail"><div class="card"><div class="msg" id="body"></div></div></div></section>
+<section class="pane editor" aria-label="미리보기"><div class="mail"><div class="pvbar"><span id="pvhint">미리보기</span><button class="btn sm" type="button" id="pvbtn" data-act="edit">문구 직접 수정</button></div><div class="card"><div class="msg" id="body"></div><textarea class="msg msgedit" id="snsedit" hidden aria-label="SNS 글 직접 수정"></textarea></div></div></section>
 <aside class="pane side" aria-label="입력">
 <div class="form">
 <div class="sec"><h2>글 종류</h2><div class="seg2" id="types" role="group" aria-label="글 종류"></div></div>
@@ -111,7 +113,7 @@ html,body{height:auto}
 <datalist id="snsauthors"></datalist>
 <label class="field dbhide" data-for="pub" id="snsworkf"><span>등록된 작품에서 선택</span><select id="snswork"><option value="">직접 입력</option></select></label>
 <p class="dbnote dbhide" id="snsdbnote"></p>
-<label class="field" data-for="pub"><span>작품명 <i>(고쳐 써도 글에만 반영됩니다)</i></span><input id="snstitle" autocomplete="off"></label>
+<label class="field" data-for="pub"><span>작품명</span><input id="snstitle" autocomplete="off"></label>
 <label class="field" data-for="pub"><span>키워드</span><textarea id="snskw" placeholder="예: BL, 현대물, 재회물 (쉼표로 구분하면 #이 자동으로 붙습니다)"></textarea></label>
 <label class="field" data-for="pub"><span>공감 글귀</span><textarea id="snsquote"></textarea></label>
 <label class="field" data-for="pub"><span>URL</span><input id="snsurl" type="url" autocomplete="off" placeholder="https://"></label>
@@ -128,7 +130,7 @@ html,body{height:auto}
 <script>
 /* 글 종류를 늘릴 때: TYPES에 [키,이름] 추가 → 입력칸에 data-for="키" → build()에 분기 추가 */
 var TYPES=[["pub","출간작"]];
-var cur="pub",PLAT="";
+var cur="pub",PLAT="",MANUAL=false,EDIT0="";
 var PLATS=["리디북스","교보문고","알라딘","예스24","북큐브"];
 var ID={"플랫폼":"platacc","작가명":"snsauthor","작품명":"snstitle","키워드":"snskw","공감글귀":"snsquote","URL":"snsurl"};
 var INPUTS=["snsauthor","snstitle","snskw","snsquote","snsurl"];
@@ -162,9 +164,14 @@ function fill(el,text){
     el.appendChild(c);
   });
 }
+function plain(b){return b.replace(/\u0001([^\u0002]+)\u0002/g,"{$1}")}
+function leftover(t){var o=[],r=/\{(플랫폼|작가명|작품명|키워드|공감글귀|URL)\}/g,x;while((x=r.exec(t)))if(o.indexOf(x[1])<0)o.push(x[1]);return o}
 function render(){
   var m=build();
-  fill($("#body"),m.b);
+  if(MANUAL)m.miss=leftover($("#snsedit").value);else fill($("#body"),m.b);
+  $("#body").hidden=MANUAL;$("#snsedit").hidden=!MANUAL;
+  $("#pvbtn").textContent=MANUAL?"입력값으로 되돌리기":"문구 직접 수정";
+  $("#pvhint").textContent=MANUAL?"직접 수정 중 · 입력칸을 바꿔도 이 문구는 바뀌지 않습니다":"미리보기";
   document.querySelectorAll("#fields [data-for]").forEach(function(f){f.hidden=f.dataset.for.split(" ").indexOf(cur)<0});
   document.querySelectorAll("#types .sw").forEach(function(b){var on=b.dataset.k===cur;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)});
   var pc=$("#platcur");pc.textContent=PLAT||"선택해 주세요";pc.className=PLAT?"":"none";
@@ -192,11 +199,16 @@ PLATS.forEach(function(n){
   b.addEventListener("click",function(){PLAT=n;$("#platacc").open=false;render()});$("#plats").appendChild(b);
 });
 INPUTS.forEach(function(id){$("#"+id).addEventListener("input",render)});
+$("#snsedit").addEventListener("input",render);
 document.addEventListener("click",function(e){
   var b=e.target.closest("[data-act]");if(!b||b.disabled)return;
   var a=b.dataset.act;
-  if(a==="copy")copy(build().b,"SNS 글을 복사했습니다.");
-  else if(a==="clear"){PLAT="";INPUTS.forEach(function(id){$("#"+id).value=""});render()}
+  if(a==="copy")copy(MANUAL?$("#snsedit").value:build().b,"SNS 글을 복사했습니다.");
+  else if(a==="edit"){
+    if(MANUAL){if($("#snsedit").value!==EDIT0&&!confirm("직접 수정한 문구를 지우고 입력값으로 되돌릴까요?"))return;MANUAL=false}
+    else{EDIT0=plain(build().b);$("#snsedit").value=EDIT0;MANUAL=true}
+    render();if(MANUAL)$("#snsedit").focus()}
+  else if(a==="clear"){MANUAL=false;$("#snsedit").value="";PLAT="";INPUTS.forEach(function(id){$("#"+id).value=""});render()}
 });
 render();
 </script>

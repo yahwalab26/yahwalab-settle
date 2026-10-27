@@ -71,6 +71,7 @@ button,input,textarea{font:inherit;color:inherit}
 .sub b{font-weight:600;font-size:15px;overflow-wrap:anywhere}
 .msg{padding:18px 20px 24px;font-size:15px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all}
 .pvbar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:30px;margin:0 0 8px;font-size:12.5px;color:var(--mute)}
+.pvedit{color:var(--red);font-weight:600}
 .pvmiss{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.pvmiss:empty{display:none}
 .msgedit{display:block;width:100%;min-height:340px;border:0;outline:0;resize:none;background:var(--paper);color:inherit;font-size:16px;overflow:hidden}
 .card:focus-within{border-color:var(--ink)}
@@ -218,7 +219,7 @@ function render(){
   if(MANUAL)m.miss=leftover(t.value);
   fit();chips(m.miss);
   $("#pvbtn").hidden=!MANUAL;
-  $("#pvhint").textContent=MANUAL?"직접 수정한 문구입니다 · 입력칸을 바꾸면 바뀐 값만 글에 반영됩니다":"미리보기 · 글을 눌러 바로 고칠 수 있습니다";
+  $("#pvhint").textContent=MANUAL?"직접 수정 중":"미리보기 · 글을 눌러 바로 고칠 수 있습니다";$("#pvhint").classList.toggle("pvedit",MANUAL);
   document.querySelectorAll("#fields [data-for]").forEach(function(f){f.hidden=f.dataset.for.split(" ").indexOf(cur)<0});
   document.querySelectorAll("#types .sw").forEach(function(b){var on=b.dataset.k===cur;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)});
   var pc=$("#platcur");pc.textContent=PLAT||"선택해 주세요";pc.className=PLAT?"":"none";

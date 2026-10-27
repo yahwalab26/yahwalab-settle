@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<title>야화랩 SNS 글 작성기</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#F3F3F4;--paper:#fff;--ink:#17171A;--ink2:#46474D;--mute:#6A6B73;--line:#D6D7DB;--line2:#E8E8EB;--hl:#EDEDF0;--red:#C4251B;--redbg:#FBE9E7;--onink:#fff;--focus:#2F6FDE;
+--ui:'IBM Plex Sans KR','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121214;--paper:#1A1A1D;--ink:#EDEDEF;--ink2:#BDBEC4;--mute:#8F9098;--line:#34353B;--line2:#26272C;--hl:#2A2B31;--red:#FF7A6E;--redbg:#3A1F1C;--onink:#121214;--focus:#7DA8FF;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121214;--paper:#1A1A1D;--ink:#EDEDEF;--ink2:#BDBEC4;--mute:#8F9098;--line:#34353B;--line2:#26272C;--hl:#2A2B31;--red:#FF7A6E;--redbg:#3A1F1C;--onink:#121214;--focus:#7DA8FF;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.55 var(--ui);-webkit-text-size-adjust:100%}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+[hidden]{display:none!important}
+.embedded .top{display:none}
+.app{height:100%;display:flex;flex-direction:column;min-height:0}
+.top{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+.top svg{display:block}
+.top strong{font-weight:600;font-size:15px}
+.mtabs{display:none;background:var(--paper);border-bottom:1px solid var(--line)}
+.mtabs button{flex:1;min-height:42px;border:0;background:none;font-weight:500;color:var(--mute);border-bottom:2px solid transparent;cursor:pointer}
+.mtabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ink)}
+.main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 380px}
+.pane{min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+.side{background:var(--paper);border-left:1px solid var(--line);display:flex;flex-direction:column}
+.form{flex:1 0 auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:0 13px;border:1px solid var(--line);border-radius:7px;background:var(--paper);cursor:pointer;font-weight:500;font-size:13px;white-space:nowrap}
+.btn:hover{background:var(--hl)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--onink)}
+.btn.primary:hover{background:var(--ink2);border-color:var(--ink2)}
+.btn.block{display:flex;width:100%}
+.btn.sm{min-height:30px;padding:0 10px;font-size:12px}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.sec{padding:14px 18px;border-bottom:1px solid var(--line2)}
+.sec h2{margin:0 0 8px;font:600 14px/1.4 var(--ui)}
+.seg2{display:flex;flex-wrap:wrap;gap:6px}
+.sw{flex:1 0 auto;min-height:34px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:var(--paper);cursor:pointer;font-size:13px;font-weight:500;color:var(--ink2)}
+.sw.on{background:var(--ink);border-color:var(--ink);color:var(--onink)}
+.field{display:block;margin:0 0 12px}
+.field:last-child{margin:0}
+.field>span{display:block;margin-bottom:4px;font-size:12.5px;color:var(--ink2)}
+.field>span i{font-style:normal;color:var(--mute)}
+.field input,.field textarea,.field select{width:100%;min-height:36px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:var(--paper)}
+.field textarea{padding:8px 10px;min-height:92px;resize:vertical;line-height:1.55}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--ink)}
+.dbhide{display:none!important}.dbnote{margin:-6px 0 12px;font-size:12px;color:var(--mute)}
+.gi{border:1px solid var(--line);border-radius:7px;padding:8px;margin-bottom:8px}
+.gh{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.gh b{font-size:13px;min-width:18px}
+.gh input{flex:1;min-width:0}
+.gi textarea{min-height:120px}
+.gadd{display:flex;flex-wrap:wrap;gap:6px}
+.field.chk{display:flex;align-items:center;gap:8px}
+.field.chk input{width:auto;min-height:0;margin:0}
+.field.chk>span{margin:0}
+.dock{position:sticky;bottom:0;margin-top:auto;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));background:var(--paper);border-top:1px solid var(--ink)}
+.need{margin:0 0 8px;font-size:12.5px;color:var(--red)}
+.btnrow{display:flex;gap:8px;margin-top:8px}
+.btnrow .btn{flex:1}
+.mdock{display:none}
+.mail{max-width:720px;margin:0 auto;padding:20px 16px 96px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.sub{padding:14px 20px;border-bottom:1px solid var(--line2)}
+.lab{display:block;margin-bottom:2px;font-size:12px;color:var(--mute)}
+.sub b{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.msg{padding:18px 20px 24px;font-size:15px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all}
+.ph{display:inline;padding:0 5px;border:1px solid var(--red);border-radius:5px;background:var(--redbg);color:var(--red);font-size:13.5px;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:20;padding:10px 16px;border-radius:8px;background:var(--ink);color:var(--onink);font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+@media (max-width:899px){
+html,body{height:auto}
+.app{height:auto;min-height:100dvh}
+.main{display:flex;flex-direction:column}
+.pane{overflow:visible}
+.side{order:-1;border-left:0;border-bottom:1px solid var(--line)}
+.side .dock{display:none}
+.mdock{display:block;position:sticky;bottom:0;z-index:5}
+.mail{padding:16px 12px 24px}
+.field input,.field textarea,.field select{font-size:16px}
+}
+.acc{border:1px solid var(--line);border-radius:7px;background:var(--paper)}
+.acc>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;padding:0 10px;cursor:pointer;list-style:none;font-size:16px;color:var(--ink)}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary::after{content:"▾";color:var(--mute);font-size:12px;transition:transform .15s}
+.acc[open]>summary::after{transform:rotate(180deg)}
+.acc[open]>summary{border-bottom:1px solid var(--line2)}
+.acc .none{color:var(--mute)}
+.acc .opt{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:38px;padding:0 10px;border:0;border-bottom:1px solid var(--line2);background:transparent;cursor:pointer;text-align:left;font-size:14px;color:var(--ink2)}
+.acc .opt:last-child{border-bottom:0}
+.acc .opt.on{color:var(--ink)}
+.acc .opt.on::after{content:"✓"}
+.acc .opt:hover{background:var(--hl)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+<header class="top"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg><strong>야화랩 SNS 글 작성기</strong></header>
+<main class="main">
+<section class="pane editor" aria-label="미리보기"><div class="mail"><div class="card"><div class="msg" id="body"></div></div></div></section>
+<aside class="pane side" aria-label="입력">
+<div class="form">
+<div class="sec"><h2>글 종류</h2><div class="seg2" id="types" role="group" aria-label="글 종류"></div></div>
+<div class="sec" id="fields">
+<div class="field" data-for="pub"><span>플랫폼</span><details class="acc" id="platacc"><summary><span id="platcur" class="none">선택해 주세요</span></summary><div id="plats"></div></details></div>
+<label class="field" data-for="pub"><span>작가명</span><input id="snsauthor" autocomplete="off" list="snsauthors"></label>
+<datalist id="snsauthors"></datalist>
+<label class="field dbhide" data-for="pub" id="snsworkf"><span>등록된 작품에서 선택</span><select id="snswork"><option value="">직접 입력</option></select></label>
+<p class="dbnote dbhide" id="snsdbnote"></p>
+<label class="field" data-for="pub"><span>작품명 <i>(고쳐 써도 글에만 반영됩니다)</i></span><input id="snstitle" autocomplete="off"></label>
+<label class="field" data-for="pub"><span>키워드</span><textarea id="snskw" placeholder="예: BL, 현대물, 재회물 (쉼표로 구분하면 #이 자동으로 붙습니다)"></textarea></label>
+<label class="field" data-for="pub"><span>공감 글귀</span><textarea id="snsquote"></textarea></label>
+<label class="field" data-for="pub"><span>URL</span><input id="snsurl" type="url" autocomplete="off" placeholder="https://"></label>
+</div>
+<div class="dock" data-dock></div>
+</div>
+</aside>
+</main>
+<div class="dock mdock" data-dock></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script src="/libs/supabase-2.49.4.js"></script>
+<script src="sns-db.js"></script>
+<script>
+/* 글 종류를 늘릴 때: TYPES에 [키,이름] 추가 → 입력칸에 data-for="키" → build()에 분기 추가 */
+var TYPES=[["pub","출간작"]];
+var cur="pub",PLAT="";
+var PLATS=["리디북스","교보문고","알라딘","예스24","북큐브"];
+var ID={"플랫폼":"platacc","작가명":"snsauthor","작품명":"snstitle","키워드":"snskw","공감글귀":"snsquote","URL":"snsurl"};
+var INPUTS=["snsauthor","snstitle","snskw","snsquote","snsurl"];
+var $=function(s){return document.querySelector(s)};
+var DOCK='<p class="need" hidden></p><button class="btn primary block" data-act="copy">SNS 글 복사</button><div class="btnrow"><button class="btn sm" data-act="clear">입력 비우기</button></div>';
+document.querySelectorAll("[data-dock]").forEach(function(d){d.innerHTML=DOCK});
+function ph(name){return "\u0001"+name+"\u0002"}
+/* 키워드: #이 하나라도 있으면 입력 그대로, 없으면 쉼표로 나눠 #을 붙임(태그 안 공백은 제거) */
+function tags(v){
+  v=v.trim();
+  if(!v||v.indexOf("#")>=0)return v;
+  return v.split(/[,，]/).map(function(s){return s.replace(/\s+/g,"")}).filter(Boolean).map(function(s){return "#"+s}).join(" ");
+}
+function build(){
+  var miss=[];
+  function need(v,name){if(v)return v;if(miss.indexOf(name)<0)miss.push(name);return ph(name)}
+  var b="";
+  if(cur==="pub"){
+    var p=need(PLAT,"플랫폼"),a=need($("#snsauthor").value.trim(),"작가명"),t=need($("#snstitle").value.trim(),"작품명"),k=need(tags($("#snskw").value),"키워드"),q=need($("#snsquote").value.trim(),"공감글귀"),u=need($("#snsurl").value.trim(),"URL");
+    b="["+p+"] "+a+" <"+t+"> 출간 ✨\n\n"+k+"\n\n"+q+"\n\n⬇️그들의 이야기 확인하기⬇️\n🎶"+u;
+  }
+  return{b:b,miss:miss};
+}
+function fill(el,text){
+  el.textContent="";
+  text.split(/\u0001([^\u0002]+)\u0002/).forEach(function(part,i){
+    if(i%2===0){if(part)el.appendChild(document.createTextNode(part));return}
+    var c=document.createElement("button");
+    c.className="ph";c.type="button";c.textContent="{"+part+"}";
+    c.addEventListener("click",function(){var f=$("#"+ID[part]);if(!f)return;if(f.tagName==="DETAILS")f.open=true;else f.focus();if(f.scrollIntoView)f.scrollIntoView({block:"center"})});
+    el.appendChild(c);
+  });
+}
+function render(){
+  var m=build();
+  fill($("#body"),m.b);
+  document.querySelectorAll("#fields [data-for]").forEach(function(f){f.hidden=f.dataset.for.split(" ").indexOf(cur)<0});
+  document.querySelectorAll("#types .sw").forEach(function(b){var on=b.dataset.k===cur;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)});
+  var pc=$("#platcur");pc.textContent=PLAT||"선택해 주세요";pc.className=PLAT?"":"none";
+  document.querySelectorAll("#plats .opt").forEach(function(b){b.classList.toggle("on",b.textContent===PLAT)});
+  document.querySelectorAll("[data-dock]").forEach(function(d){
+    var n=d.querySelector(".need");
+    n.hidden=!m.miss.length;
+    n.textContent=m.miss.length?"입력이 필요합니다: "+m.miss.join(", "):"";
+    d.querySelector('[data-act="copy"]').disabled=m.miss.length>0;
+  });
+}
+var tt;
+function toast(msg){var t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(tt);tt=setTimeout(function(){t.hidden=true},2200)}
+function copy(text,msg){
+  function ok(){toast(msg)}
+  function fb(){var ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){toast("복사 실패")}document.body.removeChild(ta)}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(ok,fb);else fb();
+}
+TYPES.forEach(function(x){
+  var b=document.createElement("button");b.className="sw";b.type="button";b.dataset.k=x[0];b.textContent=x[1];
+  b.addEventListener("click",function(){cur=x[0];render()});$("#types").appendChild(b);
+});
+PLATS.forEach(function(n){
+  var b=document.createElement("button");b.className="opt";b.type="button";b.textContent=n;
+  b.addEventListener("click",function(){PLAT=n;$("#platacc").open=false;render()});$("#plats").appendChild(b);
+});
+INPUTS.forEach(function(id){$("#"+id).addEventListener("input",render)});
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-act]");if(!b||b.disabled)return;
+  var a=b.dataset.act;
+  if(a==="copy")copy(build().b,"SNS 글을 복사했습니다.");
+  else if(a==="clear"){PLAT="";INPUTS.forEach(function(id){$("#"+id).value=""});render()}
+});
+render();
+</script>
+<script>
+/* 관리자 사이트 안(iframe)에서 쓰일 때: 헤더 숨김·밝은 화면 고정, 작업 중임을 알려 자동 로그아웃이 작업 도중에 걸리지 않게 함 */
+(function(){if(window.parent===window)return;
+document.documentElement.classList.add('embedded');document.documentElement.setAttribute('data-theme','light');
+let t=0;['keydown','pointerdown','input','scroll','wheel'].forEach(function(ev){addEventListener(ev,function(){const n=Date.now();if(n-t>5000){t=n;try{parent.postMessage({t:'yw-act'},location.origin)}catch(e){}}},{passive:true,capture:true})})})();
+</script>
+</body>
+</html>

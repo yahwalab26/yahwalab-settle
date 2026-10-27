@@ -161,6 +161,44 @@ function build(){
   }
   return{b:b,miss:miss};
 }
+/* 직접 수정 + 입력칸 변경을 함께 반영: base(직전 자동 문구) · mine(지금 편집칸) · theirs(새 자동 문구)를 3-way 병합.
+   줄 → 단어 → 글자 순으로, 같은 자리를 둘 다 바꿨을 때만 더 잘게 나눠 다시 합침.
+   직접 고친 부분은 유지, 입력칸 값이 바뀐 부분만 새 값으로, 같은 값을 둘 다 바꿨다면 입력칸 값이 우선 */
+function toksL(s){return s.match(/[^\n]*\n|[^\n]+$/g)||[]}
+function toksW(s){return s.match(/^\s+|\S+\s*/g)||[]}
+function toksC(s){return Array.from(s)}
+function lcsMap(a,b){
+  var n=a.length,m=b.length,dp=[],i,j,map=[];
+  for(i=0;i<=n;i++)dp.push(new Uint16Array(m+1));
+  for(i=n-1;i>=0;i--)for(j=m-1;j>=0;j--)dp[i][j]=a[i]===b[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+  for(i=0;i<n;i++)map.push(-1);
+  i=0;j=0;
+  while(i<n&&j<m){if(a[i]===b[j]){map[i]=j;i++;j++}else if(dp[i+1][j]>=dp[i][j+1])i++;else j++}
+  return map;
+}
+function merge3(base,mine,theirs,lv){
+  lv=lv||0;
+  if(mine===base)return theirs;if(theirs===base||theirs===mine)return mine;
+  var tk=[toksL,toksW,toksC][lv],B=tk(base),M=tk(mine),T=tk(theirs),mm=lcsMap(B,M),tm=lcsMap(B,T);
+  var out=[],pb=-1,pm=-1,pt=-1,i;
+  function chunk(b1,m1,t1){
+    var cb=B.slice(pb+1,b1).join(""),cm=M.slice(pm+1,m1).join(""),ct=T.slice(pt+1,t1).join(""),r;
+    if(cm===cb)r=ct;else if(ct===cb)r=cm;
+    else if(!cb)r=cm+ct;                                                    /* 같은 자리에 둘 다 끼워 넣음 */
+    else if(lv<2)r=merge3(cb,cm,ct,lv+1);                                   /* 같은 자리를 둘 다 바꿈 → 더 잘게 나눠 재병합 */
+    else if(cm.indexOf(cb)===0)r=ct+cm.slice(cb.length);                    /* 값 뒤에 직접 덧붙인 글 유지 */
+    else if(cm.slice(-cb.length)===cb)r=cm.slice(0,cm.length-cb.length)+ct; /* 값 앞에 직접 덧붙인 글 유지 */
+    else r=ct;                                                              /* 같은 값을 둘 다 바꿈 → 입력칸 우선 */
+    out.push(r);
+  }
+  for(i=0;i<B.length;i++){
+    if(mm[i]<0||tm[i]<0)continue;
+    chunk(i,mm[i],tm[i]);out.push(B[i]);pb=i;pm=mm[i];pt=tm[i];
+  }
+  chunk(B.length,M.length,T.length);
+  return out.join("");
+}
+var LAST="";
 function plain(b){return b.replace(/\u0001([^\u0002]+)\u0002/g,"{$1}")}
 function leftover(t){var o=[],r=/\{(플랫폼|작가명|작품명|키워드|공감글귀|URL)\}/g,x;while((x=r.exec(t)))if(o.indexOf(x[1])<0)o.push(x[1]);return o}
 function chips(names){
@@ -174,11 +212,13 @@ function chips(names){
 function fit(){var t=$("#snsedit");t.style.height="auto";t.style.height=Math.max(t.scrollHeight,340)+"px"}
 /* 왼쪽 글은 항상 바로 고칠 수 있음. 직접 고치기 전에는 입력칸에 맞춰 자동으로 바뀌고, 고친 뒤에는 덮어쓰지 않음 */
 function render(){
-  var m=build(),t=$("#snsedit");
-  if(MANUAL)m.miss=leftover(t.value);else t.value=plain(m.b);
+  var m=build(),t=$("#snsedit"),auto=plain(m.b),nv=MANUAL?merge3(LAST,t.value,auto):auto;
+  if(t.value!==nv)t.value=nv;         // 같은 값이면 건드리지 않음(글 쓰는 중 커서 유지)
+  LAST=auto;
+  if(MANUAL)m.miss=leftover(t.value);
   fit();chips(m.miss);
   $("#pvbtn").hidden=!MANUAL;
-  $("#pvhint").textContent=MANUAL?"직접 수정한 문구입니다 · 입력칸을 바꿔도 이 문구는 바뀌지 않습니다":"미리보기 · 글을 눌러 바로 고칠 수 있습니다";
+  $("#pvhint").textContent=MANUAL?"직접 수정한 문구입니다 · 입력칸을 바꾸면 바뀐 값만 글에 반영됩니다":"미리보기 · 글을 눌러 바로 고칠 수 있습니다";
   document.querySelectorAll("#fields [data-for]").forEach(function(f){f.hidden=f.dataset.for.split(" ").indexOf(cur)<0});
   document.querySelectorAll("#types .sw").forEach(function(b){var on=b.dataset.k===cur;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)});
   var pc=$("#platcur");pc.textContent=PLAT||"선택해 주세요";pc.className=PLAT?"":"none";

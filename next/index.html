@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko"><head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-yiDnftotftGmMF65wjuQ1XxsxlAZPq6nZcViGJv0NnM='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co https://github.com https://raw.githubusercontent.com; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1sd1Zag2H+QSaV5t2i/Zc9dB1dgpNzG/kBeaUvtzj5I='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co https://github.com https://raw.githubusercontent.com; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="format-detection" content="telephone=no,email=no,address=no">
@@ -13,166 +13,16 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<style>
-:root{--ink:#111;--mute:#7a7a7a;--line:#e6e6e3;--soft:#f7f7f5;--bad:#b3261e;--ok:#1a6b3c}
-*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
-body{margin:0;background:#fff;color:var(--ink);font:15px/1.7 "Pretendard Variable",Pretendard,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
-[hidden]{display:none!important}
-@keyframes in{from{opacity:0}to{opacity:1}}
-section{animation:in .5s ease both}
-.wrap{max-width:900px;margin:0 auto;padding:0 24px}.wrap.wide{max-width:1480px}
-.ef{display:block;width:100%;height:calc(100vh - 230px);height:calc(100dvh - 230px);min-height:560px;border:1px solid var(--line);margin-top:18px;background:#fff}#app{padding-bottom:96px}
-.logo{display:block;margin:0 auto;height:52px;width:auto;max-width:70%}.wm{font-size:22px;letter-spacing:.02em}
-.sub{margin:14px 0 0;font-size:14px;font-weight:600;letter-spacing:.08em;color:var(--ink)}
-.foot{margin:56px 0 0;font-size:12px;color:var(--mute);letter-spacing:.02em}
-h1{font-size:26px;line-height:1.3;margin:0 0 8px;font-weight:700;letter-spacing:-.01em}
-h2{margin:60px 0 18px;text-align:center;font-size:22px;line-height:1.3;font-weight:700;letter-spacing:-.01em}
-h2 small{display:block;font-size:12px;font-weight:500;color:var(--mute);letter-spacing:.06em;margin-bottom:6px}
-#login,#chpw,#denied,#accept{min-height:100vh;min-height:calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom));display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:32px 0}
-/* 버전 표기: 관리자 화면 우측 상단. 배포 때마다 VER 값만 올린다(major.minor.patch) */
-.ver{position:fixed;top:8px;right:12px;font-size:11px;color:var(--mute);letter-spacing:.04em;z-index:5;pointer-events:none}
-header{display:flex;flex-direction:column;align-items:center;gap:6px;padding:34px 0 20px;border-bottom:1px solid var(--ink);text-align:center}
-header .logo{height:36px}header .sub{margin:6px 0 0;font-size:12px}
-.who{display:flex;align-items:center;justify-content:center;gap:4px 16px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin-top:8px}
-button.lnk{background:none;color:var(--ink);border:0;padding:0;min-height:0;font-size:13px;text-decoration:underline;text-underline-offset:3px}
-button.lnk:hover{background:none;color:var(--mute)}
-.login{display:flex;flex-direction:column;gap:6px;width:100%;max-width:340px;margin:0 auto;text-align:left}
-input[type=email],input[type=password],input[type=date],input[type=text],input[type=tel],input[type=month],select{font:inherit;color:var(--ink);background:#fff;border:0;border-bottom:1px solid var(--ink);border-radius:0;padding:12px 2px;width:100%}
-input::placeholder{color:#a3a3a3}
-input:focus,select:focus{outline:none;border-bottom-width:2px;padding-bottom:11px}
-.row input[type=date]{width:auto}.row select{width:auto;max-width:100%}
-button{font:inherit;background:var(--ink);color:#fff;border:1px solid var(--ink);padding:12px 22px;border-radius:0;cursor:pointer;letter-spacing:.02em;transition:background .15s,color .15s}
-button:hover:not(:disabled){background:#fff;color:var(--ink)}
-button:disabled{opacity:.3;cursor:not-allowed}
-button.ghost{background:#fff;color:var(--ink);border-color:var(--line);padding:7px 14px;font-size:13px}
-button.ghost:hover:not(:disabled){border-color:var(--ink)}
-.login>button:not(.ghost){margin-top:16px;width:100%}.login>button.ghost{margin-top:4px;width:100%}
-.login .chk{align-self:flex-start;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--mute);margin-top:10px;cursor:pointer;text-align:left}
-.login .chk input{width:16px;height:16px;min-height:0;margin:0;padding:0;flex:none;accent-color:var(--ink)}
-#le,#ce{min-height:20px;font-size:13px;text-align:center;margin-top:8px}
-.drop{display:block;border:1px solid var(--line);background:var(--soft);padding:48px 20px;text-align:center;color:var(--mute);cursor:pointer;transition:all .15s}
-.drop b{display:block;color:var(--ink);font-size:17px;font-weight:600;margin-bottom:4px}
-.drop:hover,.drop.on{border-color:var(--ink);background:#fff}
-.card{border:1px solid var(--line);padding:24px;margin-top:16px;text-align:center;background:#fff}
-.row{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
-.tw{overflow:visible}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
-th{font-weight:500;color:var(--mute);font-size:12px;letter-spacing:.04em}
-.r,th.r{text-align:right}.card th,.card td{text-align:left}.card .r{text-align:right}
-
-.k{color:var(--mute);font-size:13px}.bad{color:var(--bad)}.ok{color:var(--ok)}
-.pre{font-family:ui-monospace,Menlo,monospace;background:var(--soft);padding:9px 14px;letter-spacing:.05em;word-break:break-all}
-@media(max-width:560px){
-  .wrap{padding:0 16px}#app{padding-bottom:64px}h2{margin-top:44px;font-size:20px}h1{font-size:23px}.logo{height:46px}
-  input[type=email],input[type=password],input[type=date],input[type=text],input[type=tel],input[type=month],select{font-size:16px;min-height:44px}
-  button{min-height:44px}  .card{padding:16px}.row{gap:8px}.row>select{flex:1 1 100%}  th,td{font-size:13px}.drop{padding:36px 14px}
-}
-header .logo{height:36px;width:auto;max-width:none;flex:none;object-fit:contain}
-header>div{flex:none;max-width:100%}
-.logo{object-fit:contain}
-#nav{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 30px;padding:14px 0 0;border-bottom:1px solid var(--line);overflow:visible}
-#nav a{color:var(--mute);text-decoration:none;font-size:14px;padding:6px 0 10px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
-#nav a.on{color:var(--ink);border-color:var(--ink);font-weight:600}
-/* 영역(정산·도구·자료실) 탭 + 세부 메뉴 */
-#nav{gap:4px 44px}#nav a{font-size:15px;font-weight:500}#nav a.on{font-weight:700}
-#sub{display:flex;gap:8px;padding:12px 16px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-#sub::-webkit-scrollbar{display:none}
-#sub a:first-child{margin-left:auto}#sub a:last-child{margin-right:auto}
-#sub a{flex:none;display:inline-flex;align-items:center;height:36px;padding:0 18px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:500;white-space:nowrap;transition:border-color .15s,background .15s,color .15s}
-#sub a:hover{border-color:var(--ink)}
-#sub a.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
-@media(max-width:560px){#nav{padding-top:6px}#nav a{padding:12px 0 14px}#sub{padding:12px 14px}#sub a{height:40px;padding:0 16px;font-size:14px;color:var(--mute)}#sub a.on{background:#fff;border-color:var(--ink);color:var(--ink);font-weight:600}}
-.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-tr.first>*{border-top:1px solid var(--ink)}
-tbody th{font-weight:600;color:var(--ink);font-size:14px;letter-spacing:0}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}.vs{font-size:13px;white-space:nowrap}
-.pr{display:flex;gap:8px;align-items:center}.pr .pn{flex:0 0 34%}.pr .pe{flex:1}.pr button{flex:none}
-@media(max-width:560px){.pr{flex-wrap:wrap}.pr .pn,.pr .pe{flex:1 1 100%}}
-@media(min-width:701px){.dsc .fr{text-align:center}.dsc .fr .row,.dsc #pchips,.dsc>.row{justify-content:center!important}#sres>p.k{text-align:center}}
-.fr{padding:14px 0;border-bottom:1px solid var(--line)}.fl{display:block;font-size:13px;font-weight:600;margin-bottom:10px}
-.chp{border-radius:999px!important;padding:7px 16px!important}.chp[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
-.bar{display:flex;align-items:center;gap:12px;margin:8px 0}.bl{flex:0 0 62px;text-align:center;background:var(--soft);font-weight:600;font-size:13px;padding:9px 4px}
-.bt{background:#e6e6e3;border-radius:999px;height:28px;overflow:hidden}.bf{height:100%;border-radius:999px;display:flex;align-items:center;justify-content:flex-end;padding:0 11px;color:#fff;font-size:12px;font-weight:600;min-width:36px;white-space:nowrap;transition:width .4s}
-.bn{font-size:12px;font-weight:600;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bh{text-align:center;font-weight:700;margin:26px 0 2px}.bu{text-align:right;font-size:12px;color:var(--mute)}
-#author{padding-bottom:80px}
-.lay{position:fixed;inset:0;background:rgba(17,17,17,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
-.lp{position:relative;background:#fff;width:100%;max-width:780px;max-height:90vh;max-height:90dvh;overflow:auto;padding:28px 26px 24px}
-.lx{position:absolute;top:10px;right:10px}html.lock{overflow:hidden}.clk{cursor:pointer}
-td button.ghost{padding:4px 10px;margin:2px 2px 2px 0}.lp h3{font-size:19px}.lp table{margin-top:4px}
-@media(max-width:700px){.hm{display:none}.lp{padding:24px 16px 18px}}
-.chp{background:#fff!important;color:var(--ink)!important;border:1px solid var(--line)!important;border-radius:999px!important;padding:8px 18px!important;font-size:14px}
-.chp:hover{border-color:var(--ink)!important}
-.chp[aria-pressed=true],.chp[aria-pressed=true]:hover{background:var(--ink)!important;color:#fff!important;border-color:var(--ink)!important}
-.chp[aria-pressed=true]::before{content:"✓ "}
-.chp:focus{outline:none}.chp:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.em{text-align:center!important;padding:30px 0!important}
-@media print{.lp .hm{display:table-cell!important}body>*:not(#lay){display:none!important}.lay{position:static;background:none;padding:0}.lp{max-height:none;overflow:visible;max-width:none;padding:0}.lx,.noprint{display:none!important}}
-header a{display:inline-block;line-height:0}
-/* ---- 버튼 통일: 모든 버튼 높이 36px(모바일 44px), 상태가 바뀌어도 크기 고정 ---- */
-button{box-sizing:border-box;height:36px;min-height:0!important;padding:0 16px!important;font-size:14px!important;line-height:1;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;margin:0;flex:none}
-button.ghost{height:36px;padding:0 14px!important}
-td button.ghost,th button.ghost{margin:2px 4px 2px 0}
-button.lnk{height:auto;min-height:0!important;padding:0!important;display:inline;font-size:14px!important;line-height:1.5}
-button.ib{width:36px;padding:0!important}
-.chp{height:38px!important;padding:0 18px!important;min-width:64px;font-size:14px!important}
-.chp[aria-pressed=true]::before{content:none!important}
-.chp:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-.pcs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.pcs button{height:38px!important;min-width:150px;padding:0 14px!important;border:1px solid var(--line)!important;background:#fff!important;color:var(--ink)!important;border-radius:0}
-.pcs button[aria-pressed=true]{background:var(--ink)!important;color:#fff!important;border-color:var(--ink)!important}
-.bw{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.bw button{min-width:170px}
-.fw{position:relative;display:block;width:100%}.fw input{padding-right:36px}
-.xb{position:absolute!important;right:2px;top:50%;transform:translateY(-50%);width:30px;height:30px!important;padding:0!important;background:none!important;border:0!important;color:var(--mute)!important;font-size:18px!important;line-height:1;cursor:pointer}
-.xb:hover{color:var(--ink)!important}.xb[hidden]{display:none!important}
-.vm td,.vm th{vertical-align:middle}.cc{text-align:center!important}.xs{overflow-x:auto}.xs table{min-width:680px}
-.fix{table-layout:fixed;width:100%}.fix td,.fix th{overflow-wrap:anywhere}
-@media(max-width:560px){button{height:44px}button.ghost{height:44px}button.lnk{height:auto}button.ib{width:44px}.chp,.pcs button{height:44px!important}}
-/* ===== 버튼 체계(최종): 기본 40px / 표 안 34px / 칩 40px 고정, 활성·비활성·호버에서도 크기 불변 ===== */
-button{box-sizing:border-box!important;height:40px!important;min-height:40px!important;padding:0 20px!important;border-width:1px!important;line-height:1!important;display:inline-flex!important;align-items:center;justify-content:center;white-space:nowrap!important;font-size:14px}
-button.ghost{padding:0 16px!important}
-button:disabled{opacity:.35}
-td button:not(.lnk),.lp td button:not(.lnk){height:34px!important;min-height:34px!important;padding:0 12px!important;font-size:13px}
-button.lnk{height:auto!important;min-height:0!important;padding:0!important;display:inline!important;line-height:1.4!important}
-.lx{height:34px!important;min-height:34px!important}
-#anew,#mp{width:172px;padding:0!important}
-#sm,#sx,#dm{height:40px!important;box-sizing:border-box}
-.chp{box-sizing:border-box!important;height:40px!important;width:112px!important;min-width:112px!important;padding:0 8px!important;font-size:14px!important;border-radius:999px!important}
-.chp::before{content:"✓"!important;visibility:hidden;margin-right:4px;display:inline-block}
-.chp[aria-pressed=true]::before{visibility:visible}
-.pcs{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(176px,1fr))!important;gap:8px!important}
-.pcs button{width:100%!important;min-width:0!important;height:40px!important;padding:0 8px!important;font-size:13px!important;overflow:hidden}
-.tw.sc{overflow-x:auto;-webkit-overflow-scrolling:touch}.tw.sc table.rt{min-width:680px}
-td.cc,th.cc{text-align:center!important}
-table.vm td,table.vm th{vertical-align:middle!important}
-table.vm td{height:52px;line-height:1.3}
-button.ghost.bkg{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:0 12px!important;font-size:16px;line-height:1;letter-spacing:0}
-button.ghost.bkg:active{cursor:grabbing}
-tr.bk-drag{position:relative;z-index:3;cursor:grabbing}tr.bk-drag td{background:#fff;box-shadow:0 1px 0 var(--ink),0 -1px 0 var(--ink)}
-tr.bk-it td{box-shadow:inset 0 3px 0 var(--ink)}tr.bk-ib td{box-shadow:inset 0 -3px 0 var(--ink)}
-table.sd td,table.sd th{vertical-align:middle}
-
-/* ===== 버튼 정렬·폭 정리 ===== */
-/* 모든 버튼(밑줄 링크형 .lnk 제외): 글자를 가로·세로 가운데에 */
-button:not(.lnk){display:inline-flex!important;align-items:center!important;justify-content:center!important;text-align:center!important}
-/* 칩 버튼: 고정 폭(112px)을 풀고 '글자 + 여유'로. 보이지 않는 ✓ 자리가 글자를 오른쪽으로 밀던 것도 제거 */
-.chp{width:auto!important;min-width:0!important;padding:0 12px!important}
-.chp::before,.chp[aria-pressed=true]::before{content:none!important;display:none!important;margin:0!important}
-/* 정산 현황: 야화랩 (전체) · 트루비 (임프린트) — 가로세로 가운데, 좌우 패딩 12px (위아래 여백과 동일) */
-#lv{display:flex;align-items:center;justify-content:center}
-#lv .chp{padding:0 12px!important}
-/* 작가 정산: 플랫폼 칩 — 글자 길이에 맞추고 여유 공백만, 한 줄에 들어가는 만큼 자동 배치(모바일 3개 안팎) */
-#pchips .chp{flex:0 0 auto;padding:0 12px!important}
-@media(max-width:700px){#pchips{gap:6px!important}#pchips .chp{padding:0 10px!important}}
-/* 헤더: 이메일 한 줄 → 그 아래 줄에 비밀번호 변경 · 로그아웃 (가운데 정렬) */
-.who{flex-direction:column;gap:6px}
-.who .wb{display:flex;align-items:center;justify-content:center;gap:16px}
-/* 현황 (03) 데이터 현황 안의 업로드 영역 */
-#pg-home .drop{padding:28px 20px;margin:0 0 14px}
-</style></head><body>
+<link rel="stylesheet" href="assets/css/tokens.css?v=B4">
+<link rel="stylesheet" href="assets/css/base.css?v=B4">
+<link rel="stylesheet" href="assets/css/shell.css?v=B4">
+<link rel="stylesheet" href="assets/css/components.css?v=B4">
+<link rel="stylesheet" href="assets/css/buttons.css?v=B4">
+<link rel="stylesheet" href="assets/css/pages.css?v=B4">
+</head><body>
 <div class="wrap">
 
-<div id="bbar" role="note" style="background:var(--soft);border-bottom:1px solid var(--line);color:var(--mute);font-size:12.5px;line-height:1.5;text-align:center;padding:7px 12px">B안 미리보기 v2.16.1-B3.1 (메뉴 개편 시험) · 같은 데이터를 사용합니다. 정산 데이터 초기화 · 정산서 발송 · 자동 발송 설정 · 홈페이지 반영은 <a href="/" style="color:inherit;text-decoration:underline">기존 사이트</a>에서 실행하세요.</div>
+<div id="bbar" role="note" style="background:var(--soft);border-bottom:1px solid var(--line);color:var(--mute);font-size:12.5px;line-height:1.5;text-align:center;padding:7px 12px">B안 미리보기 v2.16.1-B4 (메뉴 개편 시험) · 같은 데이터를 사용합니다. 정산 데이터 초기화 · 정산서 발송 · 자동 발송 설정 · 홈페이지 반영은 <a href="/" style="color:inherit;text-decoration:underline">기존 사이트</a>에서 실행하세요.</div>
 <section id="login" hidden>
   <img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"><p class="sub">야화랩 정산 사이트</p>
   <form class="login" id="lf" style="margin:36px auto 0">
@@ -348,7 +198,7 @@ button:not(.lnk){display:inline-flex!important;align-items:center!important;just
 <script src="/libs/supabase-2.49.4.js"></script>
 <script>
 document.querySelectorAll('.logo').forEach(i=>i.onerror=()=>{i.outerHTML='<b class="wm">야화랩 YAHWA LAB</b>'});
-const VER='v2.16.1-B3.1'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
+const VER='v2.16.1-B4'; /* 새 기능=minor, 수정·문구=patch, 구조 개편=major */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s),won=n=>n==null?'-':Number(n).toLocaleString('ko-KR')+'원';
 const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));

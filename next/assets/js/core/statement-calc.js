@@ -1,0 +1,5 @@
+/* core/statement-calc.js — 정산서 계산 공용(taxOf·won1·fetchTaxRate)
+   index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
+const ORD=['ridi','kyobo','aladin','yes24','bookcube'],ORDN=ORD.map(c=>PN[c]),ordDet=D=>{const g=[];D.forEach(r=>{if(r[0]!==''||!g.length)g.push([]);g[g.length-1].push(r)});const rk=n=>{const i=ORDN.indexOf(n);return i<0?99:i};return g.flatMap(rows=>{const h=rows[0].slice(0,3);return rows.slice().sort((a,b)=>rk(a[3])-rk(b[3])).map((r,i)=>[i?'':h[0],i?'':h[1],i?'':h[2],...r.slice(3)])})},fl=n=>Math.floor(n),LOCAL_MIN=0,taxOf=(A,r)=>{if(A>0&&Math.abs(r-3.3)<1e-9){const i=Math.floor(A*3/1000)*10,l=Math.floor(i/100)*10;return i+(l<LOCAL_MIN?0:l)}return Math.floor(A*r/100)},won1=n=>w0(n)+'원';
+/* 원천징수율 설정(app_settings.withholding_rate, 숫자 %). 관리자가 정산 화면에서 저장 → 작가 화면 '예상 실지급액'이 읽음 */
+const fetchTaxRate=async()=>{const{data,error}=await SB.from('app_settings').select('value').eq('key','withholding_rate').maybeSingle();const v=data?.value;return !error&&typeof v==='number'&&v>=0&&v<=100?v:undefined};

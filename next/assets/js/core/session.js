@@ -1,5 +1,5 @@
 /* core/session.js — 작가 자동 로그아웃(1시간) · 로그인 입력칸 X 버튼
-   index.html의 <script> 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
+   index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
 /* ---------- 작가 자동 로그아웃 (1시간 미사용) ---------- */
 const IDLE=60*60*1000;let LA=Date.now(),LW=0,IT=null;
 const stamp=()=>{try{localStorage.setItem('yw_la',String(Date.now()))}catch(e){dbg('활동 시각 저장',e)}};

@@ -1,5 +1,5 @@
 /* core/auth.js — 인증(로그인·로그아웃·세션)
-   index.html의 <script> 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
+   index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
 /* ---------- 인증 ---------- */
 const view=id=>['login','accept','chpw','mfa','denied','app','author'].forEach(v=>$('#'+v).hidden=v!==id);
 document.querySelectorAll('.out').forEach(b=>b.onclick=async()=>{stopIdle();dropEmbeds();await SB.auth.signOut();view('login')});

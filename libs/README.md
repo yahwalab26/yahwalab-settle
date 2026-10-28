@@ -7,6 +7,7 @@
 | xlsx-0.20.3.full.min.js | SheetJS 공식 CDN `https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js` (npm 의 xlsx 는 0.18.5 에서 멈춤 → 공식 사이트 파일을 사용자가 직접 받아 첨부) | sha256 cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41 (npm 무결성 값 없음. 버전 문자열·외부 통신 코드 없음·0.18.5와 읽기/쓰기 결과 동일을 확인) |
 | html2canvas-1.4.1.min.js | html2canvas@1.4.1 `dist/html2canvas.min.js` | fPU6BHNpsyIhr8yyMpTLLxAbkaK8ArIBcmZIRiBLiDhjeqvXolaEmDGmELFuX9I4xDcaKKcJl+TKZLqruBbmWA== |
 | jspdf-4.2.1.umd.min.js | jspdf@4.2.1 `dist/jspdf.umd.min.js` | sha512-YyAXyvnmjTbR4bHQRLzex3CuINCDlQnBqoSYyjJwTP2x9jDLuKDzy7aKUl0hgx3uhcl7xzg32agn5vlie6HIlQ== |
+| jszip-3.10.1.min.js | jszip@3.10.1 `dist/jszip.min.js` (교정고 점검 `proofcheck.html` 전용: hwpx·docx 읽기·쓰기) | sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g== |
 
 (npm 값은 각 패키지 압축 파일(.tgz) 전체의 값이며 `npm view <패키지>@<버전> dist.integrity` 로 확인됩니다.)
 

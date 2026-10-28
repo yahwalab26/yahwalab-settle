@@ -1,9 +1,7 @@
 /* admin/shell.js — 메뉴(영역 탭·세부 메뉴)·라우팅·엑셀 라이브러리 로더·프롬프트 모음
-   index.html의 <script> 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
+   index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
 /* ---------- 메뉴(nav) ---------- */
 $('#homelink').onclick=e=>{if(location.hash===''||location.hash==='#/home'){e.preventDefault();loadHome();scrollTo(0,0)}};
-/* 새로 접속(주소 입력·북마크·탭 복원)하면 현황에서 시작. 같은 탭의 새로고침·뒤로가기만 보던 화면 유지 */
-try{const nt=(performance.getEntriesByType('navigation')[0]||{}).type;if(!sessionStorage.getItem('yw_s')||nt==='navigate'){if(location.hash&&location.hash!=='#/home')history.replaceState(null,'',location.pathname+'#/home')}sessionStorage.setItem('yw_s','1')}catch(e){dbg('세션 표시',e)}
 const PG=['home','upload','authors','settle','tax','docs','books','proof','mail','sns','prompt','alog','llog','visit'];
 /* 영역 → 세부 메뉴. 주소(#/home 등)는 그대로이고 화면 묶음만 나눔. 영역을 누르면 그 영역에서 마지막으로 본 화면으로 감 */
 const AREAS={works:['books','authors'],settle:['upload','settle','tax'],stats:['home','visit'],tools:['mail','sns','proof','prompt'],ops:['docs','alog','llog']};

@@ -1,5 +1,5 @@
 /* admin/upload-infer.js — 양식 자동 추론·업로드 확정
-   index.html의 <script> 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
+   index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
 /* ---------- 양식 자동 추론: 알려진 양식이 아니어도 열 이름(제목)을 보고 값을 추정 ---------- */
 const SYN={title:['제목','도서명','상품명','작품명','콘텐츠명','책제목','title'],author:['저자','저자명','작가','작가명','필명'],isbn:['isbn','epubisbn','전자책isbn','도서isbn'],
   date:['판매일','판매일시','판매취소일시','판매기간','일자','날짜','주문일','결제일'],qty:['부수','수량','판매수량','판매부수','건수'],list:['정가','출판사판매가'],price:['판매가','서점판매가','단가'],
@@ -99,4 +99,3 @@ async function commit(){const b=$('#go');b.disabled=true;$('#msg').textContent='
   const{data,error}=await SB.rpc('commit_upload_v2',{p_batch:{platform_code:S.p,filename:S.name,file_sha256:S.sha,period_start:S.ps,period_end:S.pe},p_lines:lines});
   if(error){b.disabled=false;$('#msg').innerHTML=`<span class="bad">${esc(error.message)}</span>`;reportErr('업로드 확정',error.message);return}
   QRES.push(`${S.name}: ${PN[S.p]} 신규 ${data.inserted}건 추가 · 중복 ${data.skipped}건 건너뜀${data.updated?` · ${data.updated}건 갱신`:''}`);S=null;loadFresh();loadUploads();nextFile()}
-

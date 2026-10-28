@@ -1,5 +1,5 @@
 /* admin/authors.js — 작가 관리
-   index.html의 <script> 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
+   index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
 /* ---------- 작가 관리 ---------- */
 let PEOPLE=[];
 const cpy=async(t,b)=>{await navigator.clipboard.writeText(t);const o=b.textContent;b.textContent='복사됨';setTimeout(()=>b.textContent=o,1200)};
@@ -62,4 +62,3 @@ $('#alist').onclick=async e=>{const b=e.target.closest('button');if(!b)return;co
 $('#mp').onclick=async e=>{e.target.disabled=true;const{data,error}=await call({action:'preview_mail'});e.target.disabled=false;if(error)return alert(error);
   const r=$('#mprev');r.innerHTML=`<b>${esc(data.subject)}</b><div class="row" style="margin-top:10px"><button class="ghost" data-w="100%">PC 폭</button><button class="ghost" data-w="360px">모바일 폭 (360px)</button></div><iframe id="mif" sandbox="" style="display:block;width:100%;max-width:100%;height:600px;border:1px solid var(--line);margin:12px auto 0"></iframe><button class="ghost" id="mx" style="margin-top:12px">닫기</button>`;
   $('#mif').srcdoc=data.html;r.hidden=false;r.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>$('#mif').style.width=b.dataset.w);$('#mx').onclick=()=>r.hidden=true};
-

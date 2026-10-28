@@ -1,5 +1,5 @@
 /* admin/upload-read.js — 파일 읽기(엑셀·CSV 해석)
-   index.html의 <script> 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
+   index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
 /* ---------- 파일 읽기 ---------- */
 function parseCSV(t){const R=[];let r=[],f='',i=0,n=t.length;
   while(i<n){
@@ -73,4 +73,3 @@ function parse(rows,p,hi){
   if(p==='kyobo'&&total!=null){const s=L.reduce((a,l)=>a+l.gross_amount,0);if(s!==total)E.push(`합계 불일치: 행 합 ${won(s)} ≠ 파일의 합계 ${won(total)}`)}
   L.forEach((l,i)=>{if(!/^\d{13}$/.test(l.isbn)&&!/^t:./.test(l.isbn))E.push(`ISBN 인식 실패: "${l.isbn}" (${l.title})`)});
   return{L,E,total}}
-

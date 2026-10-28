@@ -1,5 +1,5 @@
 /* admin/uploads.js — 업로드 이력 · 정산 데이터 초기화
-   index.html의 <script> 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
+   index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
 /* ---------- 업로드 이력 · 정산 데이터 초기화 ---------- */
 async function loadUploads(){const{data}=await SB.from('upload_batches').select('id,platform_code,filename,row_count,created_at').order('created_at',{ascending:false}).limit(30);
   $('#ul').innerHTML=(data||[]).map(b=>`<tr><td>${new Date(b.created_at).toLocaleString('ko-KR')}</td><td>${PN[b.platform_code]||b.platform_code}</td><td class="hm">${esc(b.filename||'')}</td><td class="r">${b.row_count}</td><td><button class="ghost ib" data-ub="${b.id}" data-n="${b.row_count}" title="이 업로드 되돌리기" aria-label="이 업로드 되돌리기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></td></tr>`).join('')||'<tr><td colspan="5" class="k">업로드 이력이 없습니다.</td></tr>'}
@@ -14,4 +14,3 @@ $('#rb').onclick=async()=>{const pf=$('#rs').value,label=pf?PN[pf]:'전체 플�
     alert(`판매 데이터 ${data.deleted}건을 삭제했습니다.`);loadFresh();loadUploads();loadHome()}})};
 $('#pc').onclick=e=>{const b=e.target.closest('button');if(b){DP=b.dataset.p;drawDetail()}};
 $('#dt').onchange=async e=>{const t=e.target.closest('select[data-wl]');if(!t||!t.value)return;const{error}=await SB.from('works').update({label:t.value}).eq('id',t.dataset.wl);if(error)return alert(error.message);loadHome()};
-

@@ -1,5 +1,5 @@
 /* admin/work-detail.js — 작품 상세(일별 판매·레이블·계약 비율)
-   index.html의 <script> 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
+   index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
 /* ---------- 작품 상세 (일별 판매 · 레이블 · 계약 비율) ---------- */
 const addM=(s,n)=>{const d=new Date(s+'T00:00:00Z'),day=d.getUTCDate();d.setUTCDate(1);d.setUTCMonth(d.getUTCMonth()+n);const last=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).getUTCDate();d.setUTCDate(Math.min(day,last));return iso(d)},addY=(s,n)=>addM(s,12*n),addDay=(s,n)=>iso(new Date(new Date(s+'T00:00:00Z').getTime()+n*864e5)),dday=s=>Math.round((new Date(s+'T00:00:00Z')-new Date(iso(kst())+'T00:00:00Z'))/864e5);
 // 계약기간 3년 = 시작일부터 3년 뒤의 '전날'까지(민법상 기간 계산). 만료 3개월 전까지 해지 통보가 없으면 1년씩 자동 연장 → 만료일은 매번 '시작일 + n년 − 1일'
@@ -7,7 +7,6 @@ function renewal(start){if(!start)return null;const t=iso(kst());let n=0,r=addDa
 const renewTxt=id=>{const w=WORKS.find(x=>x.id===id),r=renewal(w&&w.contract_start);return r?`${r.date} <span class="k">(D-${r.d})</span>`:'<span class="k">-</span>'};
 function drawRenew(){const L=WORKS.map(w=>({w,r:renewal(w.contract_start)})).filter(x=>x.r&&x.r.d<=180).sort((a,b)=>a.r.date.localeCompare(b.r.date));
   $('#rn').innerHTML=`<b>계약 갱신 일정</b> <span class="k">(180일 이내 · 3년 계약, 만료 3개월 전까지 해지 의사가 없으면 1년 자동 연장)</span><div class="tw" style="margin-top:10px"><table><caption class="sr-only">계약 갱신 일정</caption><thead><tr><th>작품</th><th>계약 만료일</th><th>해지 통보 마감</th></tr></thead><tbody>${L.map(({w,r})=>`<tr><td><button class="lnk" data-w="${w.id}">${esc(w.title)}</button></td><td>${r.date} <span class="k">(D-${r.d})</span></td><td>${r.dn<0?'<span class="k">기한 경과 · 자동 연장 예정</span>':`${r.notice} <span class="${r.dn<=30?'bad':'k'}">(D-${r.dn}${r.dn<=30?' · 임박':''})</span>`}</td></tr>`).join('')||'<tr><td colspan="3" class="k em">180일 이내에 갱신되는 계약이 없습니다. (계약 시작일은 작품 상세에서 입력)</td></tr>'}</tbody></table></div>`}
-const pct=r=>Math.round(Number(r)*1000)/10+'%',KD={base:'기본',special:'특약'};
 function rateTxt(id){const t=iso(kst()),L=CT.filter(c=>c.work_id===id&&c.effective_from<=t&&(!c.effective_to||c.effective_to>=t));if(!L.length)return '<span class="bad">미설정</span>';
   const b=L.find(c=>c.kind==='base'&&!c.platform_code)||L[0];return pct(b.author_rate)+(L.length>1?' <span class="k">(특약·개별 있음)</span>':'')}
 let CE=null;
@@ -54,7 +53,6 @@ async function loadCf(id){const{data}=await SB.from('work_contracts').select('id
 function prepFile(f){return new Promise((res,rej)=>{if(f.type==='application/pdf'){if(f.size>8*1024*1024)return rej('PDF는 8MB 이하여야 합니다.');const r=new FileReader();r.onload=()=>res({mime:f.type,data:String(r.result).split(',')[1]});r.onerror=()=>rej('파일을 읽지 못했습니다.');return r.readAsDataURL(f)}
   if(!/^image\/(jpeg|png|webp)$/.test(f.type))return rej('JPG, PNG, WEBP 이미지 또는 PDF만 올릴 수 있습니다.');
   const img=new Image(),u=URL.createObjectURL(f);img.onload=()=>{const k=Math.min(1,2200/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);URL.revokeObjectURL(u);res({mime:'image/jpeg',data:cv.toDataURL('image/jpeg',.85).split(',')[1]})};img.onerror=()=>rej('이미지를 읽지 못했습니다.');img.src=u})}
-let CFURL=null;
 async function viewCf(cid,wid){openLay('<p class="k">불러오는 중…</p>');const{data,error}=await call({action:'contract_get',id:cid});if(error)return openLay(`<p class="bad">${esc(error)}</p><button class="ghost" id="cfx">← 작품 상세</button>`),$('#cfx').onclick=()=>openWork(wid);
   const bytes=Uint8Array.from(atob(data.data),c=>c.charCodeAt(0));if(CFURL)URL.revokeObjectURL(CFURL);CFURL=URL.createObjectURL(new Blob([bytes],{type:data.mime}));
   openLay(`<div class="row" style="justify-content:space-between;margin-bottom:12px"><button class="ghost" id="cfx">← 작품 상세</button><a href="${CFURL}" target="_blank" rel="noopener" class="k" style="text-decoration:underline">새 창에서 열기</a></div><h3 id="lt" style="margin:0 0 10px">${esc(data.note||'계약서')}</h3>${data.mime==='application/pdf'?`<iframe src="${CFURL}" title="계약서" style="width:100%;height:70vh;border:1px solid var(--line)"></iframe>`:`<img src="${CFURL}" alt="계약서" style="max-width:100%;display:block;margin:0 auto;border:1px solid var(--line)">`}`);
@@ -64,4 +62,3 @@ async function loadCT(){const{data,error}=await SB.from('contracts').select('id,
 async function openPen(aid){if(!await loadCT())return alert('계약 비율을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');const a=AUTHORS.find(x=>x.id===aid)||{},ws=WORKS.filter(w=>(WA[w.id]||[]).includes(aid));
   openLay(`<h3 id="lt" style="margin:0 0 4px">${esc(a.pen_name)}</h3><p class="k" style="margin:0 0 14px">${esc(a.email||'')} · 연결된 작품 ${ws.length}개</p><table><caption class="sr-only">필명의 작품 목록</caption><thead><tr><th>작품</th><th>레이블</th><th class="r">계약 비율</th></tr></thead><tbody>${ws.map(w=>`<tr><td><button class="lnk" data-ow="${w.id}">${esc(w.title)}</button></td><td>${esc(w.label||'미지정')}</td><td class="r">${rateTxt(w.id)}</td></tr>`).join('')||'<tr><td colspan="3" class="k em">연결된 작품이 없습니다.</td></tr>'}</tbody></table>`);
   $('#lbody').onclick=e=>{const b=e.target.closest('[data-ow]');if(b)openWork(b.dataset.ow)}}
-

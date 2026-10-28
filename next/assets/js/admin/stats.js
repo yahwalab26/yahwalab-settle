@@ -1,5 +1,5 @@
 /* admin/stats.js — 현황(정산 현황·작품별 판매 상세)
-   index.html의 <script> 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
+   index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
 /* ---------- 현황 ---------- */
 let DD=[],DP='all';const COL={'야화랩':'#111','트루비':'#e8b23c','미지정':'#bdbdbd'},PL={all:'전체',ridi:'리디북스',kyobo:'교보문고',aladin:'알라딘',yes24:'예스24',bookcube:'북큐브'};
 const man=n=>n>=1e4?(n/1e4).toFixed(1)+'만':Math.round(n).toLocaleString('ko-KR'),sum=(a,k)=>a.reduce((t,r)=>t+Number(r[k]),0);
@@ -59,4 +59,3 @@ $('#yr').onclick=yrPick;$('#yr').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')
 $('#dm').onchange=loadHome;
 $('#lv').onclick=e=>{const b=e.target.closest('[data-lv]');if(b){LV=b.dataset.lv;drawWeekly();drawWeek();drawDetail();drawYear()}};
 $('#wl').onclick=e=>{const b=e.target.closest('[data-w]');if(b)openWork(b.dataset.w)};
-

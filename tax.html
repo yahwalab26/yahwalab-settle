@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-GFCSt8cSJ6n/Oz196X6B8cQat7VeqvlsNpmQKDhWfg8='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-yrbj8xBZmDOWZucI2IPmQbziUb/OjFzCu3om7hx39kc='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -66,7 +66,7 @@ button.done{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
 <script src="libs/supabase-2.49.4.js"></script>
 <script>
 (function(){'use strict';
-const VER='v1.5.0';   /* 새 기능=minor, 수정·문구=patch. index.html과 별개로 관리 */
+const VER='v1.6.0';   /* 새 기능=minor, 수정·문구=patch. index.html과 별개로 관리 */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -96,6 +96,13 @@ const group=(rows,names)=>{const G=new Map();rows.forEach(r=>{const pm=payMonth(
 const calc=g=>{const L=[...g.P.values()].map(p=>{const t=taxOf(p.A);return{...p,t,pay:p.A-t.tot,diff:p.A>0&&p.site!==t.tot}}).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   const act=L.filter(p=>p.A>0),S=(f)=>act.reduce((s,p)=>s+f(p),0);
   return{L,act,skip:L.filter(p=>!(p.A>0)),tot:{cnt:act.length,A:S(p=>p.A),inc:S(p=>p.t.inc),loc:S(p=>p.t.loc),all:S(p=>p.t.tot),pay:S(p=>p.pay)}}};
+/* 주민등록번호 형식 검사: 13자리, 앞 6자리=생년월일(7번째 숫자로 1900/2000년대 구분), 7번째=성별(1~8) — index.html 의 rrnCheck 와 같은 규칙 */
+const rrnCheck=(raw,today)=>{const d=String(raw==null?'':raw).replace(/\D/g,'');if(d.length!==13)return{ok:false,msg:'숫자 13자리가 아닙니다('+d.length+'자리)'};
+  const g=+d[6];if(!(g>=1&&g<=8))return{ok:false,msg:'7번째 숫자(성별)는 1~8이어야 합니다'};
+  const y=((g===1||g===2||g===5||g===6)?1900:2000)+ +d.slice(0,2),m=+d.slice(2,4),dd=+d.slice(4,6),dt=new Date(Date.UTC(y,m-1,dd));
+  if(m<1||m>12||dt.getUTCFullYear()!==y||dt.getUTCMonth()!==m-1||dt.getUTCDate()!==dd)return{ok:false,msg:'앞 6자리가 올바른 생년월일(YYMMDD)이 아닙니다'};
+  if(dt>(today||new Date()))return{ok:false,msg:'생년월일이 오늘보다 뒤입니다(7번째 숫자나 연도를 확인하세요)'};
+  const birth=y+'-'+d.slice(2,4)+'-'+d.slice(4,6),foreign=g>=5,sex=g%2?'남':'여';return{ok:true,birth,foreign,sex,msg:birth+' 생 · '+(foreign?'외국인 ':'')+sex}};
 /*PURE-END*/
 let G=new Map(),DRAFT=[],names={},FIL={},busy=false,REAL={},showReal=false,RRN=null,rrnTimer=0,realMsg=null,rrnMsg=null,pMsg=null;
 const nm=p=>showReal&&REAL[p.id]?REAL[p.id]:p.name;
@@ -144,7 +151,7 @@ function draw(key){const g=G.get(key);if(!g)return;const c=calc(g),today=iso(kst
   if(c.skip.length)notes+=`<div class="note info">지급액이 0원 이하인 ${c.skip.length}명은 신고 대상에서 제외했습니다.</div>`;
   const tsv=['성명\t지급액\t소득세\t지방소득세\t계\t실지급액'].concat(c.act.map(p=>[nm(p),p.A,p.t.inc,p.t.loc,p.t.tot,p.pay].join('\t'))).join('\n');
   const ns=c.act.filter(p=>pinfo(key,p.id,'stmt').done).length,nl=c.act.filter(p=>pinfo(key,p.id,'local').done).length;
-  const rows=c.act.map(p=>`<tr><td>${esc(nm(p))}</td>${RRN?`<td>${RRN[p.id]?`${esc(fmtRrn(RRN[p.id]))} ${cp(RRN[p.id],'복사')}`:'<span class="bad">미등록</span>'}</td>`:''}<td>${n0(p.A)}</td><td>${n0(p.t.inc)}</td><td>${n0(p.t.loc)}${p.t.ex?' <span class="k" title="지방소득세 1,000원 미만: 소액부징수 대상이 될 수 있음">소액</span>':''}</td><td>${n0(p.t.tot)}</td><td>${n0(p.pay)}</td><td class="${p.diff?'bad':'ok'}">${p.diff?'정산 '+n0(p.site)+' ≠ '+n0(p.t.tot):'일치'}</td>${['stmt','local'].map(f=>{const i=pinfo(key,p.id,f);return`<td style="text-align:center"><input type="checkbox" data-pc="${f}:${esc(p.id)}"${i.done?' checked':''} title="${i.done?'입력 완료 '+esc(i.date||''):'아직 입력 전'}" aria-label="${f==='stmt'?'명세서':'지방세'} 입력 완료"></td>`}).join('')}</tr>`).join('')||'<tr><td colspan="10" class="k" style="text-align:center">신고할 지급이 없습니다.</td></tr>';
+  const rows=c.act.map(p=>`<tr><td>${esc(nm(p))}</td>${RRN?`<td>${RRN[p.id]?`${esc(fmtRrn(RRN[p.id]))} ${(()=>{const ck=rrnCheck(RRN[p.id]);return`<span class="${ck.ok?'ok':'bad'}" title="${esc(ck.msg)}">${ck.ok?'✓':'⚠'}</span>`})()} ${cp(RRN[p.id],'복사')}${(()=>{const ck=rrnCheck(RRN[p.id]);return ck.ok?'':`<div class="bad" style="font-size:12px">${esc(ck.msg)}</div>`})()}`:'<span class="bad">미등록</span>'}</td>`:''}<td>${n0(p.A)}</td><td>${n0(p.t.inc)}</td><td>${n0(p.t.loc)}${p.t.ex?' <span class="k" title="지방소득세 1,000원 미만: 소액부징수 대상이 될 수 있음">소액</span>':''}</td><td>${n0(p.t.tot)}</td><td>${n0(p.pay)}</td><td class="${p.diff?'bad':'ok'}">${p.diff?'정산 '+n0(p.site)+' ≠ '+n0(p.t.tot):'일치'}</td>${['stmt','local'].map(f=>{const i=pinfo(key,p.id,f);return`<td style="text-align:center"><input type="checkbox" data-pc="${f}:${esc(p.id)}"${i.done?' checked':''} title="${i.done?'입력 완료 '+esc(i.date||''):'아직 입력 전'}" aria-label="${f==='stmt'?'명세서':'지방세'} 입력 완료"></td>`}).join('')}</tr>`).join('')||'<tr><td colspan="10" class="k" style="text-align:center">신고할 지급이 없습니다.</td></tr>';
   $('#app').innerHTML=`${notes}
 <div class="cards">
 <div class="card"><span class="k">입금일</span><b>${fmt(s.pay)}</b></div>
@@ -211,7 +218,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-real
   const g=G.get(key),act=g?calc(g).act:[];
   try{
     if(isReal){if(!Object.keys(REAL).length)await loadReal();showReal=true;const n=act.filter(p=>REAL[p.id]).length;realMsg={t:n===act.length?`작가 실명 ${n}명을 불러왔습니다.`:`작가 실명 ${n}/${act.length}명만 불러왔습니다. 나머지는 작가 정보에 실명이 없습니다.`,err:n<act.length}}
-    else{await loadRrn(act.map(p=>p.id));const n=act.filter(p=>RRN[p.id]).length;rrnMsg={t:n===act.length?`주민등록번호 ${n}명을 불러왔습니다. 60초 뒤 자동으로 숨깁니다.`:`주민등록번호 ${n}/${act.length}명만 등록되어 있습니다. 미등록 작가는 작가 관리 > 수정에서 입력해 주세요. 60초 뒤 자동으로 숨깁니다.`,err:n<act.length}}
+    else{await loadRrn(act.map(p=>p.id));const n=act.filter(p=>RRN[p.id]).length,badN=act.filter(p=>RRN[p.id]&&!rrnCheck(RRN[p.id]).ok).length;rrnMsg={t:(n===act.length?`주민등록번호 ${n}명을 불러왔습니다.`:`주민등록번호 ${n}/${act.length}명만 등록되어 있습니다. 미등록 작가는 작가 관리 > 수정에서 입력해 주세요.`)+(badN?` 형식이 이상한 번호가 ${badN}명 있습니다(⚠ 표시, 생년월일·성별 숫자를 확인하세요).`:' 모두 형식(생년월일·성별 숫자)이 맞습니다.')+' 60초 뒤 자동으로 숨깁니다.',err:n<act.length||badN>0}}
   }catch(x){const m=hint(String(x&&x.message||x));if(isReal)realMsg={t:'실명을 불러오지 못했습니다: '+m,err:true};else rrnMsg={t:'주민등록번호를 불러오지 못했습니다: '+m,err:true}}
   busy=false;draw(key)});
 async function actP(key,field,ids,done,onFail){if(busy)return;busy=true;

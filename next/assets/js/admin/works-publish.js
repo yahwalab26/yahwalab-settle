@@ -6,9 +6,12 @@ const BKG=['BL','로판','현로'],BKURL=/^https:\/\/blog\.naver\.com\//;
 const bkRnd=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join(''); /* 표지 파일명용 무작위 32자(추측 방지) */
 const bkCover=p=>p?SB.storage.from('covers').getPublicUrl(p).data.publicUrl:'';
 const bkNames=id=>(WA[id]||[]).map(a=>(AUTHORS.find(x=>x.id===a)||{}).pen_name).filter(Boolean).join(', ');
+const bkPens=id=>(WA[id]||[]).map(a=>(AUTHORS.find(x=>x.id===a)||{}).pen_name).filter(Boolean).map(n=>`<button class="lnk" data-bka="${esc(n)}">${esc(n)}</button>`).join(', ');
+/* 작가 탭의 작품 이름을 누르면 여기로: 목록 필터를 풀고 해당 작품 편집 카드를 연다 */
+function goWork(id){BKSEL=id;BKTAB='info';BKCOVER=null;BKF='all';BKQ='';BKADD=false;BKSCROLL=true;if(location.hash==='#/books')loadBooks();else location.hash='#/books'}
 const bkMiss=w=>[!bkNames(w.id)&&'필명',!w.genre&&'장르',!w.cover_path&&'표지',!w.blog_url&&'블로그 주소'].filter(Boolean);
 const bkListed=()=>BK.filter(w=>w.public_listed).sort((a,b)=>(a.sort_order??1e9)-(b.sort_order??1e9)||String(a.release_date||'').localeCompare(String(b.release_date||'')));
-let BKTAB='info',BKF='all',BKQ='',BKADD=false; /* 작품 목록 보기: 필터(all·on·off·miss)·검색어·'작품 추가' 열림 */
+let BKSCROLL=false,BKTAB='info',BKF='all',BKQ='',BKADD=false; /* 작품 목록 보기: 필터(all·on·off·miss)·검색어·'작품 추가' 열림 */
 let BKP={t:'',c:'k'}; /* 홈페이지 반영 요청 결과 표시(화면이 다시 그려져도 유지) */
 async function bkPublish(){const put=(t,c)=>{BKP={t,c};const e=$('#bkpub');if(e){e.className=c;e.textContent=t}};
   put('홈페이지 반영 요청 중…','k');const r=await call({action:'publish_site'});
@@ -41,7 +44,7 @@ function drawBooks(){
   drawBookRows();drawBookEdit()}
 function drawBookEdit(){const el=$('#bke'),w=BK.find(x=>x.id===BKSEL);if(!el)return;if(!w){el.innerHTML='';return}
   const cv=BKCOVER?URL.createObjectURL(BKCOVER):bkCover(w.cover_path),opt=(v,cur)=>`<option ${v===cur?'selected':''}>${esc(v)}</option>`;
-  el.innerHTML=`<h2><small>(02)</small>작품 편집</h2><div class="card" style="text-align:left"><h3 style="margin:0 0 4px">${esc(w.title)}</h3><p class="k" style="margin:0 0 10px">${esc(bkNames(w.id)||'필명 미연결 — 작가 탭에서 작품에 필명을 연결해 주세요.')}</p>
+  el.innerHTML=`<h2><small>(02)</small>작품 편집</h2><div class="card" style="text-align:left"><h3 style="margin:0 0 4px">${esc(w.title)}</h3><p class="k" style="margin:0 0 10px">${bkPens(w.id)||'필명 미연결 — 작가 탭에서 작품에 필명을 연결해 주세요.'}</p>
   <div class="row" role="tablist" style="justify-content:flex-start;gap:6px;margin:0 0 14px">${[['info','기본 정보'],['ct','계약·판매']].map(([k,n])=>`<button class="${BKTAB===k?'':'ghost'}" role="tab" aria-selected="${BKTAB===k}" data-bkt="${k}" style="min-height:34px;padding:0 14px">${n}</button>`).join('')}</div>
   ${BKTAB==='ct'?'<div id="bkdet"></div><div class="row" style="justify-content:flex-start;margin-top:16px"><button class="ghost" id="bkx">닫기</button></div>':`
   <div class="row" style="align-items:flex-start;justify-content:flex-start;gap:18px"><div style="flex:0 0 130px"><div id="bkpvw" style="width:130px;aspect-ratio:2/3;background:#f2f2f2;border:1px solid var(--line);overflow:hidden">${cv?`<img src="${cv}" alt="표지 미리보기" style="width:100%;height:100%;object-fit:cover;display:block">`:'<div class="k" style="padding:60px 8px;text-align:center">표지 없음</div>'}</div><button class="ghost" id="bkcp" style="margin-top:8px;width:130px">표지 선택</button><input type="file" id="bkcx" accept="image/jpeg,image/png,image/webp" hidden></div>
@@ -50,7 +53,7 @@ function drawBookEdit(){const el=$('#bke'),w=BK.find(x=>x.id===BKSEL);if(!el)ret
   <div style="margin-top:10px"><label class="k" for="bku">블로그 글 주소</label><input id="bku" type="text" inputmode="url" placeholder="https://blog.naver.com/yahwalab/…" value="${esc(w.blog_url||'')}" maxlength="300"></div>
   <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:14px"><input type="checkbox" id="bkp" ${w.public_listed?'checked':''} style="width:18px;height:18px"> 홈페이지에 공개</label></div></div>
   <div class="row" style="justify-content:flex-start;margin-top:16px"><button id="bks">저장</button><button class="ghost" id="bkx">닫기</button></div><p id="bkm" class="k" role="status" style="min-height:18px;margin:10px 0 0"></p>`}</div>`;
-  if(BKTAB==='ct')openWork(w.id,$('#bkdet'))}
+  if(BKTAB==='ct')openWork(w.id,$('#bkdet'));if(BKSCROLL){BKSCROLL=false;el.scrollIntoView({block:'start'})}}
 function bkConv(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(file),im=new Image();
   im.onload=()=>{URL.revokeObjectURL(u);const W=520,H=780,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),k=Math.max(W/im.width,H/im.height),w=im.width*k,h=im.height*k;x.fillStyle='#fff';x.fillRect(0,0,W,H);x.drawImage(im,(W-w)/2,(H-h)/2,w,h);c.toBlob(b=>b?ok({b,crop:Math.abs(im.width/im.height-2/3)>0.03}):no(new Error('이미지 변환에 실패했습니다.')),'image/jpeg',0.88)};
   im.onerror=()=>{URL.revokeObjectURL(u);no(new Error('이미지를 읽을 수 없습니다.'))};im.src=u})}
@@ -108,6 +111,7 @@ $('#pg-books').oninput=e=>{if(e.target.id==='bkq'){BKQ=e.target.value;drawBookRo
 $('#pg-books').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
   if(d.bkf){BKF=d.bkf;drawBookRows();return}
   if(b.id==='bkaddb'){BKADD=!BKADD;$('#bkadd').hidden=!BKADD;b.setAttribute('aria-expanded',String(BKADD));if(BKADD)$('#bkat').focus();return}
+  if(b.dataset.bka){$('#aq').value=b.dataset.bka;location.hash='#/authors';return}
   if(b.dataset.bkt){BKTAB=b.dataset.bkt;drawBookEdit();return}
   if(d.be){BKTAB='info';BKSEL=d.be;BKCOVER=null;drawBookEdit();$('#bke').scrollIntoView({behavior:'smooth',block:'nearest'});return}
   if(b.id==='bkcp')return $('#bkcx').click();

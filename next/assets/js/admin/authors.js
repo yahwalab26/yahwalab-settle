@@ -15,8 +15,8 @@ function renderPeople(){const q=$('#aq').value.trim().toLowerCase();
   $('#alist').innerHTML=rows.map(({p,d,pens})=>{const st=STAT[p.id],list=pens.length?pens:[{}],n=list.length,
     stat=st===undefined?'<span class="vs k">계정 없음</span>':st?'<span class="vs bad"><i class="dot" style="background:var(--bad)"></i>인증 전</span>':'<span class="vs ok"><i class="dot" style="background:var(--ok)"></i>인증 완료</span>',
     acts=['edit:수정','link:링크 재발급','del:삭제'].map(x=>{const[k,t]=x.split(':');return `<button class="ghost" data-pa="${k}" data-id="${p.id}">${t}</button>`}).join('');
-    return list.map((a,i)=>{const ws=WORKS.filter(w=>(WA[w.id]||[]).includes(a.id)).map(w=>esc(w.title)).join('<br>')||'<span class="k">-</span>';
-      return `<tr class="${i?'':'first'}">${i?'':`<th scope="row" rowspan="${n}"><button class="lnk" data-pa="view" data-id="${p.id}">${esc(d.legal_name||p.name_masked)}</button></th>`}<td>${a.id?`<button class="lnk" data-pa="pen" data-id="${a.id}">${esc(a.pen_name)}</button>`:'-'}</td>${i?'':`<td class="hm" rowspan="${n}">${esc(d.phone||p.phone_masked||'-')}</td>`}<td class="hm">${esc(a.email||'-')}</td>${i?'':`<td class="cc" rowspan="${n}">${stat}</td><td class="cc" rowspan="${n}">${acts}</td>`}</tr>`}).join('')}).join('')||'<tr><td colspan="6" class="k em">등록된 작가가 없습니다.</td></tr>'}
+    return list.map((a,i)=>{const ws=WORKS.filter(w=>(WA[w.id]||[]).includes(a.id)).map(w=>`<button class="lnk" data-pa="work" data-id="${w.id}">${esc(w.title)}</button>`).join('<br>')||'<span class="k">-</span>';
+      return `<tr class="${i?'':'first'}">${i?'':`<th scope="row" rowspan="${n}"><button class="lnk" data-pa="view" data-id="${p.id}">${esc(d.legal_name||p.name_masked)}</button></th>`}<td>${a.id?`<button class="lnk" data-pa="pen" data-id="${a.id}">${esc(a.pen_name)}</button>`:'-'}</td><td>${ws}</td>${i?'':`<td class="hm" rowspan="${n}">${esc(d.phone||p.phone_masked||'-')}</td>`}<td class="hm">${esc(a.email||'-')}</td>${i?'':`<td class="cc" rowspan="${n}">${stat}</td><td class="cc" rowspan="${n}">${acts}</td>`}</tr>`}).join('')}).join('')||'<tr><td colspan="7" class="k em">등록된 작가가 없습니다.</td></tr>'}
 async function loadDec(){const{data}=await call({action:'list_people'});if(data){DEC=data.people||{};renderPeople()}}
 $('#aq').oninput=renderPeople;
 let EDIT=null;
@@ -51,7 +51,7 @@ $('#af').onsubmit=async e=>{e.preventDefault();const g=i=>$('#'+i).value.trim(),
   if(EDIT){$('#ares').innerHTML='<b class="ok">작가 정보를 수정했습니다.</b>';$('#ares').hidden=false}
   else showLink(data.link,`${esc(pens[0].pen_name)} 계정을 만들었습니다.`,data.mail);
   loadPeople()};
-$('#alist').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.id,a=b.dataset.pa;
+$('#alist').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.id,a=b.dataset.pa;if(a==='work')return goWork(id);
   if(a==='pen')return openPen(id);
   if(a==='edit')return openForm(id);
   if(a==='del'){if(prompt('정말 삭제할까요?\n작가 계정, 개인정보, 필명과 작품 연결이 모두 삭제됩니다.\n삭제하려면 "삭제"를 입력하세요.')!=='삭제')return;b.disabled=true;

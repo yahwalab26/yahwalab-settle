@@ -15,9 +15,10 @@ function mailSt(pid){const p=buildSt().find(x=>x.id===pid),x=SS[pid],m=monVal('#
   confirmLay({title:sent?'정산 메일 재발송':'정산 메일 발송',danger:false,body:`<p style="margin:0"><b>${esc([...p.pens].join(', '))}</b> 작가님께 ${m.slice(0,7)} 정산서 확정 안내 메일을 ${sent?'다시 ':''}발송합니다.<br>정산서 PDF를 첨부해 발송합니다(PDF에는 정산 금액이 포함됩니다).${sent?`<br><span class="bad">${(x.sent_at||'').slice(0,10)}에 이미 발송했습니다.</span>`:''}</p>`,ok:sent?'재발송':'발송',onOk:async()=>{
     openLay('<p class="k">정산서 PDF 생성·메일 발송 중…</p>');let r;try{const{data:sn,error:se}=await SB.from('settlements').select('snapshot').eq('id',x.id).single();if(se||!sn?.snapshot)throw '확정된 정산서를 불러오지 못했습니다.';r=await mailPdf(pid,m,sn.snapshot)}catch(e){closeLay();return alert(String(e.message||e))}
     closeLay();if(r.error)return alert(r.error);alert(`${r.data.to} 로 발송했습니다.`);loadSettle()}})}
-function confirmSt(ids){const L=buildSt().filter(p=>ids.includes(p.id)),m=monVal('#sm')+'-01',bad=L.filter(p=>p.nr);
+function confirmSt(ids){const L=buildSt().filter(p=>ids.includes(p.id)),m=monVal('#sm')+'-01',bad=L.filter(p=>p.nr),neg=L.filter(p=>p.A<0);
   if(!L.length)return alert('확정할 정산서가 없습니다.');
   if(bad.length)return alert(`계약 비율이 설정되지 않은 판매가 있어 확정할 수 없습니다.\\n${bad.map(p=>[...p.pens][0]+' ('+p.nr+'건)').join(', ')}\\n작품 상세에서 계약 비율을 먼저 입력하세요.`);
+  if(neg.length)return alert('정산액이 마이너스인 작가가 있어 확정할 수 없습니다. 마이너스는 다음 달로 이월해 차감해야 하므로, 이월 공제 기능이 준비되기 전에는 이 작가를 확정하지 마세요. / '+neg.map(p=>[...p.pens][0]+' ('+won1(p.A)+')').join(', '));
   const over=L.some(p=>SS[p.id]&&SS[p.id].status!=='draft');
   confirmLay({title:'정산서 확정',danger:false,body:`<p style="margin:0">${m.slice(0,7)} 정산서 <b>${L.length}명</b>을 확정하고, 작가가 본인 정산서를 열람할 수 있게 합니다.<br>확정만 하며 <b>메일은 발송되지 않습니다</b>. 정산서 메일은 정산 화면의 '메일 발송' 버튼으로 보냅니다.<br>원천징수율 <b>${$('#sx').value}%</b> 기준으로 저장됩니다.${over?'<br><span class="bad">이미 확정된 정산서는 현재 값으로 덮어씁니다.</span>':''}</p>`,ok:'확정',onOk:async()=>{
     for(const p of L){const row={person_id:p.id,period_month:m,status:'confirmed',gross_total:p.gross,net_total:p.net,author_total:p.A,deduction:p.ded,tax_amount:p.tax,payable_amount:p.pay,tax_rate:Number($('#sx').value),snapshot:mkSnap(p),confirmed_at:new Date().toISOString()},x=SS[p.id];

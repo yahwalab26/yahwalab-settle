@@ -21,9 +21,9 @@ async function loadDec(){const{data}=await call({action:'list_people'});if(data)
 $('#aq').oninput=renderPeople;
 let EDIT=null;
 const penRow=(p={})=>`<div class="pr"${p.id?` data-id="${p.id}"`:''}><input class="pn" type="text" placeholder="필명" aria-label="필명" value="${esc(p.pen_name||'')}" required><input class="pe" type="email" placeholder="이메일" aria-label="필명별 이메일" value="${esc(p.email||'')}" required><button type="button" class="ghost" data-rm aria-label="이 줄 삭제">삭제</button></div>`;
-async function openForm(id){EDIT=id;$('#af').reset();rrnFmt();$('#f5').placeholder='주민등록번호 13자리 (선택 · 암호화 저장)';$('#fmw').hidden=!!id;$('#fl').hidden=!id;$('#fs').textContent=id?'저장':'등록하고 설정 링크 만들기';let pens=[{}];
+async function openForm(id){EDIT=id;$('#af').reset();rrnFmt();$('#f5v').hidden=true;$('#f5').placeholder='주민등록번호 13자리 (선택 · 암호화 저장)';$('#fmw').hidden=!!id;$('#fl').hidden=!id;$('#fs').textContent=id?'저장':'등록하고 설정 링크 만들기';let pens=[{}];
   if(id){const{data,error}=await call({action:'get_person',person_id:id});if(error)return alert(error);const d=data.pii;
-    $('#f1').value=d.legal_name||'';$('#f2').value=d.phone||'';$('#f3').value=d.address||'';$('#f4').value=d.bank||[d.bank_name,d.bank_account].filter(Boolean).join(' ');pens=data.pens.length?data.pens:[{}];$('#fl').value=data.login_email||'';if(data.has_rrn)$('#f5').placeholder='주민등록번호 등록됨 (바꾸려면 새 번호 입력, 비워 두면 그대로 유지)'}
+    $('#f1').value=d.legal_name||'';$('#f2').value=d.phone||'';$('#f3').value=d.address||'';$('#f4').value=d.bank||[d.bank_name,d.bank_account].filter(Boolean).join(' ');pens=data.pens.length?data.pens:[{}];$('#fl').value=data.login_email||'';if(data.has_rrn){$('#f5').placeholder='주민등록번호 등록됨 (바꾸려면 새 번호 입력, 비워 두면 그대로 유지)';$('#f5v').hidden=false}}
   $('#prow').innerHTML=pens.map(penRow).join('');$('#afw').hidden=false;$('#afw').scrollIntoView({behavior:'smooth',block:'center'})}
 $('#anew').onclick=()=>openForm(null);$('#fc').onclick=()=>{$('#afw').hidden=true};
 $('#padd').onclick=()=>$('#prow').insertAdjacentHTML('beforeend',penRow());
@@ -34,22 +34,42 @@ function showLink(link,msg,mail){const r=$('#ares');
   r.hidden=false;$('#cl').onclick=e=>cpy(link,e.target)}
 function showPii(d){const L=[['legal_name','실명'],['phone','연락처'],['address','주소'],['bank','은행 · 계좌 · 예금주'],['rrn_state','주민등록번호'],['login_email','로그인 이메일']];
   openLay(`<h3 id="lt" style="margin:0 0 14px">작가 상세</h3><table>${L.map(([k,t])=>`<tr><th scope="row" style="width:32%">${t}</th><td>${esc(d[k]||'-')}</td></tr>`).join('')}</table>${d.pens&&d.pens.length?`<h4 style="margin:22px 0 6px">필명 · 이메일 · 작품</h4><table><thead><tr><th>필명</th><th>이메일</th><th>작품</th></tr></thead><tbody>${d.pens.map(p=>`<tr><td>${esc(p.pen_name)}</td><td>${esc(p.email||'-')}</td><td>${WORKS.filter(w=>(WA[w.id]||[]).includes(p.id)).map(w=>esc(w.title)).join('<br>')||'-'}</td></tr>`).join('')}</tbody></table>`:''}`)}
-/* 주민등록번호 입력: 입력하는 동안은 숫자가 보이고(확인용), 자리 수·형식을 바로 알려 주며, 저장하면 칸이 비워져 화면에 남지 않음 */
+/* 주민등록번호 입력: 입력하는 동안은 숫자가 보이고(확인용), 자리 수·생년월일·성별 숫자를 바로 검사해 알려 주며, 저장하면 칸이 비워지고, 저장 직후와 수정 화면에서 서버에 저장된 값을 10초 동안만 다시 보여 줌 */
+const rrnCheck=(raw,today)=>{const d=String(raw==null?'':raw).replace(/\D/g,'');if(d.length!==13)return{ok:false,msg:'숫자 13자리가 아닙니다('+d.length+'자리)'};
+  const g=+d[6];if(!(g>=1&&g<=8))return{ok:false,msg:'7번째 숫자(성별)는 1~8이어야 합니다'};
+  const y=((g===1||g===2||g===5||g===6)?1900:2000)+ +d.slice(0,2),m=+d.slice(2,4),dd=+d.slice(4,6),dt=new Date(Date.UTC(y,m-1,dd));
+  if(m<1||m>12||dt.getUTCFullYear()!==y||dt.getUTCMonth()!==m-1||dt.getUTCDate()!==dd)return{ok:false,msg:'앞 6자리가 올바른 생년월일(YYMMDD)이 아닙니다'};
+  if(dt>(today||new Date()))return{ok:false,msg:'생년월일이 오늘보다 뒤입니다(7번째 숫자나 연도를 확인하세요)'};
+  const birth=y+'-'+d.slice(2,4)+'-'+d.slice(4,6),foreign=g>=5,sex=g%2?'남':'여';return{ok:true,birth,foreign,sex,msg:birth+' 생 · '+(foreign?'외국인 ':'')+sex}};
 const rrnFmt=()=>{const el=$('#f5'),d=el.value.replace(/\D/g,'').slice(0,13),s=$('#f5s');el.value=d.length>6?d.slice(0,6)+'-'+d.slice(6):d;
   if(!d.length){s.textContent='';s.className='k';return}
-  if(d.length<13){s.textContent=d.length+'/13자리';s.className='k'}
-  else if(!/^\d{6}[1-8]\d{6}$/.test(d)){s.textContent='7번째 숫자는 1~8이어야 합니다. 번호를 다시 확인해 주세요.';s.className='bad'}
-  else{s.textContent='✓ 13자리 형식이 맞습니다. 저장하면 화면에서 지워집니다.';s.className='ok'}};
+  if(d.length>=7&&!(+d[6]>=1&&+d[6]<=8)){s.textContent='7번째 숫자(성별)는 1~8이어야 합니다. 번호를 다시 확인해 주세요.';s.className='bad';return}
+  if(d.length<13){s.textContent=d.length+'/13자리';s.className='k';return}
+  const c=rrnCheck(d);if(!c.ok){s.textContent='⚠ '+c.msg+'. 번호를 다시 확인해 주세요.';s.className='bad';return}
+  s.textContent='✓ 앞 6자리 '+d.slice(0,6)+' = '+c.birth+' 생 · 7번째 '+d[6]+' = '+(c.foreign?'외국인 ':'')+c.sex+' · 뒤 6자리 '+d.slice(7)+' — 저장하면 지워지고, 저장 직후 10초 동안 서버에 저장된 값을 다시 보여 드립니다.';s.className='ok'};
+$('#f5').oninput=rrnFmt;
+let PKT=0,PKI=0;
+function hidePeek(){clearTimeout(PKT);clearInterval(PKI);const b=$('#rrnpk');b.hidden=true;b.textContent=''}
+async function peekRrn(id,label){hidePeek();const b=$('#rrnpk');b.hidden=false;b.textContent='서버에 저장된 값을 확인하는 중…';
+  const{data,error}=await call({action:'get_rrn',person_ids:[id]});
+  if(error){b.innerHTML='<b class="bad">확인하지 못했습니다</b><div class="k" style="text-align:left">'+esc(error)+'</div>';PKT=setTimeout(hidePeek,8000);return}
+  const v=(data.rrn||{})[id]||'';if(!v){b.innerHTML='<b class="bad">'+esc(label||'작가')+' — 저장된 주민등록번호가 없습니다</b>';PKT=setTimeout(hidePeek,8000);return}
+  const c=rrnCheck(v);let n=10;
+  const paint=()=>{b.innerHTML='<div class="k" style="text-align:left">'+esc(label||'작가')+' · 서버에 저장된 번호 ('+n+'초 후 자동으로 숨김)</div><div style="font-size:19px;font-weight:700;letter-spacing:.5px;margin:4px 0;text-align:left">'+esc(v.slice(0,6)+'-'+v.slice(6))+'</div><div class="'+(c.ok?'ok':'bad')+'" style="font-size:13px;text-align:left">'+(c.ok?'✓ ':'⚠ ')+esc(c.msg)+'</div><button type="button" class="ghost" id="rrnpkx" style="margin-top:8px">지금 숨기기</button>';$('#rrnpkx').onclick=hidePeek};
+  paint();PKI=setInterval(()=>{n--;if(n<=0)hidePeek();else paint()},1000)}
+$('#f5v').onclick=()=>peekRrn(EDIT,(document.querySelector('#prow .pn')||{}).value||'작가');
+addEventListener('hashchange',hidePeek);document.addEventListener('visibilitychange',()=>{if(document.hidden)hidePeek()});
 $('#f5').oninput=rrnFmt;
 $('#af').onsubmit=async e=>{e.preventDefault();const g=i=>$('#'+i).value.trim(),b=$('#fs'),
   pens=[...document.querySelectorAll('#prow .pr')].map(r=>({id:r.dataset.id,pen_name:r.querySelector('.pn').value.trim(),email:r.querySelector('.pe').value.trim().toLowerCase()})),
-  base={legal_name:g('f1'),phone:g('f2'),address:g('f3'),bank:g('f4'),rrn:g('f5'),pens};if(base.rrn&&!/^\d{6}-?[1-8]\d{6}$/.test(base.rrn))return alert('주민등록번호는 숫자 13자리로 입력해 주세요.');b.disabled=true;
+  base={legal_name:g('f1'),phone:g('f2'),address:g('f3'),bank:g('f4'),rrn:g('f5'),pens};if(base.rrn){const ck=rrnCheck(base.rrn);if(!ck.ok)return alert('주민등록번호를 확인해 주세요: '+ck.msg)}b.disabled=true;
   const{data,error}=await call(EDIT?{action:'update_person',person_id:EDIT,login_email:g('fl'),...base}:{action:'create_person',send_email:$('#fm').checked,...base});
   b.disabled=false;$('#f5').value='';rrnFmt();if(error)return alert(error);
   if(data.duplicate){$('#ares').innerHTML=`<b class="bad">이미 등록된 작가입니다 (${esc(data.name_masked)})</b><p class="k" style="margin:6px 0 0">실명과 전화번호가 같은 사람이 있습니다. 목록에서 '수정'으로 필명을 추가하세요.</p>`;$('#ares').hidden=false;return}
   $('#afw').hidden=true;
   if(EDIT){$('#ares').innerHTML='<b class="ok">작가 정보를 수정했습니다.</b>';$('#ares').hidden=false}
   else showLink(data.link,`${esc(pens[0].pen_name)} 계정을 만들었습니다.`,data.mail);
+  if(base.rrn)peekRrn(EDIT||data.person_id,pens[0].pen_name);
   loadPeople()};
 $('#alist').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.id,a=b.dataset.pa;if(a==='work')return goWork(id);
   if(a==='pen')return openPen(id);

@@ -2,7 +2,7 @@
    BUNDLES 배열의 순서가 곧 실행 순서(앞 파일의 전역을 뒤 파일이 씀). 파일을 추가·이름 변경하면 여기도 고칠 것(scripts/check_split.py가 점검) */
 const BUNDLES={
 author:["author/home.js","author/rates.js","author/statements.js"],
-admin:["admin/month.js","admin/totp.js","admin/password.js","admin/shell.js","admin/docs.js","admin/works-publish.js","admin/tools.js","admin/stats.js","admin/confirm.js","admin/work-detail.js","admin/statements.js","admin/statement-pdf.js","admin/uploads.js","admin/authors.js","admin/refs.js","admin/upload-read.js","admin/upload-ui.js","admin/upload-infer.js"]},BUNDLE_P={};
+admin:["admin/month.js","admin/totp.js","admin/password.js","admin/shell.js","admin/docs.js","admin/works-publish.js","admin/tools.js","admin/stats.js","admin/confirm.js","admin/work-detail.js","admin/statements.js","admin/statement-pdf.js","admin/uploads.js","admin/authors.js","admin/refs.js","admin/upload-read.js","admin/upload-ui.js","admin/upload-infer.js","admin/flow.js","admin/overview.js"]},BUNDLE_P={};
 function loadBundle(n){return BUNDLE_P[n]??=new Promise((ok,ko)=>{const L=BUNDLES[n];let k=0;   /* 동시에 내려받고 순서대로 실행(async=false) */
   L.forEach(f=>{const s=document.createElement('script');s.src='assets/js/'+f+'?v='+VER.slice(1);s.async=false;
     s.onload=()=>{if(++k===L.length)ok()};s.onerror=()=>ko(new Error(f));document.head.appendChild(s)})})}

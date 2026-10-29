@@ -13,16 +13,16 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/css/tokens.css?v=2.16.1-B10">
-<link rel="stylesheet" href="assets/css/base.css?v=2.16.1-B10">
-<link rel="stylesheet" href="assets/css/shell.css?v=2.16.1-B10">
-<link rel="stylesheet" href="assets/css/components.css?v=2.16.1-B10">
-<link rel="stylesheet" href="assets/css/buttons.css?v=2.16.1-B10">
-<link rel="stylesheet" href="assets/css/pages.css?v=2.16.1-B10">
+<link rel="stylesheet" href="assets/css/tokens.css?v=2.16.1-B12">
+<link rel="stylesheet" href="assets/css/base.css?v=2.16.1-B12">
+<link rel="stylesheet" href="assets/css/shell.css?v=2.16.1-B12">
+<link rel="stylesheet" href="assets/css/components.css?v=2.16.1-B12">
+<link rel="stylesheet" href="assets/css/buttons.css?v=2.16.1-B12">
+<link rel="stylesheet" href="assets/css/pages.css?v=2.16.1-B12">
 </head><body>
 <div class="wrap">
 
-<div id="bbar" role="note" style="background:var(--soft);border-bottom:1px solid var(--line);color:var(--mute);font-size:12.5px;line-height:1.5;text-align:center;padding:7px 12px">B안 미리보기 v2.16.1-B10 (메뉴 개편 시험) · 같은 데이터를 사용합니다. 정산 데이터 초기화 · 정산서 발송 · 자동 발송 설정 · 홈페이지 반영은 <a href="/" style="color:inherit;text-decoration:underline">기존 사이트</a>에서 실행하세요.</div>
+<div id="bbar" role="note" style="background:var(--soft);border-bottom:1px solid var(--line);color:var(--mute);font-size:12.5px;line-height:1.5;text-align:center;padding:7px 12px">B안 미리보기 v2.16.1-B12 (메뉴 개편 시험) · 같은 데이터를 사용합니다. 정산 데이터 초기화 · 정산서 발송 · 자동 발송 설정 · 홈페이지 반영은 <a href="/" style="color:inherit;text-decoration:underline">기존 사이트</a>에서 실행하세요.</div>
 <section id="login" hidden>
   <img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"><p class="sub">야화랩 정산 사이트</p>
   <form class="login" id="lf" style="margin:36px auto 0">
@@ -100,6 +100,7 @@
     <div class="who"><span id="who"></span><span class="wb"><button class="lnk" id="pwb">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
   <nav id="nav" aria-label="영역"><a href="#/books" data-a="works">작품·작가</a><a href="#/upload" data-a="settle">정산</a><a href="#/home" data-a="stats">통계</a><a href="#/mail" data-a="tools">도구</a><a href="#/docs" data-a="ops">운영</a></nav>
   <nav id="sub" aria-label="세부 메뉴"></nav>
+  <div id="flow" hidden></div>
 
   <div class="pg" id="pg-home">
   <h2><small>(01)</small>정산 현황</h2>
@@ -131,11 +132,11 @@
   <div class="pg" id="pg-settle" hidden>
   <h2><small>(01)</small>월 정산서</h2>
   <div class="row" style="gap:10px"><label class="k" for="sm">판매보고 기준월</label><input id="sm" type="month" style="width:auto;height:36px;padding:0 6px">
-    <span class="k">원천징수율</span><b id="sxv" style="min-width:44px;text-align:center">3.3%</b><span id="sxw" class="row" style="gap:6px" hidden><input id="sx" type="number" step="0.1" min="0" max="100" value="3.3" aria-label="원천징수율(%)" style="width:80px;height:36px;padding:0 6px"></span><button class="ghost" id="sxe" style="min-width:64px">수정</button>
-    <button id="sca" style="min-width:130px">전체 일괄 확정</button></div>
+    <span class="k">원천징수율</span><b id="sxv" style="min-width:44px;text-align:center">3.3%</b><span id="sxw" class="row" style="gap:6px" hidden><input id="sx" type="number" step="0.1" min="0" max="100" value="3.3" aria-label="원천징수율(%)" style="width:80px;height:36px;padding:0 6px"></span><button class="ghost" id="sxe" style="min-width:64px">수정</button></div>
   <p class="k" style="text-align:center;font-size:12px;margin:10px 0 18px">기준월의 판매를 작가별로 합산합니다. 작가 정산액 = 작품별 총 정산액 × 작가 비율(반올림), 원천징수액 = 작가 정산액 합계 기준 소득세 3% + 지방소득세(소득세의 10%), 각각 10원 미만 내림 (원천징수율이 3.3%가 아니면 합계 × 원천징수율 내림), 출판사 공제액 = 총 정산액 − 작가 정산액.</p>
-  <div class="row" style="justify-content:center;gap:10px;margin:0 0 14px"><label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer"><input id="amc" type="checkbox" disabled style="width:16px;height:16px;min-height:0;margin:0;padding:0;accent-color:var(--ink)"> 25일 자동 메일 발송</label><span class="k" id="ams" style="font-size:12px"></span><button class="ghost" id="amt" style="height:30px;font-size:12px">서버 PDF 시험 발송(내 메일로)</button></div>
+  
   <div class="tw"><table class="vm"><caption class="sr-only">작가별 월 정산</caption><thead><tr><th>작가</th><th class="r">총 정산액</th><th class="r">작가 정산액</th><th class="r hm">원천징수</th><th class="r">실 지급액</th><th class="r hm">출판사 공제</th><th class="cc">상태</th></tr></thead><tbody id="sl"></tbody><tfoot id="slf"></tfoot></table></div>
+  <div class="card" id="dng" style="text-align:left;margin-top:22px"><b>③ 확정·발송</b><p class="k" style="margin:4px 0 12px;font-size:12px">위 표의 금액과 비율을 확인한 뒤 진행하세요. 확정하면 작가에게 정산서가 공개되고, 발송 메일은 되돌릴 수 없습니다.</p><div class="row" style="justify-content:flex-start;gap:10px;margin:0 0 12px"><button id="sca" style="min-width:130px">전체 일괄 확정</button></div><div class="row" style="justify-content:flex-start;gap:10px;margin:0"><label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer"><input id="amc" type="checkbox" disabled style="width:16px;height:16px;min-height:0;margin:0;padding:0;accent-color:var(--ink)"> 25일 자동 메일 발송</label><span class="k" id="ams" style="font-size:12px"></span><button class="ghost" id="amt" style="height:30px;font-size:12px">서버 PDF 시험 발송(내 메일로)</button></div></div>
   </div>
   <div class="pg" id="pg-authors" hidden>
   <h2><small>(01)</small>작가 관리</h2>
@@ -196,19 +197,19 @@
 </div>
 <div id="lay" class="lay" hidden><div class="lp" role="dialog" aria-modal="true" aria-labelledby="lt"><button class="ghost lx" id="lxb">닫기</button><div id="lbody"></div></div></div>
 <script src="/libs/supabase-2.49.4.js"></script>
-<script src="assets/js/core/boot.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/loader.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/auth.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/enter.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/password.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/start-hash.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/embed.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/dates.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/session.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/layer.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/work-shared.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/statement-calc.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/statement-html.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/statement-print.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/error-report.js?v=2.16.1-B10"></script>
-<script src="assets/js/core/invite.js?v=2.16.1-B10"></script></body></html>
+<script src="assets/js/core/boot.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/loader.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/auth.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/enter.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/password.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/start-hash.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/embed.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/dates.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/session.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/layer.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/work-shared.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/statement-calc.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/statement-html.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/statement-print.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/error-report.js?v=2.16.1-B12"></script>
+<script src="assets/js/core/invite.js?v=2.16.1-B12"></script></body></html>

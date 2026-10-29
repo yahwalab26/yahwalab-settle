@@ -1,5 +1,5 @@
 /* admin/flow.js — 월 마감 체크리스트(입력→검증→확정·발송→세무): 정산 3개 화면 위에 '지금 할 일'과 문제 항목을 실제 데이터로 보여 주고 바로 이동시킨다(읽기 전용) */
-const FLOW_PG=['upload','settle','tax'];
+const FLOW_PG=['today','upload','settle','tax'];
 let FLOWT=null,FLOWS=null,FLOWM='',FLOWOPEN=true;
 const flowMonth=()=>{const el=$('#sm');let m=el&&el.value;if(!/^\d{4}-\d{2}$/.test(m||'')){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);m=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}return m};
 const flowPage=()=>FLOW_PG.find(p=>!$('#pg-'+p).hidden)||null;

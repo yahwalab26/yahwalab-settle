@@ -21,3 +21,4 @@ ol.flow b{font-size:11px;color:var(--mute)}ol.flow .fn{font-size:14px}
 ol.flow .fst{font-size:11.5px;color:var(--mute);min-height:15px}ol.flow .fst.ok{color:var(--ok)}ol.flow .fst.bad{color:var(--bad)}
 @media (max-width:560px){ol.flow{grid-template-columns:repeat(2,1fr)}}
 #flow .fdt{margin:8px 0 0;font-size:12px;line-height:1.7}
+h3.ovh{font-size:15px;margin:22px 0 10px;text-align:left}

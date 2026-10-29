@@ -1,0 +1,33 @@
+/* pages.css — 화면별 개별 조정(정산 현황 칩·작가 정산 칩·헤더 계정 줄·데이터 입력 업로드 영역)
+   index.html의 <link> 순서대로 로드해야 한다(CSS는 뒤 규칙이 앞 규칙을 덮음). 순서·내용을 바꾸면 화면이 달라질 수 있음 */
+/* 정산 현황: 야화랩 (전체) · 트루비 (임프린트) — 가로세로 가운데, 좌우 패딩 12px (위아래 여백과 동일) */
+#lv{display:flex;align-items:center;justify-content:center}
+#lv .chp{padding:0 12px!important}
+/* 작가 정산: 플랫폼 칩 — 글자 길이에 맞추고 여유 공백만, 한 줄에 들어가는 만큼 자동 배치(모바일 3개 안팎) */
+#pchips .chp{flex:0 0 auto;padding:0 12px!important}
+@media(max-width:700px){#pchips{gap:6px!important}#pchips .chp{padding:0 10px!important}}
+/* 헤더: 이메일 한 줄 → 그 아래 줄에 비밀번호 변경 · 로그아웃 (가운데 정렬) */
+.who{flex-direction:column;gap:6px}
+.who .wb{display:flex;align-items:center;justify-content:center;gap:16px}
+/* 정산 > 데이터 입력 페이지의 업로드 영역 (S3에서 현황 → 데이터 입력으로 이동하여 선택자 갱신) */
+#pg-upload .drop{padding:28px 20px;margin:0 0 14px}
+
+h3.ovh{font-size:15px;margin:22px 0 10px;text-align:left}
+
+/* S8 월 마감 체크리스트 */
+#flow{margin:0 0 24px}
+.fl{border:1px solid var(--line);text-align:left}
+.flh{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.flh .ghost{min-height:34px;padding:0 12px}
+ol.flr{list-style:none;margin:0;padding:0}
+ol.flr li{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:start;padding:14px 16px;border-top:1px solid var(--line)}
+ol.flr li:first-child{border-top:0}
+ol.flr li.now{background:var(--soft);box-shadow:inset 3px 0 0 var(--ink)}
+.fic{width:24px;height:24px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--mute)}
+li.ok .fic{background:var(--ok);border-color:var(--ok);color:#fff}li.warn .fic{background:var(--bad);border-color:var(--bad);color:#fff}
+.ft{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.ft b{font-size:15px}
+.ftag{font-size:11px;padding:1px 7px;border:1px solid var(--line);color:var(--mute)}
+.ftag.ok{color:var(--ok);border-color:var(--ok)}.ftag.warn{color:var(--bad);border-color:var(--bad)}.ftag.now{background:var(--ink);border-color:var(--ink);color:#fff}
+.fbd .fd{margin:4px 0 0;font-size:13.5px;line-height:1.6}.fbd p{margin:6px 0 0;font-size:13px;line-height:1.7}
+.fa button{white-space:nowrap;min-height:36px;padding:0 14px}
+@media (max-width:560px){ol.flr li{grid-template-columns:28px 1fr}.fa{grid-column:2}}

@@ -1,0 +1,3 @@
+/* tokens.css — 색·글꼴 변수(디자인 토큰). 값은 여기서만 정의
+   index.html의 <link> 순서대로 로드해야 한다(CSS는 뒤 규칙이 앞 규칙을 덮음). 순서·내용을 바꾸면 화면이 달라질 수 있음 */
+:root{--ink:#111;--mute:#7a7a7a;--line:#e6e6e3;--soft:#f7f7f5;--bad:#b3261e;--ok:#1a6b3c}

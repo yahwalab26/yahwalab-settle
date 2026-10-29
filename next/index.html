@@ -13,16 +13,16 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/css/tokens.css?v=2.16.1-B16">
-<link rel="stylesheet" href="assets/css/base.css?v=2.16.1-B16">
-<link rel="stylesheet" href="assets/css/shell.css?v=2.16.1-B16">
-<link rel="stylesheet" href="assets/css/components.css?v=2.16.1-B16">
-<link rel="stylesheet" href="assets/css/buttons.css?v=2.16.1-B16">
-<link rel="stylesheet" href="assets/css/pages.css?v=2.16.1-B16">
+<link rel="stylesheet" href="assets/css/tokens.css?v=2.16.1-B17">
+<link rel="stylesheet" href="assets/css/base.css?v=2.16.1-B17">
+<link rel="stylesheet" href="assets/css/shell.css?v=2.16.1-B17">
+<link rel="stylesheet" href="assets/css/components.css?v=2.16.1-B17">
+<link rel="stylesheet" href="assets/css/buttons.css?v=2.16.1-B17">
+<link rel="stylesheet" href="assets/css/pages.css?v=2.16.1-B17">
 </head><body>
 <div class="wrap">
 
-<div id="bbar" role="note" style="background:var(--soft);border-bottom:1px solid var(--line);color:var(--mute);font-size:12.5px;line-height:1.5;text-align:center;padding:7px 12px">B안 미리보기 v2.16.1-B16 (메뉴 개편 시험) · 같은 데이터를 사용합니다. 정산 데이터 초기화 · 정산서 발송 · 자동 발송 설정 · 홈페이지 반영은 <a href="/" style="color:inherit;text-decoration:underline">기존 사이트</a>에서 실행하세요.</div>
+<div id="bbar" role="note" style="background:var(--soft);border-bottom:1px solid var(--line);color:var(--mute);font-size:12.5px;line-height:1.5;text-align:center;padding:7px 12px">B안 미리보기 v2.16.1-B17 (메뉴 개편 시험) · 같은 데이터를 사용합니다. 정산 데이터 초기화 · 정산서 발송 · 자동 발송 설정 · 홈페이지 반영은 <a href="/" style="color:inherit;text-decoration:underline">기존 사이트</a>에서 실행하세요.</div>
 <section id="login" hidden>
   <img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"><p class="sub">야화랩 정산 사이트</p>
   <form class="login" id="lf" style="margin:36px auto 0">
@@ -163,6 +163,7 @@
     <input id="f4" type="text" placeholder="은행명 계좌번호 예금주 (예: 국민은행 123-456-789012 홍길동)" autocomplete="off" required>
     <input id="f5" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="주민등록번호 13자리 (선택 · 암호화 저장)" maxlength="14">
     <div id="f5s" class="k" style="margin:-4px 0 0;text-align:left;font-size:12.5px;min-height:18px" aria-live="polite"></div>
+    <button type="button" id="f5v" class="ghost" hidden style="margin:0 0 10px">저장된 번호 10초 확인</button>
     <input id="fl" type="email" placeholder="로그인 이메일 (수정하면 다음 로그인부터 적용)" autocomplete="off" hidden>
     <div id="prow" role="group" aria-label="필명과 이메일" style="display:flex;flex-direction:column;gap:10px"></div>
     <p class="k" style="margin:0">첫 번째 줄의 이메일이 로그인 계정이 됩니다. 필명마다 이메일이 다르면 줄을 추가하세요.</p>
@@ -207,21 +208,22 @@
 </section>
 
 </div>
+<div id="rrnpk" hidden role="status" aria-live="polite" style="position:fixed;right:12px;bottom:12px;z-index:9999;background:#fff;border:1px solid #17171A;padding:12px 14px;max-width:min(380px,calc(100vw - 24px));box-shadow:0 4px 18px rgba(0,0,0,.18)"></div>
 <div id="lay" class="lay" hidden><div class="lp" role="dialog" aria-modal="true" aria-labelledby="lt"><button class="ghost lx" id="lxb">닫기</button><div id="lbody"></div></div></div>
 <script src="/libs/supabase-2.49.4.js"></script>
-<script src="assets/js/core/boot.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/loader.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/auth.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/enter.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/password.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/start-hash.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/embed.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/dates.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/session.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/layer.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/work-shared.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/statement-calc.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/statement-html.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/statement-print.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/error-report.js?v=2.16.1-B16"></script>
-<script src="assets/js/core/invite.js?v=2.16.1-B16"></script></body></html>
+<script src="assets/js/core/boot.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/loader.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/auth.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/enter.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/password.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/start-hash.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/embed.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/dates.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/session.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/layer.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/work-shared.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/statement-calc.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/statement-html.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/statement-print.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/error-report.js?v=2.16.1-B17"></script>
+<script src="assets/js/core/invite.js?v=2.16.1-B17"></script></body></html>

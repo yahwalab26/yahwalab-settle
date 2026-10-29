@@ -11,3 +11,13 @@
 .who .wb{display:flex;align-items:center;justify-content:center;gap:16px}
 /* 정산 > 데이터 입력 페이지의 업로드 영역 (S3에서 현황 → 데이터 입력으로 이동하여 선택자 갱신) */
 #pg-upload .drop{padding:28px 20px;margin:0 0 14px}
+
+/* S8 월 마감 진행 표시줄 */
+#flow{margin:0 0 22px}#flow .fmo{text-align:center;margin:0 0 8px;font-size:12px}
+ol.flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+ol.flow a{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid var(--line);color:var(--ink);text-decoration:none;min-height:44px}
+ol.flow a.on{border-color:var(--ink);border-bottom-width:2px}
+ol.flow b{font-size:11px;color:var(--mute)}ol.flow .fn{font-size:14px}
+ol.flow .fst{font-size:11.5px;color:var(--mute);min-height:15px}ol.flow .fst.ok{color:var(--ok)}ol.flow .fst.bad{color:var(--bad)}
+@media (max-width:560px){ol.flow{grid-template-columns:repeat(2,1fr)}}
+#flow .fdt{margin:8px 0 0;font-size:12px;line-height:1.7}

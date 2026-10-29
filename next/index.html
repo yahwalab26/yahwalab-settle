@@ -13,16 +13,16 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/css/tokens.css?v=2.16.1-B15">
-<link rel="stylesheet" href="assets/css/base.css?v=2.16.1-B15">
-<link rel="stylesheet" href="assets/css/shell.css?v=2.16.1-B15">
-<link rel="stylesheet" href="assets/css/components.css?v=2.16.1-B15">
-<link rel="stylesheet" href="assets/css/buttons.css?v=2.16.1-B15">
-<link rel="stylesheet" href="assets/css/pages.css?v=2.16.1-B15">
+<link rel="stylesheet" href="assets/css/tokens.css?v=2.16.1-B16">
+<link rel="stylesheet" href="assets/css/base.css?v=2.16.1-B16">
+<link rel="stylesheet" href="assets/css/shell.css?v=2.16.1-B16">
+<link rel="stylesheet" href="assets/css/components.css?v=2.16.1-B16">
+<link rel="stylesheet" href="assets/css/buttons.css?v=2.16.1-B16">
+<link rel="stylesheet" href="assets/css/pages.css?v=2.16.1-B16">
 </head><body>
 <div class="wrap">
 
-<div id="bbar" role="note" style="background:var(--soft);border-bottom:1px solid var(--line);color:var(--mute);font-size:12.5px;line-height:1.5;text-align:center;padding:7px 12px">B안 미리보기 v2.16.1-B15 (메뉴 개편 시험) · 같은 데이터를 사용합니다. 정산 데이터 초기화 · 정산서 발송 · 자동 발송 설정 · 홈페이지 반영은 <a href="/" style="color:inherit;text-decoration:underline">기존 사이트</a>에서 실행하세요.</div>
+<div id="bbar" role="note" style="background:var(--soft);border-bottom:1px solid var(--line);color:var(--mute);font-size:12.5px;line-height:1.5;text-align:center;padding:7px 12px">B안 미리보기 v2.16.1-B16 (메뉴 개편 시험) · 같은 데이터를 사용합니다. 정산 데이터 초기화 · 정산서 발송 · 자동 발송 설정 · 홈페이지 반영은 <a href="/" style="color:inherit;text-decoration:underline">기존 사이트</a>에서 실행하세요.</div>
 <section id="login" hidden>
   <img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"><p class="sub">야화랩 정산 사이트</p>
   <form class="login" id="lf" style="margin:36px auto 0">
@@ -96,11 +96,17 @@
 
 <section id="app" hidden>
   <div class="ver" id="ver" aria-label="사이트 버전"></div>
-  <header><div><a href="#/home" id="homelink" aria-label="현황으로 이동" title="현황으로 이동"><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"></a><p class="sub">야화랩 정산 사이트</p></div>
+  <header><div><a href="#/today" id="homelink" aria-label="홈으로 이동" title="홈으로 이동"><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"></a><p class="sub">야화랩 정산 사이트</p></div>
     <div class="who"><span id="who"></span><span class="wb"><button class="lnk" id="pwb">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
-  <nav id="nav" aria-label="영역"><a href="#/books" data-a="works">작품·작가</a><a href="#/upload" data-a="settle">정산</a><a href="#/overview" data-a="stats">통계</a><a href="#/mail" data-a="tools">도구</a><a href="#/docs" data-a="ops">운영</a></nav>
+  <nav id="nav" aria-label="영역"><a href="#/today" data-a="dash">홈</a><a href="#/books" data-a="works">작품·작가</a><a href="#/upload" data-a="settle">정산</a><a href="#/overview" data-a="stats">통계</a><a href="#/mail" data-a="tools">도구</a><a href="#/docs" data-a="ops">운영</a></nav>
   <nav id="sub" aria-label="세부 메뉴"></nav>
   <div id="flow" hidden></div>
+
+  <div class="pg" id="pg-today" hidden>
+  <h2><small>(01)</small>오늘 <small id="tdd"></small></h2>
+  <div class="row" style="justify-content:flex-start;gap:10px"><label class="k" for="tm">마감 기준월</label><input id="tm" type="month" style="max-width:200px"></div>
+  <div id="tdb" style="margin-top:14px"></div>
+  </div>
 
   <div class="pg" id="pg-overview" hidden>
   <h2><small>(01)</small>통계 요약</h2>
@@ -203,19 +209,19 @@
 </div>
 <div id="lay" class="lay" hidden><div class="lp" role="dialog" aria-modal="true" aria-labelledby="lt"><button class="ghost lx" id="lxb">닫기</button><div id="lbody"></div></div></div>
 <script src="/libs/supabase-2.49.4.js"></script>
-<script src="assets/js/core/boot.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/loader.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/auth.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/enter.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/password.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/start-hash.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/embed.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/dates.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/session.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/layer.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/work-shared.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/statement-calc.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/statement-html.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/statement-print.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/error-report.js?v=2.16.1-B15"></script>
-<script src="assets/js/core/invite.js?v=2.16.1-B15"></script></body></html>
+<script src="assets/js/core/boot.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/loader.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/auth.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/enter.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/password.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/start-hash.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/embed.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/dates.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/session.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/layer.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/work-shared.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/statement-calc.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/statement-html.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/statement-print.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/error-report.js?v=2.16.1-B16"></script>
+<script src="assets/js/core/invite.js?v=2.16.1-B16"></script></body></html>

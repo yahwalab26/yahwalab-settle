@@ -66,7 +66,7 @@ button.done{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
 <script src="libs/supabase-2.49.4.js"></script>
 <script>
 (function(){'use strict';
-const VER='v1.6.0';   /* 새 기능=minor, 수정·문구=patch. index.html과 별개로 관리 */
+const VER='v1.6.1';   /* 새 기능=minor, 수정·문구=patch. index.html과 별개로 관리 */
 const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -82,8 +82,8 @@ const off=x=>[0,6].includes(x.getUTCDay())||HOL.has(iso(x));
 const prevBiz=(y,m,d)=>{const x=new Date(Date.UTC(y,m,d));while(off(x))x.setUTCDate(x.getUTCDate()-1);return x};   /* 입금일: 휴일이면 앞 영업일 (계약서 제7조) */
 const nextBiz=(y,m,d)=>{const x=new Date(Date.UTC(y,m,d));while(off(x))x.setUTCDate(x.getUTCDate()+1);return x};   /* 신고 기한: 휴일이면 다음 영업일 */
 /* 규칙 A (홈택스 실측 확정): 소득세 = 지급액×3% 10원 미만 절사, 지방소득세 = 소득세×10% 10원 미만 절사. 정수 연산. */
-const SMALL_LOCAL=1000;   /* 참고용 표시 기준: 지방소득세가 1,000원 미만이면 소액부징수 대상이 될 수 있음(구청 안내). 작가에게서는 3.3%를 모두 공제하므로 금액은 줄이지 않음 */
-const taxOf=A=>{if(!(A>0))return{inc:0,loc:0,tot:0,ex:false};const inc=Math.floor(A*3/1000)*10,loc=Math.floor(inc/100)*10;return{inc,loc,tot:inc+loc,ex:loc<SMALL_LOCAL}};
+const SMALL_INC=1000;   /* 참고 표시(ex): 소득세가 1,000원 미만(3.3%에서 지급액 33,333원 이하)인 작가. 소득세법 제86조 개정(2024.7.1~)으로 계속적·반복적 인적용역 사업소득은 소액부징수에서 제외되므로 면제가 아니며, 금액을 줄이지 않고 그대로 신고·납부함 */
+const taxOf=A=>{if(!(A>0))return{inc:0,loc:0,tot:0,ex:false};const inc=Math.floor(A*3/1000)*10,loc=Math.floor(inc/100)*10;return{inc,loc,tot:inc+loc,ex:inc<SMALL_INC}};
 /* 지급월 = 판매월 + 2개월 (판매월의 익익월 말일 입금) */
 const payMonth=pm=>{const y=+pm.slice(0,4),m=+pm.slice(5,7)-1+2;return{y:y+Math.floor(m/12),m:m%12}};
 const sched=(y,m)=>({pay:prevBiz(y,m+1,0),tax:nextBiz(y,m+1,10),stmt:nextBiz(y,m+2,0)});   /* m: 0부터 */
@@ -147,11 +147,11 @@ function draw(key){const g=G.get(key);if(!g)return;const c=calc(g),today=iso(kst
   if(drafts)notes+=`<div class="note warn">이 지급월에 아직 확정하지 않은 정산이 ${drafts}건 있습니다. 확정된 건만 아래에 합산했습니다.</div>`;
   if(dup.length)notes+=`<div class="note err">같은 작가의 정산이 한 달에 2건 이상 저장된 경우가 있습니다(${dup.map(p=>esc(p.name)).join(', ')}). 금액이 중복되지 않았는지 확인해 주세요.</div>`;
   if(diff.length)notes+=`<div class="note err">정산 사이트에 저장된 공제액이 신고 금액과 다른 작가가 ${diff.length}명 있습니다(표의 붉은 숫자). 작가에게서 뗀 금액과 신고·납부액이 같도록 정산 화면에서 <b>재확정</b>해 주세요.</div>`;
-  if(c.act.some(p=>p.t.ex))notes+=`<div class="note info">지방소득세가 1,000원 미만인 작가 ${c.act.filter(p=>p.t.ex).length}명(표에 “소액” 표시)은 소액부징수 대상이 될 수 있습니다. 작가에게서는 3.3%를 모두 공제했고 아래 금액에도 포함되어 있으며, 이 부분의 지방소득세 신고·납부는 직접 판단해 처리하세요.</div>`;
+  if(c.act.some(p=>p.t.ex))notes+=`<div class="note info">소득세가 1,000원 미만인 작가 ${c.act.filter(p=>p.t.ex).length}명(표에 “소액” 표시)도 <b>소액부징수 대상이 아닙니다</b>. 2024.7.1 이후 지급하는 계속적·반복적 인적용역 사업소득은 금액이 작아도 원천징수·신고해야 하며, 작가에게서 공제한 금액 그대로 아래 합계에 포함되어 있습니다.</div>`;
   if(c.skip.length)notes+=`<div class="note info">지급액이 0원 이하인 ${c.skip.length}명은 신고 대상에서 제외했습니다.</div>`;
   const tsv=['성명\t지급액\t소득세\t지방소득세\t계\t실지급액'].concat(c.act.map(p=>[nm(p),p.A,p.t.inc,p.t.loc,p.t.tot,p.pay].join('\t'))).join('\n');
   const ns=c.act.filter(p=>pinfo(key,p.id,'stmt').done).length,nl=c.act.filter(p=>pinfo(key,p.id,'local').done).length;
-  const rows=c.act.map(p=>`<tr><td>${esc(nm(p))}</td>${RRN?`<td>${RRN[p.id]?`${esc(fmtRrn(RRN[p.id]))} ${(()=>{const ck=rrnCheck(RRN[p.id]);return`<span class="${ck.ok?'ok':'bad'}" title="${esc(ck.msg)}">${ck.ok?'✓':'⚠'}</span>`})()} ${cp(RRN[p.id],'복사')}${(()=>{const ck=rrnCheck(RRN[p.id]);return ck.ok?'':`<div class="bad" style="font-size:12px">${esc(ck.msg)}</div>`})()}`:'<span class="bad">미등록</span>'}</td>`:''}<td>${n0(p.A)}</td><td>${n0(p.t.inc)}</td><td>${n0(p.t.loc)}${p.t.ex?' <span class="k" title="지방소득세 1,000원 미만: 소액부징수 대상이 될 수 있음">소액</span>':''}</td><td>${n0(p.t.tot)}</td><td>${n0(p.pay)}</td><td class="${p.diff?'bad':'ok'}">${p.diff?'정산 '+n0(p.site)+' ≠ '+n0(p.t.tot):'일치'}</td>${['stmt','local'].map(f=>{const i=pinfo(key,p.id,f);return`<td style="text-align:center"><input type="checkbox" data-pc="${f}:${esc(p.id)}"${i.done?' checked':''} title="${i.done?'입력 완료 '+esc(i.date||''):'아직 입력 전'}" aria-label="${f==='stmt'?'명세서':'지방세'} 입력 완료"></td>`}).join('')}</tr>`).join('')||'<tr><td colspan="10" class="k" style="text-align:center">신고할 지급이 없습니다.</td></tr>';
+  const rows=c.act.map(p=>`<tr><td>${esc(nm(p))}</td>${RRN?`<td>${RRN[p.id]?`${esc(fmtRrn(RRN[p.id]))} ${(()=>{const ck=rrnCheck(RRN[p.id]);return`<span class="${ck.ok?'ok':'bad'}" title="${esc(ck.msg)}">${ck.ok?'✓':'⚠'}</span>`})()} ${cp(RRN[p.id],'복사')}${(()=>{const ck=rrnCheck(RRN[p.id]);return ck.ok?'':`<div class="bad" style="font-size:12px">${esc(ck.msg)}</div>`})()}`:'<span class="bad">미등록</span>'}</td>`:''}<td>${n0(p.A)}</td><td>${n0(p.t.inc)}</td><td>${n0(p.t.loc)}${p.t.ex?' <span class="k" title="소득세 1,000원 미만이지만 2024.7.1 이후 인적용역 사업소득은 소액부징수 제외 — 그대로 신고·납부 대상">소액</span>':''}</td><td>${n0(p.t.tot)}</td><td>${n0(p.pay)}</td><td class="${p.diff?'bad':'ok'}">${p.diff?'정산 '+n0(p.site)+' ≠ '+n0(p.t.tot):'일치'}</td>${['stmt','local'].map(f=>{const i=pinfo(key,p.id,f);return`<td style="text-align:center"><input type="checkbox" data-pc="${f}:${esc(p.id)}"${i.done?' checked':''} title="${i.done?'입력 완료 '+esc(i.date||''):'아직 입력 전'}" aria-label="${f==='stmt'?'명세서':'지방세'} 입력 완료"></td>`}).join('')}</tr>`).join('')||'<tr><td colspan="10" class="k" style="text-align:center">신고할 지급이 없습니다.</td></tr>';
   $('#app').innerHTML=`${notes}
 <div class="cards">
 <div class="card"><span class="k">입금일</span><b>${fmt(s.pay)}</b></div>
@@ -173,8 +173,8 @@ function draw(key){const g=G.get(key);if(!g)return;const c=calc(g),today=iso(kst
 <div class="sec"><div class="sh"><h2>2. 지방소득세 특별징수 신고·납부</h2>${secTag(key,2,s.tax,today)}</div>
 <ol class="step"><li>서울 사업장은 서울시 ETAX, 서울 밖은 위택스에서 신고·납부합니다.</li>
 <li>서울시 ETAX: 신고납부 &gt; 지방소득세 &gt; <b>특별징수분</b></li>
-<li>소득세 신고와 별도로 신고·납부해야 하며, 금액은 소득세의 10%입니다. 작가별 지방소득세가 1,000원 미만이면 소액부징수 대상이 될 수 있으나, 이 화면의 합계에는 포함되어 있습니다(작가에게서 공제한 금액 기준).</li></ol>
-<div class="kv"><span>지방소득세 합계</span><span></span><span class="v">${n0(T.loc)} ${cp(T.loc)}</span>${c.act.some(p=>p.t.ex)?`<span class="k">(참고) 1,000원 미만 소액부징수 대상</span><span></span><span class="v k" style="font-size:14px;font-weight:600">${n0(c.act.filter(p=>p.t.ex).reduce((s,p)=>s+p.t.loc,0))}원 · ${c.act.filter(p=>p.t.ex).length}명</span>`:''}</div><div class="k" style="margin:2px 0 6px">작가별 지방소득세 입력: <b>${nl}/${T.cnt}명</b> 완료 — 아래 ‘작가별 금액’ 표의 <b>지방세 입력</b> 열에서 작가마다 체크하세요.</div>${chk(key,2)}</div>
+<li>소득세 신고와 별도로 신고·납부해야 하며, 금액은 소득세의 10%입니다. 작가별 금액이 작아도(소득세 1,000원 미만) 2024.7.1 이후 인적용역 사업소득은 소액부징수에서 제외되므로 이 화면의 합계에 모두 포함해 신고·납부합니다(작가에게서 공제한 금액 기준).</li></ol>
+<div class="kv"><span>지방소득세 합계</span><span></span><span class="v">${n0(T.loc)} ${cp(T.loc)}</span>${c.act.some(p=>p.t.ex)?`<span class="k">(참고) 소득세 1,000원 미만 작가(소액이어도 신고 대상)</span><span></span><span class="v k" style="font-size:14px;font-weight:600">${n0(c.act.filter(p=>p.t.ex).reduce((s,p)=>s+p.t.loc,0))}원 · ${c.act.filter(p=>p.t.ex).length}명</span>`:''}</div><div class="k" style="margin:2px 0 6px">작가별 지방소득세 입력: <b>${nl}/${T.cnt}명</b> 완료 — 아래 ‘작가별 금액’ 표의 <b>지방세 입력</b> 열에서 작가마다 체크하세요.</div>${chk(key,2)}</div>
 
 <div class="sec"><div class="sh"><h2>3. 간이지급명세서 (사업소득)</h2>${secTag(key,3,s.stmt,today)}</div>
 <ol class="step"><li>홈택스 &gt; 지급명세서·자료제출 &gt; <b>간이지급명세서(거주자의 사업소득)</b>, 제출구분 정기신고, 지급연도·지급월 <b>${g.y}년 ${mm}월</b></li>

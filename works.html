@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-5PV8XKYCAA19n2oicGFMGPY4daEXGBRAi1BPT7Z7a+k='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob: https://wddixxdrndgvjgicwunu.supabase.co; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co wss://wddixxdrndgvjgicwunu.supabase.co; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<title>야화랩 작품 현황</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{--bg:#F3F3F4;--paper:#fff;--ink:#17171A;--ink2:#46474D;--mute:#6A6B73;--line:#D6D7DB;--line2:#E8E8EB;--hl:#EDEDF0;--red:#C4251B;--redbg:#FBE9E7;--ok:#1F7A3E;--okbg:#E7F4EC;--warn:#8A5A00;--warnbg:#FFF4D6;--focus:#2F6FDE;
+--ui:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 var(--ui);-webkit-text-size-adjust:100%}
+.wrap{max-width:1200px;margin:0 auto;padding:22px 18px 60px}
+h1{font-size:20px;margin:0 0 4px;font-weight:700}
+.k{color:var(--mute);font-size:12.5px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.ctl label{display:block}
+select,input[type=text],input[type=date],input[type=search]{height:34px;border:1px solid var(--line);border-radius:7px;background:var(--paper);padding:0 8px;font:inherit;color:var(--ink);max-width:100%}
+select:focus,input:focus,button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+button{font:inherit;height:34px;padding:0 12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:7px;cursor:pointer}
+button:hover{background:var(--hl)}
+button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:12px 14px}
+.card b{display:block;font-size:19px;margin-top:2px;font-variant-numeric:tabular-nums}
+.sec{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:14px;margin-bottom:14px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:900px;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line2);text-align:right;white-space:nowrap;vertical-align:middle}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink2);background:var(--bg);font-size:12.5px}
+tfoot td{font-weight:700;border-top:2px solid var(--ink);border-bottom:0}
+td.t{text-align:left;white-space:normal;min-width:180px}
+td.t small{color:var(--mute)}
+td input,td select{width:100%;min-width:70px;height:30px;text-align:right}
+td small{display:block;color:var(--mute);font-size:11.5px;line-height:1.3}
+.rf{color:var(--red)}
+td small,.sm{display:block;color:var(--mute);font-size:11.5px;font-weight:400}
+td select{text-align:left}
+td input.d{min-width:128px;text-align:left}
+td.m input,td.m select{border-color:#E5A39C;background:#FFF7F6}
+.note{border-radius:7px;padding:10px 12px;margin:0 0 12px;font-size:13px}
+.note.warn{background:var(--warnbg);color:var(--warn)}.note.err{background:var(--redbg);color:var(--red)}.note.info{background:var(--hl);color:var(--ink2)}
+.ok{color:var(--ok);font-weight:600}.bad{color:var(--red);font-weight:600}
+.gate{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:24px;text-align:center}
+.gate a{color:var(--ink);font-weight:600}
+.foot{color:var(--mute);font-size:12px;margin-top:14px;line-height:1.7}
+@media(max-width:560px){.wrap{padding:16px 12px 48px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><div><h1>작품 현황</h1><div class="k">작품별 장르 · 출간일 · 정가(판매 파일 기준)와 플랫폼별 순 판매 부수(환불 반영) &nbsp;·&nbsp; 장르·출간일은 표에서 바로 수정 <span id="ver"></span></div></div>
+<div class="ctl" id="ctl" hidden>
+<label class="k">기간<br><select id="per"></select></label>
+<label class="k">정렬<br><select id="srt"><option value="qty">판매 부수 많은 순</option><option value="rd">출간일 최신순</option><option value="ti">작품명</option></select></label>
+<label class="k" style="align-self:flex-end;display:flex;gap:6px;align-items:center;height:34px"><input type="checkbox" id="rf"> 환불 함께 보기</label>
+<label class="k">검색<br><input type="search" id="q" placeholder="작품명" style="width:150px"></label>
+</div></div>
+<div id="app"><div class="gate k">불러오는 중…</div></div>
+</div>
+<script src="libs/supabase-2.49.4.js"></script>
+<script>
+(function(){'use strict';
+const VER='v1.0.0';   /* 새 기능=minor, 수정·문구=patch. index.html·tax.html 과 별개로 관리 */
+const SB=supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co','sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const n0=n=>Math.round(Number(n)||0).toLocaleString('ko-KR');
+/*PURE-START*/
+const PN={ridi:'리디북스',kyobo:'교보문고',aladin:'알라딘',yes24:'예스24',bookcube:'북큐브'},ORDER=['ridi','kyobo','aladin','yes24','bookcube'],GENRES=['BL','로판','현로'];
+/* 기간 선택값: 'all' | 'YYYY' | 'YYYY-MM' → 해당 월 목록 */
+const pickMonths=(all,per)=>per==='all'?all:all.filter(m=>m.startsWith(per));
+/* admin_work_stats 행(작품×플랫폼×월)을 작품별로 합산. 순 판매 = 판매 − 환불. 정가는 판매 파일에서 읽은 list_price:
+   lastL = 선택 기간 중 가장 최근 달의 정가(그 달 최댓값), lmin~lmax = 기간 내 정가 범위(프로모션 등으로 달라질 수 있음) */
+const aggregate=(rows,months,works)=>{const S=new Set(months),byId=new Map(works.map(w=>[String(w.id),w.id])),O=new Map(),un={n:0,net:0};
+  rows.forEach(r=>{const m=String(r.sale_month).slice(0,7);if(!S.has(m))return;const sold=Number(r.sold)||0,ref=Number(r.refunded)||0,p=r.platform_code||'?',id=byId.get(String(r.work_id));
+    if(id===undefined){un.n++;un.net+=sold-ref;return}
+    const o=O.get(id)||{by:{},sold:0,ref:0,gross:0,lmin:null,lmax:null,lastM:'',lastL:null},b=o.by[p]||(o.by[p]={sold:0,ref:0});
+    b.sold+=sold;b.ref+=ref;o.sold+=sold;o.ref+=ref;o.gross+=Number(r.gross_sale)||0;
+    const lo=r.list_min==null?null:+r.list_min,hi=r.list_max==null?null:+r.list_max;
+    if(lo!=null&&(o.lmin==null||lo<o.lmin))o.lmin=lo;if(hi!=null&&(o.lmax==null||hi>o.lmax))o.lmax=hi;
+    if(hi!=null&&(m>o.lastM||(m===o.lastM&&hi>o.lastL))){o.lastM=m;o.lastL=hi}
+    O.set(id,o)});
+  return{O,un}};
+const EMPTY={by:{},sold:0,ref:0,gross:0,lmin:null,lmax:null,lastM:'',lastL:null};
+const qtyOf=(A,w)=>A.O.get(w.id)||EMPTY,net=o=>o.sold-o.ref,nb=(o,c)=>{const b=o.by[c]||{sold:0,ref:0};return b.sold-b.ref},avgPrice=o=>o.sold>0?Math.round(o.gross/o.sold):null;
+const rowMissing=w=>[!w.genre&&'장르',!w.release_date&&'출간일'].filter(Boolean);
+/*PURE-END*/
+let W=[],ROWS=[],MONTHS=[],STATS_MISSING=false,msg=null,busy=false;
+$('#ver').textContent=VER;
+function gate(t,link){$('#ctl').hidden=true;$('#app').innerHTML='<div class="gate"><p style="margin:0 0 '+(link?12:0)+'px">'+esc(t)+'</p>'+(link?'<a href="index.html">정산 사이트로 가기</a>':'')+'</div>'}
+function draw(){
+  const per=$('#per').value,rf=$('#rf').checked,A=aggregate(ROWS,pickMonths(MONTHS,per),W),q=$('#q').value.trim().toLowerCase();
+  const extra=[...new Set(ROWS.map(r=>r.platform_code))].filter(c=>c&&!ORDER.includes(c));
+  let R=W.filter(w=>!q||String(w.title).toLowerCase().includes(q)).map(w=>({w,o:qtyOf(A,w)}));
+  const s=$('#srt').value;R.sort((a,b)=>s==='ti'?a.w.title.localeCompare(b.w.title,'ko'):s==='rd'?String(b.w.release_date||'').localeCompare(String(a.w.release_date||''))||net(b.o)-net(a.o):net(b.o)-net(a.o)||a.w.title.localeCompare(b.w.title,'ko'));
+  const sum=f=>R.reduce((t,x)=>t+f(x.o),0),tSold=sum(o=>o.sold),tRef=sum(o=>o.ref),miss=R.filter(x=>rowMissing(x.w).length).length;
+  const exN=o=>extra.reduce((t,c)=>t+nb(o,c),0),exS=o=>extra.reduce((t,c)=>t+((o.by[c]||{}).sold||0),0),exR=o=>extra.reduce((t,c)=>t+((o.by[c]||{}).ref||0),0);
+  const cell=(o,c)=>{const b=o.by[c]||{sold:0,ref:0},v=b.sold-b.ref;return `<td>${n0(v)}${rf&&(b.sold||b.ref)?`<small>판매 ${n0(b.sold)}${b.ref?` · <span class="rf">환불 ${n0(b.ref)}</span>`:''}</small>`:''}</td>`};
+  const price=o=>o.lastL==null?'<td>-</td>':`<td>${n0(o.lastL)}${o.lmin!==o.lmax?`<small title="선택한 기간 안에서 정가가 달랐습니다(프로모션 등)">${n0(o.lmin)}~${n0(o.lmax)}</small>`:''}</td>`;
+  const body=R.map(({w,o})=>`<tr><td class="t">${esc(w.title)}<br><small>${esc(w.label||'레이블 미지정')}</small></td>
+<td class="${w.genre?'':'m'}"><select data-f="genre" data-id="${esc(w.id)}" aria-label="장르"><option value="">미입력</option>${GENRES.map(g=>`<option${g===w.genre?' selected':''}>${g}</option>`).join('')}</select></td>
+<td class="${w.release_date?'':'m'}"><input class="d" type="date" data-f="release_date" data-id="${esc(w.id)}" value="${esc(w.release_date||'')}" aria-label="출간일"></td>
+${price(o)}<td title="판매 금액 ÷ 판매 부수(환불 제외)">${avgPrice(o)==null?'-':n0(avgPrice(o))}</td>
+${ORDER.map(c=>cell(o,c)).join('')}${extra.length?`<td title="${esc(extra.join(', '))}">${n0(exN(o))}</td>`:''}${rf?`<td>${n0(o.sold)}</td><td class="rf">${n0(o.ref)}</td>`:''}<td><b>${n0(net(o))}</b></td></tr>`).join('')||'<tr><td colspan="16" class="k" style="text-align:center">표시할 작품이 없습니다.</td></tr>';
+  const tsv=['작품\t레이블\t장르\t출간일\t정가(최근)\t정가 최소\t정가 최대\t평균 판매가\t'+ORDER.map(c=>PN[c]).join('\t')+(extra.length?'\t기타':'')+'\t판매\t환불\t순 판매'].concat(R.map(({w,o})=>[w.title,w.label||'',w.genre||'',w.release_date||'',o.lastL??'',o.lmin??'',o.lmax??'',avgPrice(o)??'',...ORDER.map(c=>nb(o,c)),...(extra.length?[exN(o)]:[]),o.sold,o.ref,net(o)].join('\t'))).join('\n');
+  const perLabel=per==='all'?'전체 누적':per.length===4?per+'년':per.slice(0,4)+'년 '+(+per.slice(5))+'월';
+  const unN=A.un.n?`<div class="note info">작품 목록에 없는 판매 ${A.un.n}건(순 ${n0(A.un.net)}부)은 아래 표에서 제외했습니다. 삭제되었거나 연결되지 않은 작품일 수 있습니다.</div>`:'';
+  $('#app').innerHTML=unN+(msg?`<div class="note ${msg.err?'err':'info'}">${esc(msg.t)}</div>`:'')+(STATS_MISSING?'<div class="note warn">판매 부수를 가져오는 조회 함수(admin_work_stats)가 아직 데이터베이스에 없습니다. 안내드린 <b>migration_work_stats.sql</b>을 한 번 실행한 뒤 새로고침해 주세요. 장르·출간일은 지금도 수정할 수 있습니다.</div>':'')+`
+<div class="cards"><div class="card"><span class="k">작품</span><b>${R.length}편</b></div><div class="card"><span class="k">순 판매 부수 (${esc(perLabel)})</span><b>${n0(tSold-tRef)}부</b></div>
+<div class="card"><span class="k">판매 부수</span><b>${n0(tSold)}부</b></div><div class="card"><span class="k">환불 부수</span><b class="${tRef?'rf':''}">${n0(tRef)}부</b></div>
+<div class="card"><span class="k">입력이 비어 있는 작품</span><b id="missN" class="${miss?'bad':'ok'}">${miss}편</b></div></div>
+<div class="sec"><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px"><span class="k">표의 부수는 <b>환불을 뺀 순 판매 부수</b>이며 정산과 같은 집계입니다(‘환불 함께 보기’를 켜면 판매·환불을 나눠 봅니다). 장르·출간일은 칸을 고치면 바로 저장됩니다. <span id="sv"></span></span><button type="button" data-cp="1">표 복사(엑셀용)</button></div>
+<div class="scroll"><table><thead><tr><th>작품</th><th>장르</th><th>출간일</th><th>정가(원)</th><th>평균 판매가</th>${ORDER.map(c=>`<th>${PN[c]}</th>`).join('')}${extra.length?'<th>기타</th>':''}${rf?'<th>판매</th><th>환불</th>':''}<th>순 판매(부)</th></tr></thead><tbody>${body}</tbody>
+<tfoot><tr><td>합계</td><td></td><td></td><td></td><td></td>${ORDER.map(c=>`<td>${n0(sum(o=>nb(o,c)))}</td>`).join('')}${extra.length?`<td>${n0(sum(exN))}</td>`:''}${rf?`<td>${n0(tSold)}</td><td class="rf">${n0(tRef)}</td>`:''}<td>${n0(tSold-tRef)}</td></tr></tfoot></table></div></div>
+<div class="foot">정가는 판매 파일에서 읽은 값입니다. 칸에는 선택한 기간 중 <b>가장 최근 달의 정가</b>가 보이고, 기간 안에서 달랐다면(프로모션 등) 아래에 범위가 함께 나옵니다. 평균 판매가는 판매 금액 ÷ 판매 부수입니다. 월을 고르면 그 달의 값만 보입니다. 플랫폼 이름이 정해진 5곳 밖의 코드는 ‘기타’로 묶습니다.</div>`;
+  $('#app').dataset.tsv=tsv}
+async function fetchStats(){let all=[],from=0;
+  for(;;){const r=await SB.rpc('admin_work_stats').range(from,from+999);if(r.error)throw r.error;const d=r.data||[];all=all.concat(d);if(d.length<1000)break;from+=1000;if(from>300000)break}
+  return all}
+async function loadAll(){
+  const w=await SB.from('works').select('id,title,label,genre,release_date').order('title');if(w.error)throw w.error;W=w.data||[];
+  try{ROWS=await fetchStats()}catch(e){if(/admin_work_stats|function|schema cache|does not exist/i.test(String(e&&e.message||e))){STATS_MISSING=true;ROWS=[]}else throw e}
+  MONTHS=[...new Set(ROWS.map(r=>String(r.sale_month).slice(0,7)))].sort();
+  const ys=[...new Set(MONTHS.map(m=>m.slice(0,4)))].sort().reverse();
+  $('#per').innerHTML='<option value="all">전체 누적</option>'+ys.map(y=>`<option value="${y}">${y}년</option>`).join('')+MONTHS.slice().reverse().map(m=>`<option value="${m}">${m.slice(0,4)}년 ${+m.slice(5)}월</option>`).join('');
+  $('#ctl').hidden=false;draw()}
+async function init(){
+  try{const{data:{session}}=await SB.auth.getSession();
+    if(!session)return gate('로그인이 필요합니다. 정산 사이트에서 로그인한 뒤 이 화면을 새로고침해 주세요.',true);
+    const pf=await SB.from('profiles').select('role').eq('id',session.user.id).maybeSingle();
+    if(pf.error||!pf.data||pf.data.role==='author')return gate('관리자만 볼 수 있는 화면입니다.',true);
+    await loadAll()}catch(e){gate('불러오지 못했습니다: '+String(e&&e.message||e))}}
+['per','srt','rf'].forEach(i=>$('#'+i).addEventListener('change',draw));$('#q').addEventListener('input',draw);
+/* 장르·출간일 칸을 고치면 해당 작품 한 줄만 저장(표를 다시 그리지 않아 Tab 키로 계속 입력 가능) */
+document.addEventListener('change',async e=>{const el=e.target.closest('[data-f]');if(!el||busy)return;const f=el.dataset.f,id=el.dataset.id,w=W.find(x=>String(x.id)===id);if(!w)return;
+  const v=el.value||null,old=w[f]||null;if(v===old)return;busy=true;const sv=$('#sv');if(sv){sv.className='k';sv.textContent='저장 중…'}
+  const r=await SB.from('works').update({[f]:v}).eq('id',w.id);busy=false;
+  if(r.error){msg={t:'저장하지 못했습니다('+w.title+'): '+r.error.message,err:true};draw();return}
+  w[f]=v;msg=null;const td=el.closest('td');if(td)td.classList.toggle('m',!v);
+  const mc=W.filter(x=>rowMissing(x).length).length,mn=$('#missN');if(mn){mn.textContent=mc+'편';mn.className=mc?'bad':'ok'}
+  const s2=$('#sv');if(s2){s2.className='ok';s2.textContent='✓ 저장됨 ('+w.title+')'}});
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-cp]');if(!b)return;const v=$('#app').dataset.tsv||'';
+  try{await navigator.clipboard.writeText(v)}catch(x){const t=document.createElement('textarea');t.value=v;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(y){}t.remove()}
+  const o=b.textContent;b.textContent='복사됨';setTimeout(()=>{b.textContent=o},1200)});
+let t0=0;['keydown','pointerdown','scroll','wheel'].forEach(ev=>addEventListener(ev,()=>{const n=Date.now();if(n-t0>5000){t0=n;try{parent!==window&&parent.postMessage({t:'yw-act'},location.origin)}catch(e){}}},{passive:true,capture:true}));
+init();
+})();
+</script>
+</body>
+</html>

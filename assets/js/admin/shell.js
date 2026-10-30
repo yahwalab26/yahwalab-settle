@@ -2,10 +2,10 @@
    index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
 /* ---------- 메뉴(nav) ---------- */
 $('#homelink').onclick=e=>{if(location.hash===''||location.hash==='#/today'){e.preventDefault();loadToday();scrollTo(0,0)}};
-const PG=['today','overview','home','upload','authors','settle','tax','docs','books','proof','mail','sns','prompt','alog','llog','visit'];
+const PG=['today','overview','home','upload','authors','settle','tax','docs','books','wstat','proof','mail','sns','prompt','alog','llog','visit'];
 /* 영역 → 세부 메뉴. 주소(#/home 등)는 그대로이고 화면 묶음만 나눔. 영역을 누르면 그 영역에서 마지막으로 본 화면으로 감 */
-const AREAS={dash:['today'],works:['books','authors'],settle:['upload','settle','tax'],stats:['overview','home','visit'],tools:['mail','sns','proof','prompt'],ops:['docs','alog','llog']};
-const NAVN={today:'오늘',overview:'통계 요약',home:'판매 현황',upload:'데이터 입력',settle:'월 정산서',authors:'작가',books:'작품',mail:'메일 작성',sns:'SNS',proof:'교정고 점검',prompt:'프롬프트',tax:'세무',docs:'회사 자료',alog:'접근 기록',llog:'로그인 기록',visit:'방문자'};
+const AREAS={dash:['today'],works:['books','wstat','authors'],settle:['upload','settle','tax'],stats:['overview','home','visit'],tools:['mail','sns','proof','prompt'],ops:['docs','alog','llog']};
+const NAVN={today:'오늘',overview:'통계 요약',home:'판매 현황',upload:'데이터 입력',settle:'월 정산서',authors:'작가',books:'작품',wstat:'작품 현황',mail:'메일 작성',sns:'SNS',proof:'교정고 점검',prompt:'프롬프트',tax:'세무',docs:'회사 자료',alog:'접근 기록',llog:'로그인 기록',visit:'방문자'};
 const LASTP={};
 function setNav(id){const a=Object.keys(AREAS).find(k=>AREAS[k].includes(id));LASTP[a]=id;
   document.querySelectorAll('#nav a').forEach(x=>{x.classList.toggle('on',x.dataset.a===a);x.href='#/'+(LASTP[x.dataset.a]||AREAS[x.dataset.a][0])});
@@ -20,5 +20,5 @@ $('#prl').onclick=async e=>{const b=e.target.closest('[data-pc]');if(!b)return;c
 let FIRSTR=true; /* 새로 접속하면 start-hash가 #/home을 붙임 → 관리자는 첫 화면을 홈(오늘)으로 */
 function route(){let r=location.hash.replace(/^#\/?/,'')||'today';if(FIRSTR&&r==='home'){r='today';history.replaceState(null,'','#/today')}FIRSTR=false;const id=PG.includes(r)?r:'today';
   PG.forEach(x=>$('#pg-'+x).hidden=x!==id);setNav(id);
-  document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail'||id==='sns'||id==='tax');if(id==='proof')openEmbed('proof','/proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','/mailer.html','메일 작성');if(id==='sns')openEmbed('sns','tools/sns.html','SNS');if(id==='tax')openEmbed('tax','/tax.html','세무');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='today')loadToday();if(id==='overview')loadOverview();if(id==='home')loadHome();if(id==='upload'){loadFresh();loadUploads()}if(id==='settle')loadSettle();if(id==='docs')loadDocs();if(id==='alog')loadLogs();if(id==='llog')loadLoginLogs();if(id==='visit')loadVisit();if(id==='prompt')renderPrompts();if(id==='books')loadBooks()}
+  document.querySelector('.wrap').classList.toggle('wide',id==='proof'||id==='mail'||id==='sns'||id==='tax'||id==='wstat');if(id==='proof')openEmbed('proof','/proofcheck.html','교정고 점검');if(id==='mail')openEmbed('mail','/mailer.html','메일 작성');if(id==='sns')openEmbed('sns','tools/sns.html','SNS');if(id==='tax')openEmbed('tax','/tax.html','세무');if(id==='wstat')openEmbed('wstat','/works.html','작품 현황');if(id==='authors'){if(PLOADED)renderPeople();loadPeople()}if(id==='today')loadToday();if(id==='overview')loadOverview();if(id==='home')loadHome();if(id==='upload'){loadFresh();loadUploads()}if(id==='settle')loadSettle();if(id==='docs')loadDocs();if(id==='alog')loadLogs();if(id==='llog')loadLoginLogs();if(id==='visit')loadVisit();if(id==='prompt')renderPrompts();if(id==='books')loadBooks()}
 addEventListener('hashchange',route);

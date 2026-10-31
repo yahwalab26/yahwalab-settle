@@ -93,6 +93,7 @@ html,body{height:auto}
 .side .dock{display:none}
 .mdock{display:block;position:sticky;bottom:0;z-index:5}
 .mail{padding:16px 12px 24px}
+.dmbox{margin-top:26px;padding-top:18px;border-top:1px solid var(--line,#e6e6e3)}.dmbox .dmh{margin:0 0 4px;font-size:13px;font-weight:700}.dmbox .dmn{margin:0 0 12px;font-size:12px;color:var(--mute)}.dmitem{margin:0 0 18px}.dmitem .msgedit{min-height:110px;font-size:15px}
 .field input,.field textarea,.field select{font-size:16px}
 }
 .acc{border:1px solid var(--line);border-radius:7px;background:var(--paper)}
@@ -113,18 +114,19 @@ html,body{height:auto}
 <div class="app" id="app">
 <header class="top"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></svg><strong>야화랩 SNS 글 작성기</strong></header>
 <main class="main">
-<section class="pane editor" aria-label="미리보기"><div class="mail"><div class="pvbar"><span id="pvhint">미리보기</span><button class="btn sm" type="button" id="pvbtn" data-act="reset" hidden>자동 문구로 되돌리기</button></div><div class="pvmiss" id="pvmiss"></div><div class="card"><textarea class="msg msgedit" id="snsedit" spellcheck="false" aria-label="SNS 글 (직접 수정할 수 있습니다)"></textarea></div></div></section>
+<section class="pane editor" aria-label="미리보기"><div class="mail"><div class="pvbar"><span id="pvhint">미리보기</span><button class="btn sm" type="button" id="pvbtn" data-act="reset" hidden>자동 문구로 되돌리기</button></div><div class="pvmiss" id="pvmiss"></div><div class="card"><textarea class="msg msgedit" id="snsedit" spellcheck="false" aria-label="SNS 글 (직접 수정할 수 있습니다)"></textarea></div><div class="dmbox" id="dmbox" hidden><p class="dmh">당첨자 DM 안내 문구</p><p class="dmn">당첨자마다 따로 복사해서 DM으로 보내세요. 글을 눌러 바로 고칠 수 있습니다.</p><div id="dmlist"></div></div></div></section>
 <aside class="pane side" aria-label="입력">
 <div class="form">
 <div class="sec"><h2>글 종류</h2><div class="seg2" id="types" role="group" aria-label="글 종류"></div></div>
 <div class="sec" id="fields">
 <div class="field" data-for="pub"><span>플랫폼</span><details class="acc" id="platacc"><summary><span id="platcur" class="none">선택해 주세요</span></summary><div id="plats"></div></details></div>
-<div class="field" data-for="pub"><span>작가명</span><div class="cb"><input id="snsauthor" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="snsalist" placeholder="작가를 선택하세요"><div class="cbl" id="snsalist" role="listbox" hidden></div></div></div>
-<label class="field" data-for="pub"><span>작품명</span><select id="snstitle" disabled><option value="">작가를 먼저 선택하세요</option></select><input id="snstitlefb" autocomplete="off" placeholder="작품명" hidden></label>
+<div class="field" data-for="pub win"><span>작가명</span><div class="cb"><input id="snsauthor" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="snsalist" placeholder="작가를 선택하세요"><div class="cbl" id="snsalist" role="listbox" hidden></div></div></div>
+<label class="field" data-for="pub win"><span>작품명</span><select id="snstitle" disabled><option value="">작가를 먼저 선택하세요</option></select><input id="snstitlefb" autocomplete="off" placeholder="작품명" hidden></label>
 <p class="dbnote" id="snsdbnote" hidden></p>
 <label class="field" data-for="pub"><span>키워드</span><textarea id="snskw" placeholder="예: BL, 현대물, 재회물 (쉼표로 구분하면 #이 자동으로 붙습니다)"></textarea></label>
 <label class="field" data-for="pub"><span>공감 글귀</span><textarea id="snsquote"></textarea></label>
 <label class="field" data-for="pub"><span>URL</span><input id="snsurl" type="url" autocomplete="off" placeholder="https://"></label>
+<label class="field" data-for="win"><span>당첨자 계정</span><textarea id="snswin" placeholder="@계정 (여러 명이면 한 줄에 한 명씩)"></textarea></label>
 </div>
 <div class="dock" data-dock></div>
 </div>
@@ -137,11 +139,11 @@ html,body{height:auto}
 <script src="sns-db.js"></script>
 <script>
 /* 글 종류를 늘릴 때: TYPES에 [키,이름] 추가 → 입력칸에 data-for="키" → build()에 분기 추가 */
-var TYPES=[["pub","출간작"]];
+var TYPES=[["pub","출간작"],["win","당첨발표"]];
 var cur="pub",PLAT="",MANUAL=false;
 var PLATS=["리디북스","교보문고","알라딘","예스24","북큐브"];
-var ID={"플랫폼":"platacc","작가명":"snsauthor","작품명":"snstitle","키워드":"snskw","공감글귀":"snsquote","URL":"snsurl"};
-var INPUTS=["snsauthor","snstitle","snskw","snsquote","snsurl"];
+var ID={"플랫폼":"platacc","작가명":"snsauthor","작품명":"snstitle","키워드":"snskw","공감글귀":"snsquote","URL":"snsurl","당첨자":"snswin"};
+var INPUTS=["snsauthor","snstitle","snskw","snsquote","snsurl","snswin"];
 var $=function(s){return document.querySelector(s)};
 var DOCK='<p class="need" hidden></p><button class="btn primary block" data-act="copy">SNS 글 복사</button><div class="btnrow"><button class="btn sm" data-act="clear">입력 비우기</button></div>';
 document.querySelectorAll("[data-dock]").forEach(function(d){d.innerHTML=DOCK});
@@ -152,6 +154,8 @@ function tags(v){
   if(!v||v.indexOf("#")>=0)return v;
   return v.split(/[,，]/).map(function(s){return s.replace(/\s+/g,"")}).filter(Boolean).map(function(s){return "#"+s}).join(" ");
 }
+/* 당첨자 계정: 한 줄에 한 명, @가 없으면 붙임 */
+function wins(){return $("#snswin").value.split(/\n/).map(function(s){s=s.trim();return s?(s.charAt(0)==="@"?s:"@"+s):""}).filter(Boolean)}
 function build(){
   var miss=[];
   function need(v,name){if(v)return v;if(miss.indexOf(name)<0)miss.push(name);return ph(name)}
@@ -159,6 +163,9 @@ function build(){
   if(cur==="pub"){
     var p=need(PLAT,"플랫폼"),a=need($("#snsauthor").value.trim(),"작가명"),t=need($("#snstitle").value.trim(),"작품명"),k=need(tags($("#snskw").value),"키워드"),q=need($("#snsquote").value.trim(),"공감글귀"),u=need($("#snsurl").value.trim(),"URL");
     b="["+p+"] "+a+" <"+t+"> 출간 ✨\n\n"+k+"\n\n"+q+"\n\n⬇️그들의 이야기 확인하기⬇️\n🎶"+u;
+  }else if(cur==="win"){
+    var g=need($("#snsauthor").value.trim(),"작가명"),t2=need($("#snstitle").value.trim(),"작품명"),w=need(wins().join("\n"),"당첨자");
+    b=g+" <"+t2+"> 출간 이벤트 🎁\n\n📢 당첨자 발표\n\n"+w+"\n\n축하드립니다! 🎉\n당첨자분께는 금일 중 관련 내용을 DM으로 안내해 드리겠습니다.";
   }
   return{b:b,miss:miss};
 }
@@ -210,6 +217,28 @@ function chips(names){
     box.appendChild(c);
   });
 }
+/* 당첨자 DM 문구: 당첨자별 한 칸, 직접 고치면 그 사람 것은 유지 */
+var DM={},DMKEY="";
+function dmText(a){return "안녕하세요, "+a+"님!\n야화랩에서 진행한 이벤트에 당첨되셔서 안내 차 디엠드립니다 :)\n카카오톡 선물코드로 전달드리려는데 괜찮으실까요?"}
+function fitEl(ta){ta.style.height="auto";ta.style.height=Math.max(ta.scrollHeight,110)+"px"}
+function dmDraw(){
+  var box=$("#dmbox");box.hidden=cur!=="win";if(cur!=="win")return;
+  var list=wins(),items=list.length?list:["{당첨자}"],key=items.join("\u0001");
+  if(key===DMKEY)return;
+  DMKEY=key;var host=$("#dmlist");host.textContent="";
+  items.forEach(function(a){
+    if(!DM[a]||!DM[a].dirty)DM[a]={t:dmText(a),dirty:false};
+    var w=document.createElement("div");w.className="dmitem";
+    var bar=document.createElement("div");bar.className="pvbar";
+    var s=document.createElement("span");s.textContent="DM 문구 · "+a;
+    var btn=document.createElement("button");btn.className="btn sm";btn.type="button";btn.dataset.act="dmcopy";btn.dataset.acc=a;btn.textContent="DM 복사";btn.disabled=!list.length;
+    bar.appendChild(s);bar.appendChild(btn);
+    var c=document.createElement("div");c.className="card";
+    var ta=document.createElement("textarea");ta.className="msg msgedit";ta.dataset.acc=a;ta.spellcheck=false;ta.value=DM[a].t;ta.setAttribute("aria-label",a+" DM 문구 (직접 수정할 수 있습니다)");
+    ta.addEventListener("input",function(){DM[a].t=ta.value;DM[a].dirty=true;fitEl(ta)});
+    c.appendChild(ta);w.appendChild(bar);w.appendChild(c);host.appendChild(w);fitEl(ta);
+  });
+}
 function fit(){var t=$("#snsedit");t.style.height="auto";t.style.height=Math.max(t.scrollHeight,340)+"px"}
 /* 왼쪽 글은 항상 바로 고칠 수 있음. 직접 고치기 전에는 입력칸에 맞춰 자동으로 바뀌고, 고친 뒤에는 덮어쓰지 않음 */
 function render(){
@@ -217,7 +246,7 @@ function render(){
   if(t.value!==nv)t.value=nv;         // 같은 값이면 건드리지 않음(글 쓰는 중 커서 유지)
   LAST=auto;
   if(MANUAL)m.miss=leftover(t.value);
-  fit();chips(m.miss);
+  fit();chips(m.miss);dmDraw();
   $("#pvbtn").hidden=!MANUAL;
   $("#pvhint").textContent=MANUAL?"직접 수정 중":"미리보기 · 글을 눌러 바로 고칠 수 있습니다";$("#pvhint").classList.toggle("pvedit",MANUAL);
   document.querySelectorAll("#fields [data-for]").forEach(function(f){f.hidden=f.dataset.for.split(" ").indexOf(cur)<0});
@@ -240,7 +269,7 @@ function copy(text,msg){
 }
 TYPES.forEach(function(x){
   var b=document.createElement("button");b.className="sw";b.type="button";b.dataset.k=x[0];b.textContent=x[1];
-  b.addEventListener("click",function(){cur=x[0];render()});$("#types").appendChild(b);
+  b.addEventListener("click",function(){if(cur!==x[0]){cur=x[0];MANUAL=false;LAST=""}render()});$("#types").appendChild(b);
 });
 PLATS.forEach(function(n){
   var b=document.createElement("button");b.className="opt";b.type="button";b.textContent=n;
@@ -253,7 +282,8 @@ document.addEventListener("click",function(e){
   var a=b.dataset.act;
   if(a==="copy")copy($("#snsedit").value,"SNS 글을 복사했습니다.");
   else if(a==="reset"){if(!confirm("직접 수정한 문구를 지우고 입력값으로 되돌릴까요?"))return;MANUAL=false;render()}
-  else if(a==="clear"){MANUAL=false;PLAT="";INPUTS.forEach(function(id){$("#"+id).value=""});render()}
+  else if(a==="clear"){MANUAL=false;PLAT="";INPUTS.forEach(function(id){$("#"+id).value=""});DM={};DMKEY="";render()}
+  else if(a==="dmcopy"){var ta=Array.prototype.filter.call(document.querySelectorAll("#dmlist textarea"),function(x){return x.dataset.acc===b.dataset.acc})[0];if(ta)copy(ta.value,"DM 문구를 복사했습니다.")}
 });
 render();
 </script>

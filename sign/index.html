@@ -1,1 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' https://cdn.jsdelivr.net data:; img-src 'self' data: blob:; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co; base-uri 'self'; form-action 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<title>전자계약 서명 | 야화랩</title>
+<style>
+:root{--bg:#F3F3F4;--paper:#fff;--ink:#17171A;--ink2:#46474D;--mute:#6A6B73;--line:#D6D7DB;--line2:#E8E8EB;--hl:#EDEDF0;--red:#C4251B;--redbg:#FBE9E7;--ok:#1F7A3E;--okbg:#E7F4EC;--focus:#2F6FDE;
+--ui:'Pretendard Variable',Pretendard,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 var(--ui);-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding:20px 14px 48px}h1{font-size:19px;margin:4px 0 2px;font-weight:700}.k{color:var(--mute);font-size:13px;margin:0 0 12px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:16px;margin:12px 0}
+label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
+input[type=text],input[type=password],input[type=tel]{width:100%;height:44px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:var(--paper);color:var(--ink);font:inherit;font-size:16px}
+input:focus,button:focus-visible,canvas:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+button{width:100%;height:46px;margin-top:14px;border:1px solid var(--ink);border-radius:7px;background:var(--ink);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+button.ghost{background:var(--paper);color:var(--ink);border-color:var(--line)}button:disabled{opacity:.45;cursor:default}
+.err{color:var(--red);font-size:14px;margin-top:10px}.ok{color:var(--ok);font-size:14px;margin-top:10px}
+.doc{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:7px;padding:14px;font-size:13.5px;background:var(--bg)}
+.doc .t1{font-size:16px;font-weight:700;text-align:center}.doc .t2{font-weight:700;text-align:center;margin-bottom:8px}.doc h4{margin:14px 0 4px;font-size:14px}.doc p{margin:2px 0}.doc .li{padding-left:12px}.doc .box{border:1px solid var(--line);padding:8px 10px;margin:10px 0;border-radius:7px;background:var(--paper)}
+#pad{width:100%;height:170px;background:#fff;border:1px dashed var(--mute);border-radius:7px;touch-action:none;display:block}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:14px;color:var(--ink);cursor:pointer}.chk input{margin-top:5px;width:18px;height:18px;flex:none}
+.steps{display:flex;gap:6px;margin:8px 0 4px}.steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}.steps i.on{background:var(--ink)}
+.hide{display:none!important}.row{display:flex;gap:8px}.row>*{flex:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>전자계약 서명</h1><p class="k" id="sub">야화랩</p>
+  <div class="steps"><i id="s1"></i><i id="s2"></i><i id="s3"></i></div>
 
+  <section id="v0" class="card"><p>불러오는 중…</p></section>
+
+  <section id="v1" class="card hide">
+    <b>이메일 인증</b><p class="k" id="hint"></p>
+    <button id="sendOtp">인증번호 받기</button>
+    <div id="otpBox" class="hide"><label for="otp">인증번호 6자리</label><input id="otp" type="tel" inputmode="numeric" maxlength="6" autocomplete="one-time-code"><button id="verify">확인</button></div>
+    <div id="e1" aria-live="polite"></div>
+  </section>
+
+  <section id="v2" class="hide">
+    <div class="card"><b>계약서 내용</b><p class="k">끝까지 읽어 주세요.</p><div class="doc" id="doc" tabindex="0"></div></div>
+    <div class="card"><b>작가 정보 입력</b>
+      <label for="name">성명(본명)</label><input id="name" type="text" autocomplete="name">
+      <label for="address">주소</label><input id="address" type="text" autocomplete="street-address">
+      <label for="phone">연락처</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel">
+      <label for="rrn">주민(사업자)등록번호</label><input id="rrn" type="password" inputmode="numeric" autocomplete="off" placeholder="숫자만 입력">
+      <label for="bank_name">은행명</label><input id="bank_name" type="text" placeholder="예: 신한은행">
+      <label for="bank_no">계좌번호</label><input id="bank_no" type="text" inputmode="numeric" autocomplete="off">
+      <label for="bank_holder">예금주</label><input id="bank_holder" type="text">
+      <div class="err" id="e2" aria-live="polite"></div><button id="next2">다음: 서명하기</button>
+    </div>
+  </section>
+
+  <section id="v3" class="card hide">
+    <b>동의 및 서명</b>
+    <label class="chk"><input type="checkbox" id="c1"><span>전자서명 및 전자문서의 사용에 동의하며, 이 전자서명이 서면 서명·날인과 동일한 효력을 가짐을 확인합니다. (필수)</span></label>
+    <label class="chk"><input type="checkbox" id="c2"><span>계약 체결 및 정산·원천징수를 위한 개인정보(성명, 주소, 연락처, 계좌정보) 수집·이용에 동의합니다. (필수)</span></label>
+    <label class="chk"><input type="checkbox" id="c3"><span>세금 신고 등을 위한 고유식별정보(주민등록번호 또는 사업자등록번호) 수집·이용에 동의합니다. (필수)</span></label>
+    <label>서명 (손가락 또는 마우스로 그려 주세요)</label>
+    <canvas id="pad" aria-label="서명 입력 영역"></canvas>
+    <div class="row"><button class="ghost" id="clear">지우기</button><button class="ghost" id="back3">이전</button></div>
+    <div class="err" id="e3" aria-live="polite"></div><button id="submit">서명 완료</button>
+  </section>
+
+  <section id="v4" class="card hide"><b id="doneT"></b><p id="doneM"></p></section>
+</div>
+<script src="/sign/sign.js?v=1.0.0"></script>
+</body>
+</html>

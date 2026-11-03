@@ -1,6 +1,6 @@
-/* core/pdf.js — 정산서 PDF 만들기·저장. 관리자(메일 첨부)와 작가(PDF 저장)가 함께 쓴다(statement-html·statement-print 뒤에 로드)
+/* core/pdf.js — 정산서 PDF 만들기·저장. 관리자(메일 첨부)와 작가(PDF 저장)가 함께 쓴다(loader.js 의 BUNDLES 맨 앞에서 로드 — index.html 이 갱신되지 않아도 동작하도록 index.html 태그에 의존하지 않음)
    index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
-const loadLib=(u,g)=>window[g]?Promise.resolve():new Promise((res,rej)=>{const e=document.createElement('script');e.src=u;e.onload=res;e.onerror=()=>rej('PDF 라이브러리를 불러오지 못했습니다.');document.head.appendChild(e)});
+var loadLib=(u,g)=>window[g]?Promise.resolve():new Promise((res,rej)=>{const e=document.createElement('script');e.src=u;e.onload=res;e.onerror=()=>rej('PDF 라이브러리를 불러오지 못했습니다.');document.head.appendChild(e)});
 async function makePdf(S){await loadLib('/libs/html2canvas-1.4.1.min.js','html2canvas');await loadLib('/libs/jspdf-4.2.1.umd.min.js','jspdf');
   const box=document.createElement('div');box.style.cssText='position:fixed;left:-10000px;top:0;width:760px;padding:24px;background:#fff;color:#111';
   box.innerHTML=stHtml(S).replace(/ id="lt"/,'').replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(x=>x!=='hm').join(' ')+'"');document.body.appendChild(box);

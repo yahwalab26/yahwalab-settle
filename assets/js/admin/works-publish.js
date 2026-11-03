@@ -11,6 +11,13 @@ const bkPens=id=>(WA[id]||[]).map(a=>(AUTHORS.find(x=>x.id===a)||{}).pen_name).f
 function goWork(id){BKSEL=id;BKTAB='info';BKCOVER=null;BKF='all';BKQ='';BKADD=false;BKSCROLL=true;if(location.hash==='#/books')loadBooks();else location.hash='#/books'}
 const bkMiss=w=>[!bkNames(w.id)&&'필명',!w.genre&&'장르',!w.cover_path&&'표지',!w.blog_url&&'블로그 주소'].filter(Boolean);
 const bkListed=()=>BK.filter(w=>w.public_listed).sort((a,b)=>(a.sort_order??1e9)-(b.sort_order??1e9)||String(a.release_date||'').localeCompare(String(b.release_date||'')));
+/* 출간일 최신순: sort_order 가 작을수록 홈페이지 위쪽. 새로 공개하면 출간일 위치에 끼워 넣고(날짜 없으면 맨 위), '출간일 최신순 정렬' 버튼은 전체를 날짜순으로 다시 매김(날짜 없는 작품은 맨 아래). 드래그 순서 변경은 그대로 */
+const bkD=x=>String(x||'').slice(0,10);
+async function bkSaveOrder(ids,cur={}){const by=Object.fromEntries(BK.map(w=>[String(w.id),w])),ch=ids.map((id,k)=>({id,o:k+1})).filter(x=>(String(x.id) in cur?cur[String(x.id)]:(by[String(x.id)]||{}).sort_order)!==x.o);
+  const rs=await Promise.all(ch.map(x=>SB.from('works').update({sort_order:x.o}).eq('id',x.id)));return rs.find(r=>r.error)?.error||null}
+function bkSortDate(){const on=bkListed().sort((a,b)=>bkD(b.release_date).localeCompare(bkD(a.release_date)));
+  confirmLay({title:'출간일 최신순으로 정렬',body:`<p style="margin:0">공개 중인 작품 ${on.length}개를 <b>출간일이 최신인 순서</b>로 다시 정렬하고 홈페이지에 반영을 요청합니다. 출간일이 비어 있는 작품은 맨 아래로 갑니다. 지금까지 끌어서 바꾼 순서는 사라집니다.</p>`,ok:'정렬',danger:false,onOk:async()=>{
+    const er=await bkSaveOrder(on.map(w=>w.id));closeLay();if(er)return alert('순서를 저장하지 못했습니다. '+er.message);await loadBooks();bkPublish()}})}
 let BKSCROLL=false,BKTAB='info',BKF='all',BKQ='',BKADD=false; /* 작품 목록 보기: 필터(all·on·off·miss)·검색어·'작품 추가' 열림 */
 let BKP={t:'',c:'k'}; /* 홈페이지 반영 요청 결과 표시(화면이 다시 그려져도 유지) */
 async function bkPublish(){const put=(t,c)=>{BKP={t,c};const e=$('#bkpub');if(e){e.className=c;e.textContent=t}};
@@ -37,7 +44,7 @@ function drawBooks(){
   <div class="card" id="bkadd"${BKADD?'':' hidden'} style="text-align:left"><p class="k" style="font-size:12px;margin:0 0 8px">판매 파일을 올리기 전에 출간작만 먼저 등록할 때 사용합니다. 정산 쪽 작품 목록에도 나타납니다.</p><div class="row" style="justify-content:flex-start"><input id="bkat" type="text" aria-label="작품명" placeholder="작품명" maxlength="80" style="flex:1 1 200px;min-width:160px"><select id="bkaa" aria-label="필명" style="flex:1 1 160px"><option value="">필명 선택</option>${AUTHORS.map(a=>`<option value="${a.id}">${esc(a.pen_name)}</option>`).join('')}</select><button class="ghost" id="bkab">추가</button></div></div>
   <div class="row" id="bkf" role="group" aria-label="작품 목록 보기" style="justify-content:flex-start;gap:8px;margin:0 0 10px">${[['all','전체'],['on','공개'],['off','비공개'],['miss','미입력 있음']].map(([k,t])=>`<button class="chp" data-bkf="${k}" aria-pressed="${k===BKF}">${t} <i style="font-style:normal;opacity:.7"></i></button>`).join('')}</div>
   <p class="k" style="font-size:12px;margin:0 0 8px;text-align:left">공개로 저장한 작품이 홈페이지 출간작이 됩니다. 저장하면 홈페이지에 자동으로 반영을 요청하며, 반영까지 1~2분 걸립니다.</p>
-  <div class="row" style="justify-content:flex-start;gap:10px;margin-bottom:8px"><button class="ghost" id="bkrp">홈페이지에 다시 반영</button><span id="bkpub" class="${BKP.c}" role="status">${esc(BKP.t)}</span></div>
+  <div class="row" style="justify-content:flex-start;gap:10px;margin-bottom:8px"><button class="ghost" id="bkrp">홈페이지에 다시 반영</button><button class="ghost" id="bkso">출간일 최신순 정렬</button><span id="bkpub" class="${BKP.c}" role="status">${esc(BKP.t)}</span></div>
   <p class="k" id="bkhint" style="font-size:12px;margin:0 0 8px;text-align:left"></p>
   <div id="bke"></div>
   <div class="tw"><table class="vm"><caption class="sr-only">작품 목록</caption><thead><tr><th>작품</th><th>상태</th><th></th></tr></thead><tbody id="bkrows"></tbody></table></div>`;
@@ -70,7 +77,8 @@ async function saveBook(){const w=BK.find(x=>x.id===BKSEL);if(!w)return;const m=
   const{error}=await SB.from('works').update(patch).eq('id',w.id);
   if(error){if(np)await SB.storage.from('covers').remove([np]);b.disabled=false;return say('저장 실패: '+error.message,'bad')}
   if(np&&w.cover_path)await SB.storage.from('covers').remove([w.cover_path]);
-  BKCOVER=null;await loadBooks();const m2=$('#bkm');if(m2){m2.className='ok';m2.textContent='저장했습니다.'}if(w.public_listed||pub)bkPublish()}
+  let oe=null;if(pub&&!w.public_listed){const on=bkListed().filter(x=>x.id!==w.id),key=bkD(rd)||'9999-12-31',i=on.findIndex(x=>bkD(x.release_date)<key),ids=on.map(x=>x.id);ids.splice(i<0?ids.length:i,0,w.id);oe=await bkSaveOrder(ids,{[String(w.id)]:patch.sort_order})} /* 새 공개 작품을 출간일 최신순 위치에 */
+  BKCOVER=null;await loadBooks();const m2=$('#bkm');if(m2){m2.className=oe?'bad':'ok';m2.textContent=oe?'저장했지만 홈페이지 순서는 바꾸지 못했습니다. "출간일 최신순 정렬"을 눌러 주세요. ('+oe.message+')':'저장했습니다.'}if(w.public_listed||pub)bkPublish()}
 async function moveBook(id,d){const on=bkListed(),i=on.findIndex(x=>x.id===id),j=i+d;if(i<0||j<0||j>=on.length)return;[on[i],on[j]]=[on[j],on[i]];
   const rs=await Promise.all(on.map((w,k)=>SB.from('works').update({sort_order:k+1}).eq('id',w.id))),er=rs.find(r=>r.error);if(er)return alert(er.error.message);await loadBooks();bkPublish()}
 async function addBook(){const t=$('#bkat').value.trim(),a=$('#bkaa').value;if(!t)return alert('작품명을 입력해 주세요.');if(!a)return alert('필명을 선택해 주세요.');
@@ -116,6 +124,6 @@ $('#pg-books').onclick=async e=>{const b=e.target.closest('button');if(!b)return
   if(d.be){BKTAB='info';BKSEL=d.be;BKCOVER=null;drawBookEdit();$('#bke').scrollIntoView({behavior:'smooth',block:'nearest'});return}
   if(b.id==='bkcp')return $('#bkcx').click();
   if(b.id==='bkx'){BKSEL=null;BKCOVER=null;drawBookEdit();return}
-  if(b.id==='bks')return saveBook();if(b.id==='bkab')return addBook();if(b.id==='bkrp')return bkPublish()};
+  if(b.id==='bks')return saveBook();if(b.id==='bkab')return addBook();if(b.id==='bkrp')return bkPublish();if(b.id==='bkso')return bkSortDate()};
 $('#pg-books').onchange=async e=>{if(e.target.id!=='bkcx')return;const f=e.target.files[0];if(!f)return;const m=$('#bkm');
   try{const r=await bkConv(f);BKCOVER=r.b;$('#bkpvw').innerHTML=`<img src="${URL.createObjectURL(r.b)}" alt="표지 미리보기" style="width:100%;height:100%;object-fit:cover;display:block">`;m.className=r.crop?'bad':'k';m.textContent=r.crop?'표지 비율이 2:3이 아니라 가장자리가 잘렸습니다. 미리보기를 확인한 뒤 저장해 주세요.':'표지를 바꿨습니다. 저장하면 반영됩니다.'}catch(x){m.className='bad';m.textContent=x.message}e.target.value=''};

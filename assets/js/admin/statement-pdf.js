@@ -1,13 +1,6 @@
 /* admin/statement-pdf.js — 정산서 PDF 생성
    index.html 또는 core/loader.js의 순서대로 로드(앞 파일의 변수·함수를 뒤 파일이 전역으로 씀). 순서를 바꾸면 깨질 수 있음 */
 /* ---------- 정산서 PDF 생성(브라우저): 정산서를 이미지로 그려 A4 PDF로 만든 뒤 메일에 첨부 ---------- */
-const loadLib=(u,g)=>window[g]?Promise.resolve():new Promise((res,rej)=>{const e=document.createElement('script');e.src=u;e.onload=res;e.onerror=()=>rej('PDF 라이브러리를 불러오지 못했습니다.');document.head.appendChild(e)});
-async function makePdf(S){await loadLib('/libs/html2canvas-1.4.1.min.js','html2canvas');await loadLib('/libs/jspdf-4.2.1.umd.min.js','jspdf');
-  const box=document.createElement('div');box.style.cssText='position:fixed;left:-10000px;top:0;width:760px;padding:24px;background:#fff;color:#111';
-  box.innerHTML=stHtml(S).replace(/ id="lt"/,'').replace(/class="([^"]*)"/g,(m,c)=>'class="'+c.split(/\s+/).filter(x=>x!=='hm').join(' ')+'"');document.body.appendChild(box);
-  try{const cv=await html2canvas(box,{scale:2,backgroundColor:'#fff'}),pdf=new jspdf.jsPDF({unit:'mm',format:'a4'}),W=190,ph=Math.floor(cv.width*277/W);
-    for(let y=0,n=0;y<cv.height;y+=ph,n++){const hh=Math.min(ph,cv.height-y),c=document.createElement('canvas');c.width=cv.width;c.height=hh;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,hh);g.drawImage(cv,0,y,cv.width,hh,0,0,cv.width,hh);if(n)pdf.addPage();pdf.addImage(c.toDataURL('image/jpeg',.92),'JPEG',10,10,W,hh*W/cv.width)}
-    return pdf.output('datauristring').split(',')[1]}finally{box.remove()}}
 async function mailPdf(pid,m,S){const pdf=await makePdf(S);return call({action:'send_statement_mail',person_id:pid,month:m,pdf,filename:fname(S)+'.pdf'})}
 function mailSt(pid){const p=buildSt().find(x=>x.id===pid),x=SS[pid],m=monVal('#sm')+'-01';if(!p||!x||x.status==='draft')return alert('확정된 정산서만 메일을 보낼 수 있습니다.');
   if(Number(x.author_total)!==p.A||Number(x.payable_amount)!==p.pay)return alert('확정 후 금액이 변경되었습니다. 먼저 재확정한 뒤 메일을 발송해 주세요.');
@@ -20,7 +13,7 @@ function confirmSt(ids){const L=buildSt().filter(p=>ids.includes(p.id)),m=monVal
   if(bad.length)return alert(`계약 비율이 설정되지 않은 판매가 있어 확정할 수 없습니다.\\n${bad.map(p=>[...p.pens][0]+' ('+p.nr+'건)').join(', ')}\\n작품 상세에서 계약 비율을 먼저 입력하세요.`);
   if(neg.length)return alert('정산액이 마이너스인 작가가 있어 확정할 수 없습니다. 마이너스는 다음 달로 이월해 차감해야 하므로, 이월 공제 기능이 준비되기 전에는 이 작가를 확정하지 마세요. / '+neg.map(p=>[...p.pens][0]+' ('+won1(p.A)+')').join(', '));
   const over=L.some(p=>SS[p.id]&&SS[p.id].status!=='draft');
-  confirmLay({title:'정산서 확정',danger:false,body:`<p style="margin:0">${m.slice(0,7)} 정산서 <b>${L.length}명</b>을 확정하고, 작가가 본인 정산서를 열람할 수 있게 합니다.<br>확정만 하며 <b>메일은 발송되지 않습니다</b>. 정산서 메일은 정산 화면의 '메일 발송' 버튼으로 보냅니다.<br>원천징수율 <b>${$('#sx').value}%</b> 기준으로 저장됩니다.${over?'<br><span class="bad">이미 확정된 정산서는 현재 값으로 덮어씁니다.</span>':''}</p>`,ok:'확정',onOk:async()=>{
+  confirmLay({title:'정산서 확정',danger:false,body:`<p style="margin:0">${m.slice(0,7)} 정산서 <b>${L.length}명</b>을 확정합니다.<br>확정만 하며 <b>메일은 발송되지 않습니다</b>. 작가 화면에는 <b>정산 메일을 발송한 뒤부터</b> 정산서가 보입니다(정산 화면의 '메일 발송' 버튼 또는 25일 자동 발송).<br>원천징수율 <b>${$('#sx').value}%</b> 기준으로 저장됩니다.${over?'<br><span class="bad">이미 확정된 정산서는 현재 값으로 덮어씁니다.</span>':''}${L.some(p=>SS[p.id]&&SS[p.id].status==='sent')?'<br><span class="bad">메일을 이미 발송한 정산서는 재확정하면 작가 화면에서 숨겨지며, 메일을 다시 발송해야 다시 보입니다.</span>':''}</p>`,ok:'확정',onOk:async()=>{
     for(const p of L){const row={person_id:p.id,period_month:m,status:'confirmed',gross_total:p.gross,net_total:p.net,author_total:p.A,deduction:p.ded,tax_amount:p.tax,payable_amount:p.pay,tax_rate:Number($('#sx').value),snapshot:mkSnap(p),confirmed_at:new Date().toISOString()},x=SS[p.id];
       const r=x?await SB.from('settlements').update(row).eq('id',x.id):await SB.from('settlements').insert(row);if(r.error){alert('확정 실패: '+r.error.message);break}}
     closeLay();loadSettle()}})}

@@ -1,4 +1,4 @@
-/* 야화랩 전자계약 — 서명 페이지 (v1.1.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
+/* 야화랩 전자계약 — 서명 페이지 (v1.2.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
    CSP(script-src 'self') 때문에 인라인이 아닌 외부 파일로 둔다. */
 (function () {
   'use strict';
@@ -11,14 +11,16 @@
   }
   const IDS = ['v0', 'v1', 'v2', 'v3', 'v4'];
   function show(id) { IDS.forEach(x => $('#' + x).classList.toggle('hide', x !== id)); const n = { v1: 1, v2: 2, v3: 3, v4: 3 }[id] || 0; [1, 2, 3].forEach(i => $('#s' + i).classList.toggle('on', i <= n)); scrollTo(0, 0); }
-  const busy = (b, on) => { b.disabled = on; }, fail = (id, e) => { $('#' + id).textContent = e.message || String(e); };
+  const busy = (b, on) => { b.disabled = on; },
+    wait = (on, t, m) => { $('#busy').classList.toggle('hide', !on); if (on) { $('#busyT').textContent = t; $('#busyM').textContent = m; } }, fail = (id, e) => { $('#' + id).textContent = e.message || String(e); };
 
   (async () => {
     if (!T) { $('#v0').textContent = '유효하지 않은 링크입니다.'; return; }
     try {
       const j = await api({ action: 'open' }); ROLE = j.role;
       $('#ttl').textContent = ROLE === 'publisher' ? '야화랩 서명(출판사)' : '전자계약 서명';
-      $('#sub').textContent = `${j.publisher} · ${j.work_title}`; show('v1');
+      $('#sub').textContent = `${j.publisher} · ${j.work_title}`;
+      if (ROLE === 'publisher' && j.session) { SESSION = j.session; await loadDoc(); show('v2'); } else show('v1');   // 야화랩(출판사)은 이메일 확인 없이 진행
     } catch (e) { $('#v0').textContent = e.message; }
   })();
 
@@ -47,7 +49,9 @@
   const F = ['name', 'address', 'phone', 'rrn', 'bank_name', 'bank_no', 'bank_holder'];
   $('#next2').onclick = () => {
     if (ROLE === 'author') {
-      if (F.find(k => !$('#' + k).value.trim())) { $('#e2').textContent = '모든 항목을 입력해 주세요.'; return; }
+      F.forEach(k => $('#' + k).classList.remove('bad'));
+      const empty = F.filter(k => !$('#' + k).value.trim());
+      if (empty.length) { empty.forEach(k => $('#' + k).classList.add('bad')); $('#' + empty[0]).focus(); $('#e2').textContent = '모든 항목은 필수입니다. 빨간 칸을 입력해 주세요.'; return; }
       const rrn = $('#rrn').value.replace(/\D/g, ''); if (![10, 13].includes(rrn.length)) { $('#e2').textContent = '주민(사업자)등록번호 자릿수를 확인해 주세요. (주민 13자리 / 사업자 10자리)'; return; }
     }
     $('#e2').textContent = ''; show('v3'); setMode(MODE);
@@ -96,7 +100,7 @@
     $('#e3').textContent = ''; const pub = ROLE === 'publisher';
     if (!($('#c1').checked && (pub || ($('#c2').checked && $('#c3').checked)))) { $('#e3').textContent = '필수 동의 항목에 모두 체크해 주세요.'; return; }
     let sig; try { sig = getSig(); } catch (x) { fail('e3', x); return; }
-    busy(e.target, true);
+    busy(e.target, true); wait(true, pub ? '서명을 처리하는 중입니다' : '계약서를 만드는 중입니다', pub ? '작가님께 서명 요청 메일을 보내고 있습니다. 잠시만 기다려 주세요.' : '계약서와 감사 추적 인증서를 만들어 이메일로 보내고 있습니다. 10~30초 걸릴 수 있으니 창을 닫지 말고 기다려 주세요.');
     try {
       if (pub) {
         const j = await api({ action: 'pub_submit', consents: { esign: true }, ...sig });
@@ -109,6 +113,6 @@
         $('#doneM').textContent = j.completed ? (j.mailOk === false ? '완료된 계약서 발송에 문제가 있어 야화랩에서 곧 다시 보내드립니다.' : '완료된 계약서와 감사 추적 인증서를 이메일로 보내드렸습니다. 메일함을 확인해 주세요.') : j.message;
         F.forEach(k => { $('#' + k).value = ''; });
       }
-    } catch (x) { fail('e3', x); busy(e.target, false); }
+    } catch (x) { fail('e3', x); busy(e.target, false); } finally { wait(false); }
   };
 })();

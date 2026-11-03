@@ -24,6 +24,9 @@
   input[type=file]{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:14px;color:var(--tx)}
   .chk{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:14px;color:var(--tx)}.chk input{margin-top:5px;width:18px;height:18px;flex:none}
   .steps{display:flex;gap:6px;margin:8px 0 4px}.steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}.steps i.on{background:var(--pri)}
+  .mask{-webkit-text-security:disc;text-security:disc}.req{color:var(--err);font-size:12px;font-style:normal;font-weight:400}input.bad{border-color:var(--err)}
+  #busy{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px}#busy .bx{background:var(--card);border-radius:14px;padding:28px 22px;text-align:center;max-width:340px;width:100%}
+  .spin{width:42px;height:42px;border:4px solid var(--line);border-top-color:var(--pri);border-radius:50%;margin:0 auto 14px;animation:sp .9s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
   .hide{display:none!important}.row{display:flex;gap:8px}.row>*{flex:1}
 </style>
 </head>
@@ -38,19 +41,20 @@
     <b>이메일 주소 확인</b>
     <p class="sub">계약서를 받으신 이메일 주소를 입력해 주세요.</p>
     <input id="email" type="email" autocomplete="email" inputmode="email" placeholder="example@email.com">
+    <p class="sub" style="margin:10px 0 0">전자 계약서 수신 이메일 주소를 입력하시면 서명이 진행됩니다.</p>
     <div class="err" id="e1"></div><button id="verify">확인</button>
   </section>
 
   <section id="v2" class="hide">
     <div class="card"><div class="note" id="note"></div><b>계약서 내용</b><p class="sub">끝까지 읽어 주세요.</p><div class="doc" id="doc"></div></div>
-    <div class="card" id="infoCard"><b>작가 정보 입력</b>
-      <label>성명(본명)</label><input id="name" type="text" autocomplete="name">
-      <label>주소</label><input id="address" type="text" autocomplete="street-address">
-      <label>연락처</label><input id="phone" type="tel" inputmode="tel" autocomplete="tel">
-      <label>주민(사업자)등록번호</label><input id="rrn" type="password" inputmode="numeric" autocomplete="off" placeholder="숫자만 입력">
-      <label>은행명</label><input id="bank_name" type="text" placeholder="예: 신한은행">
-      <label>계좌번호</label><input id="bank_no" type="text" inputmode="numeric" autocomplete="off">
-      <label>예금주</label><input id="bank_holder" type="text">
+    <div class="card" id="infoCard"><b>작가 정보 입력</b> <span class="req">모든 항목은 필수입니다</span>
+      <label>성명(본명) <i class="req">*</i></label><input id="name" name="ec_name" type="text" autocomplete="off">
+      <label>주소 <i class="req">*</i></label><input id="address" name="ec_address" type="text" autocomplete="off">
+      <label>연락처 <i class="req">*</i></label><input id="phone" name="ec_phone" type="tel" inputmode="tel" autocomplete="off">
+      <label>주민(사업자)등록번호 <i class="req">*</i></label><input id="rrn" name="ec_idnum" class="mask" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="숫자만 입력">
+      <label>은행명 <i class="req">*</i></label><input id="bank_name" type="text" placeholder="예: 신한은행">
+      <label>계좌번호 <i class="req">*</i></label><input id="bank_no" name="ec_account" type="text" inputmode="numeric" autocomplete="off">
+      <label>예금주 <i class="req">*</i></label><input id="bank_holder" type="text">
     </div>
     <div class="card"><div class="err" id="e2"></div><button id="next2">다음: 서명하기</button></div>
   </section>
@@ -69,8 +73,10 @@
     <div class="err" id="e3"></div><button id="submit">서명 완료</button>
   </section>
 
+  <div id="busy" class="hide" role="alert" aria-live="assertive"><div class="bx"><div class="spin"></div><b id="busyT">처리 중입니다</b><p class="sub" id="busyM" style="margin:8px 0 0"></p></div></div>
+
   <section id="v4" class="card hide"><b id="doneT"></b><p id="doneM"></p></section>
 </div>
-<script src="/sign/sign.js?v=1.1.0"></script>
+<script src="/sign/sign.js?v=1.2.0"></script>
 </body>
 </html>

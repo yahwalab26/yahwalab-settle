@@ -1,11 +1,12 @@
-/* tools/contracts.js v1.0.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.1.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
   'use strict';
   const SB = supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co', 'sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
-  const ST = { draft: ['작성중', ''], review_sent: ['검토용 발송', ''], sent: ['서명 요청됨', 'warn'], opened: ['열람함', 'warn'], signed: ['처리 대기', 'bad'], completed: ['완료', 'ok'], cancelled: ['취소', ''] };
+  const ST = { draft: ['작성중', ''], review_sent: ['검토용 발송', ''], pub_pending: ['야화랩 서명 대기', 'warn'], pub_signed: ['작가 발송 대기', 'warn'], sent: ['작가 서명 대기', 'warn'], opened: ['작가 열람함', 'warn'], signed: ['처리 대기', 'bad'], completed: ['완료', 'ok'], cancelled: ['취소', ''] };
   const TY = { general: '일반', special: '특약' };
+  const EVN = { created: '계약서 생성', review_sent: '검토용 발송', pub_request_sent: '야화랩 서명 요청 발송', opened: '열람', email_failed: '이메일 확인 실패', email_verified: '이메일 확인', consent_agreed: '동의', publisher_signed: '야화랩 서명', sent: '작가 서명 요청 발송', info_submitted: '작가 정보 입력', signed: '작가 서명', completed: '완료', mail_sent: '완료 메일 발송', mail_failed: '메일 발송 실패', complete_failed: '완료 처리 실패', pii_viewed: '개인정보 원문 열람', file_downloaded: '파일 내려받기', cancelled: '취소' };
   const root = document.getElementById('root');
   const h = (t, a, ...c) => { const e = document.createElement(t); Object.entries(a || {}).forEach(([k, v]) => { if (k === 'onclick') e.onclick = v; else if (v !== false && v != null) e.setAttribute(k, v); }); c.flat().forEach(x => { if (x == null || x === false) return; e.append(x instanceof Node ? x : document.createTextNode(String(x))); }); return e; };
   const kst = s => s ? new Date(new Date(s).getTime() + 9 * 36e5).toISOString().replace('T', ' ').slice(0, 16) : '';
@@ -55,7 +56,7 @@
         const r = await api({ action: 'create', contract_type: f.type.value, author_email: f.email.value, pen_name: f.pen.value, work_title: f.title.value, terms, author_id: f.au.value || null });
         detail(r.id);
       }) }, '만들기'), h('button', { onclick: list }, '취소')));
-    root.replaceChildren(h('div', { class: 'top' }, h('div', {}, h('h1', {}, '새 계약서'), h('div', { class: 'k' }, '만든 뒤 “가계약서 발송”으로 먼저 검토받고, 확정되면 “서명 요청”을 보냅니다.'))), msg, body);
+    root.replaceChildren(h('div', { class: 'top' }, h('div', {}, h('h1', {}, '새 계약서'), h('div', { class: 'k' }, '만든 뒤 “가계약서 발송”으로 먼저 검토받고, 확정되면 “서명 요청 시작”을 누르세요. 야화랩이 먼저 서명한 뒤 작가에게 자동으로 발송됩니다.'))), msg, body);
   }
 
   /* ---------- 상세 ---------- */
@@ -67,18 +68,20 @@
     const dl = (label, kind) => h('button', { onclick: () => run(async () => { window.open((await api({ action: 'download', id, kind })).url, '_blank', 'noopener'); }) }, label);
     const pii = h('div', {}, j.masked ? [`성명 ${j.masked.name} · 주민/사업자번호 ${j.masked.rrn} · 연락처 ${j.masked.phone}`, h('br'), `주소 ${j.masked.address} · 계좌 ${j.masked.bank}`] : '작가가 아직 정보를 입력하지 않았습니다.');
     const reveal = j.masked && h('button', { onclick: async () => { if (!confirm('개인정보 원문을 화면에 표시합니다. 열람 기록이 남습니다.')) return; const r = await run(() => api({ action: 'reveal', id })); if (r) { const i = r.info; pii.replaceChildren(`성명 ${i.name} · 번호 ${i.rrn} · 연락처 ${i.phone}`, h('br'), `주소 ${i.address} · ${i.bank_name} ${i.bank_no} (${i.bank_holder})`); } } }, '개인정보 원문 보기');
-    const editable = ['draft', 'review_sent'].includes(c.status), live = ['draft', 'review_sent', 'sent', 'opened'].includes(c.status);
+    const editable = ['draft', 'review_sent'].includes(c.status), live = ['draft', 'review_sent', 'pub_pending', 'pub_signed', 'sent', 'opened'].includes(c.status);
+    const signLabel = c.pub_signed_at ? '작가에게 서명 요청 재발송' : (c.status === 'pub_pending' ? '야화랩 서명 메일 재발송' : '서명 요청 시작 (야화랩 서명 메일 발송)');
+    const signOk = c.pub_signed_at ? '작가님께 서명 요청 메일을 다시 보냈습니다.' : '야화랩(admin@yahwalab.xyz)으로 서명 요청 메일을 보냈습니다. 야화랩이 서명하면 작가님께 자동으로 발송됩니다.';
     root.replaceChildren(
       h('div', { class: 'top' }, h('div', {}, h('h1', {}, c.work_title), h('div', { class: 'k' }, `${c.doc_no} · `, h('span', { class: 'tag' }, TY[c.contract_type]), ' ', h('span', { class: 'tag ' + stCls }, stText))), h('button', { onclick: list }, '← 목록')), msg,
       h('div', { class: 'sec' }, h('h2', {}, '계약 조건'), `필명 ${c.pen_name || '-'} · ${c.author_email}`, h('br'), `기간 ${t.term_years}년 · 인도 후 ${t.publish_months}개월 이내 개시 · 인도일 ${t.delivery_date || '미정'} · 배분 ${t.share_author}:${t.share_publisher}`, t.extra ? [h('br'), `특약: ${t.extra.until}까지 ${t.extra.share_author}:${t.extra.share_publisher}`] : ''),
       h('div', { class: 'sec' }, h('h2', {}, '작가 정보 (기본 가림)'), pii, reveal || ''),
       h('div', { class: 'sec' }, h('h2', {}, '진행'),
         editable ? act('가계약서(검토용) 발송', () => api({ action: 'send_review', id }), '', '검토용 계약서를 작가 메일로 보냈습니다.') : '',
-        live ? act(c.status === 'sent' || c.status === 'opened' ? '서명 요청 재발송' : '서명 요청 발송', () => api({ action: 'send_sign', id }), 'p', '서명 요청 메일을 보냈습니다.') : '',
+        live ? act(signLabel, () => api({ action: 'send_sign', id }), 'p', signOk) : '',
         c.status === 'signed' ? act('완료 처리 재시도', () => api({ action: 'retry_complete', id }), 'p') : '', c.status === 'completed' ? act('완료 메일 재발송', () => api({ action: 'retry_complete', id }), '', '완료 메일을 다시 보냈습니다.') : '',
         c.review_pdf_path ? dl('검토용 PDF', 'review') : '', c.final_pdf_path ? dl('계약서 PDF', 'contract') : '', c.cert_pdf_path ? dl('감사 추적 인증서', 'cert') : '',
         !['completed', 'cancelled'].includes(c.status) ? h('button', { onclick: () => { if (confirm('이 계약을 취소할까요? 보낸 서명 링크도 무효가 됩니다.')) run(() => api({ action: 'cancel', id })).then(() => detail(id)); } }, '계약 취소') : ''),
-      h('div', { class: 'sec' }, h('h2', {}, '진행 기록'), h('div', { class: 'scroll' }, h('table', {}, h('tbody', {}, j.events.map(e => h('tr', {}, h('td', { class: 'mono' }, kst(e.created_at)), h('td', {}, e.event), h('td', {}, e.actor || ''), h('td', {}, e.ip || ''))))))));
+      h('div', { class: 'sec' }, h('h2', {}, '진행 기록'), h('div', { class: 'scroll' }, h('table', {}, h('tbody', {}, j.events.map(e => h('tr', {}, h('td', { class: 'mono' }, kst(e.created_at)), h('td', {}, EVN[e.event] || e.event), h('td', {}, (e.actor || '').replace('publisher:', '야화랩 ').replace('author:', '작가 ').replace('admin:', '관리자 ')), h('td', {}, e.ip || ''))))))));
   }
 
   /* ---------- 시작: 로그인·관리자 확인(다른 도구와 같은 방식) ---------- */

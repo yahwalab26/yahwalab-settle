@@ -17,6 +17,7 @@ h3.ovh{font-size:15px;margin:22px 0 10px;text-align:left}
 /* S8 월 마감 체크리스트 */
 #flow{margin:0 0 24px}
 .fl{border:1px solid var(--line);text-align:left}
+.dsc .fl{border:0} /* 작가 정산 조회 카드의 제목(정산 기간·작품명·플랫폼)은 테두리 없는 글자만 */
 .flh{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
 .flh .ghost{min-height:34px;padding:0 12px}
 ol.flr{list-style:none;margin:0;padding:0}

@@ -13,12 +13,12 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/css/tokens.css?v=2.23.1">
-<link rel="stylesheet" href="assets/css/base.css?v=2.23.1">
-<link rel="stylesheet" href="assets/css/shell.css?v=2.23.1">
-<link rel="stylesheet" href="assets/css/components.css?v=2.23.1">
-<link rel="stylesheet" href="assets/css/buttons.css?v=2.23.1">
-<link rel="stylesheet" href="assets/css/pages.css?v=2.23.1">
+<link rel="stylesheet" href="assets/css/tokens.css?v=2.23.2">
+<link rel="stylesheet" href="assets/css/base.css?v=2.23.2">
+<link rel="stylesheet" href="assets/css/shell.css?v=2.23.2">
+<link rel="stylesheet" href="assets/css/components.css?v=2.23.2">
+<link rel="stylesheet" href="assets/css/buttons.css?v=2.23.2">
+<link rel="stylesheet" href="assets/css/pages.css?v=2.23.2">
 </head><body>
 <div class="wrap">
 
@@ -60,10 +60,10 @@
   <h2><small>(04)</small>일일 정산 현황</h2>
   <p class="k" style="text-align:center;margin:0 0 12px;font-size:12px;line-height:1.9">정산 내역은 매일 00시~01시에 업데이트되므로, 전일까지의 판매 내역만 확인할 수 있습니다.<br>리디북스는 플랫폼 정산 내역 제공 기준에 따라 판매일로부터 이틀 후(익익일) 정산 내역이 업데이트됩니다.<br>(※ 본 정산 현황은 미확정 금액입니다. 취소분 등으로 인하여 실제 정산액과 차이가 있을 수 있습니다.)</p>
   <div class="card dsc" style="text-align:left;padding-top:8px">
-    <div class="fr"><label class="fl" for="sf">정산 기간</label><div class="row" style="justify-content:flex-start"><input id="sf" type="date" style="width:auto"><span>~</span><input id="se" type="date" style="width:auto">
+    <div class="fr"><span class="fl">정산 기간</span><div class="row" style="justify-content:flex-start"><input id="sf" type="date" aria-label="정산 시작일" style="width:auto"><span>~</span><input id="se" type="date" aria-label="정산 종료일" style="width:auto">
       <span id="sdq" class="row" style="gap:6px"><button type="button" class="ghost" data-q="y">어제</button><button type="button" class="ghost" data-q="yy">그제</button><button type="button" class="ghost" data-q="tm">이번 달</button><button type="button" class="ghost" data-q="lm">저번 달</button></span></div>
       <p class="k" style="margin:8px 0 0;font-size:12px">3개월 이내의 데이터만 조회할 수 있습니다.</p></div>
-    <div class="fr"><label class="fl" for="sq">작품명</label><input id="sq" type="text" placeholder="작품명을 입력하세요 (미입력 시 전체 작품)" autocomplete="off">
+    <div class="fr"><span class="fl">작품명</span><input id="sq" type="text" aria-label="작품명" placeholder="작품명을 입력하세요 (미입력 시 전체 작품)" autocomplete="off">
       <p class="k" style="margin:8px 0 0;font-size:12px">띄어쓰기로 여러 작품을 함께 조회할 수 있고, 작품명의 일부만 입력해도 됩니다.</p></div>
     <div class="fr" style="border:0"><span class="fl" id="pfl">플랫폼</span><div class="row" id="pchips" role="group" aria-labelledby="pfl" style="justify-content:flex-start;gap:8px"></div></div>
     <div class="row" style="justify-content:flex-end"><button id="sgo">조회</button></div></div>
@@ -212,19 +212,19 @@
 <div id="rrnpk" hidden role="status" aria-live="polite" style="position:fixed;right:12px;bottom:12px;z-index:9999;background:#fff;border:1px solid #17171A;padding:12px 14px;max-width:min(380px,calc(100vw - 24px));box-shadow:0 4px 18px rgba(0,0,0,.18)"></div>
 <div id="lay" class="lay" hidden><div class="lp" role="dialog" aria-modal="true" aria-labelledby="lt"><button class="ghost lx" id="lxb">닫기</button><div id="lbody"></div></div></div>
 <script src="/libs/supabase-2.49.4.js"></script>
-<script src="assets/js/core/boot.js?v=2.23.1"></script>
-<script src="assets/js/core/loader.js?v=2.23.1"></script>
-<script src="assets/js/core/auth.js?v=2.23.1"></script>
-<script src="assets/js/core/enter.js?v=2.23.1"></script>
-<script src="assets/js/core/password.js?v=2.23.1"></script>
-<script src="assets/js/core/start-hash.js?v=2.23.1"></script>
-<script src="assets/js/core/embed.js?v=2.23.1"></script>
-<script src="assets/js/core/dates.js?v=2.23.1"></script>
-<script src="assets/js/core/session.js?v=2.23.1"></script>
-<script src="assets/js/core/layer.js?v=2.23.1"></script>
-<script src="assets/js/core/work-shared.js?v=2.23.1"></script>
-<script src="assets/js/core/statement-calc.js?v=2.23.1"></script>
-<script src="assets/js/core/statement-html.js?v=2.23.1"></script>
-<script src="assets/js/core/statement-print.js?v=2.23.1"></script>
-<script src="assets/js/core/error-report.js?v=2.23.1"></script>
-<script src="assets/js/core/invite.js?v=2.23.1"></script></body></html>
+<script src="assets/js/core/boot.js?v=2.23.2"></script>
+<script src="assets/js/core/loader.js?v=2.23.2"></script>
+<script src="assets/js/core/auth.js?v=2.23.2"></script>
+<script src="assets/js/core/enter.js?v=2.23.2"></script>
+<script src="assets/js/core/password.js?v=2.23.2"></script>
+<script src="assets/js/core/start-hash.js?v=2.23.2"></script>
+<script src="assets/js/core/embed.js?v=2.23.2"></script>
+<script src="assets/js/core/dates.js?v=2.23.2"></script>
+<script src="assets/js/core/session.js?v=2.23.2"></script>
+<script src="assets/js/core/layer.js?v=2.23.2"></script>
+<script src="assets/js/core/work-shared.js?v=2.23.2"></script>
+<script src="assets/js/core/statement-calc.js?v=2.23.2"></script>
+<script src="assets/js/core/statement-html.js?v=2.23.2"></script>
+<script src="assets/js/core/statement-print.js?v=2.23.2"></script>
+<script src="assets/js/core/error-report.js?v=2.23.2"></script>
+<script src="assets/js/core/invite.js?v=2.23.2"></script></body></html>

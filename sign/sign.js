@@ -1,4 +1,4 @@
-/* 야화랩 전자계약 — 서명 페이지 (v1.2.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
+/* 야화랩 전자계약 — 서명 페이지 (v1.3.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
    CSP(script-src 'self') 때문에 인라인이 아닌 외부 파일로 둔다. */
 (function () {
   'use strict';
@@ -100,7 +100,7 @@
     $('#e3').textContent = ''; const pub = ROLE === 'publisher';
     if (!($('#c1').checked && (pub || ($('#c2').checked && $('#c3').checked)))) { $('#e3').textContent = '필수 동의 항목에 모두 체크해 주세요.'; return; }
     let sig; try { sig = getSig(); } catch (x) { fail('e3', x); return; }
-    busy(e.target, true); wait(true, pub ? '서명을 처리하는 중입니다' : '계약서를 만드는 중입니다', pub ? '작가님께 서명 요청 메일을 보내고 있습니다. 잠시만 기다려 주세요.' : '계약서와 감사 추적 인증서를 만들어 이메일로 보내고 있습니다. 10~30초 걸릴 수 있으니 창을 닫지 말고 기다려 주세요.');
+    busy(e.target, true); wait(true, pub ? '서명을 처리하는 중입니다' : '서명을 저장하는 중입니다', pub ? '작가님께 서명 요청 메일을 보내고 있습니다. 잠시만 기다려 주세요.' : '계약서와 감사 추적 인증서를 만들어 이메일로 보내고 있습니다. 10~30초 걸릴 수 있으니 창을 닫지 말고 기다려 주세요.');
     try {
       if (pub) {
         const j = await api({ action: 'pub_submit', consents: { esign: true }, ...sig });
@@ -108,10 +108,17 @@
         $('#doneM').textContent = j.mailOk === false ? j.message : '작가님께 서명 요청 메일(야화랩 서명이 완료된 계약서 첨부)을 자동으로 보냈습니다.';
       } else {
         const info = Object.fromEntries(F.map(k => [k, $('#' + k).value.trim()]));
-        const j = await api({ action: 'submit', info, consents: { esign: true, privacy: true, rrn: true }, ...sig });
-        show('v4'); $('#doneT').textContent = '서명이 완료되었습니다';
-        $('#doneM').textContent = j.completed ? (j.mailOk === false ? '완료된 계약서 발송에 문제가 있어 야화랩에서 곧 다시 보내드립니다.' : '완료된 계약서와 감사 추적 인증서를 이메일로 보내드렸습니다. 메일함을 확인해 주세요.') : j.message;
+        await api({ action: 'submit', info, consents: { esign: true, privacy: true, rrn: true }, ...sig });
         F.forEach(k => { $('#' + k).value = ''; });
+        // 계약서·인증서 생성과 메일 발송을 한 단계씩 진행(서버 시간 제한 때문에 나눔)
+        const LABEL = { contract: '계약서를 만드는 중입니다', cert: '감사 추적 인증서를 만드는 중입니다', mail: '이메일로 보내는 중입니다' };
+        let r = null, bad = 0;
+        for (let i = 0; i < 6; i++) {
+          try { r = await api({ action: 'finalize' }); bad = 0; } catch (x) { if (++bad > 2) break; await new Promise(z => setTimeout(z, 1500)); i--; continue; }
+          if (r.done) break; wait(true, LABEL[r.step === 'contract' ? 'cert' : 'mail'] || '처리 중입니다', '창을 닫지 말고 기다려 주세요.');
+        }
+        show('v4'); $('#doneT').textContent = '서명이 완료되었습니다';
+        $('#doneM').textContent = r && r.done ? (r.mailOk === false ? '서명은 완료되었습니다. 완료 문서 발송에 문제가 있어 야화랩에서 확인 후 다시 보내드립니다.' : '완료된 계약서와 감사 추적 인증서를 이메일로 보내드렸습니다. 메일함을 확인해 주세요.') : '서명은 접수되었습니다. 완료 문서는 야화랩에서 확인 후 이메일로 보내드립니다.';
       }
     } catch (x) { fail('e3', x); busy(e.target, false); } finally { wait(false); }
   };

@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.1.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.2.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -78,7 +78,7 @@
       h('div', { class: 'sec' }, h('h2', {}, '진행'),
         editable ? act('가계약서(검토용) 발송', () => api({ action: 'send_review', id }), '', '검토용 계약서를 작가 메일로 보냈습니다.') : '',
         live ? act(signLabel, () => api({ action: 'send_sign', id }), 'p', signOk) : '',
-        c.status === 'signed' ? act('완료 처리 재시도', () => api({ action: 'retry_complete', id }), 'p') : '', c.status === 'completed' ? act('완료 메일 재발송', () => api({ action: 'retry_complete', id }), '', '완료 메일을 다시 보냈습니다.') : '',
+        (c.status === 'signed' || (c.status === 'completed' && !c.final_mail_sent_at)) ? act('완료 처리 재시도', async () => { let r; for (let i = 0; i < 6; i++) { r = await api({ action: 'retry_complete', id }); if (r.done) break; } return r; }, 'p', '완료 처리를 이어서 실행했습니다. 상태를 확인해 주세요.') : '', c.status === 'completed' ? act('완료 메일 재발송', () => api({ action: 'retry_complete', id, force: true }), '', '완료 메일을 다시 보냈습니다.') : '',
         c.review_pdf_path ? dl('검토용 PDF', 'review') : '', c.final_pdf_path ? dl('계약서 PDF', 'contract') : '', c.cert_pdf_path ? dl('감사 추적 인증서', 'cert') : '',
         !['completed', 'cancelled'].includes(c.status) ? h('button', { onclick: () => { if (confirm('이 계약을 취소할까요? 보낸 서명 링크도 무효가 됩니다.')) run(() => api({ action: 'cancel', id })).then(() => detail(id)); } }, '계약 취소') : ''),
       h('div', { class: 'sec' }, h('h2', {}, '진행 기록'), h('div', { class: 'scroll' }, h('table', {}, h('tbody', {}, j.events.map(e => h('tr', {}, h('td', { class: 'mono' }, kst(e.created_at)), h('td', {}, EVN[e.event] || e.event), h('td', {}, (e.actor || '').replace('publisher:', '야화랩 ').replace('author:', '작가 ').replace('admin:', '관리자 ')), h('td', {}, e.ip || ''))))))));

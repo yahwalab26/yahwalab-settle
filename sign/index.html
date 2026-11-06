@@ -48,13 +48,15 @@
   <section id="v2" class="hide">
     <div class="card"><div class="note" id="note"></div><b>계약서 내용</b><p class="sub">끝까지 읽어 주세요.</p><div class="doc" id="doc"></div></div>
     <div class="card" id="infoCard"><b>작가 정보 입력</b> <span class="req">모든 항목은 필수입니다</span>
-      <label>성명(본명) <i class="req">*</i></label><input id="name" name="ec_name" type="text" autocomplete="off">
       <label>주소 <i class="req">*</i></label><input id="address" name="ec_address" type="text" autocomplete="off">
+      <label>성명(본명) <i class="req">*</i></label><input id="name" name="ec_name" type="text" autocomplete="off">
       <label>연락처 <i class="req">*</i></label><input id="phone" name="ec_phone" type="tel" inputmode="tel" autocomplete="off">
-      <label>주민(사업자)등록번호 <i class="req">*</i></label><input id="rrn" name="ec_idnum" class="mask" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="숫자만 입력">
+      <p class="sub" style="margin:14px 0 0">계좌번호 (은행명 / 계좌번호 / 예금주)</p>
       <label>은행명 <i class="req">*</i></label><input id="bank_name" type="text" placeholder="예: 신한은행">
       <label>계좌번호 <i class="req">*</i></label><input id="bank_no" name="ec_account" type="text" inputmode="numeric" autocomplete="off">
       <label>예금주 <i class="req">*</i></label><input id="bank_holder" type="text">
+      <div id="rrnWrap"><label>주민(사업자)등록번호 <i class="req">*</i></label><input id="rrn" name="ec_idnum" class="mask" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="숫자만 입력"></div>
+      <div id="delWrap"><label>원고 인도일 <i class="req">*</i> <span id="delNote" class="req"></span></label><input id="delivery" type="text" maxlength="40" autocomplete="off" placeholder="완고인 경우, 즉시라고 남겨주시면 됩니다."></div>
     </div>
     <div class="card"><div class="err" id="e2"></div><button id="next2">다음: 서명하기</button></div>
   </section>
@@ -77,6 +79,6 @@
 
   <section id="v4" class="card hide"><b id="doneT"></b><p id="doneM"></p></section>
 </div>
-<script src="/sign/sign.js?v=1.3.0"></script>
+<script src="/sign/sign.js?v=1.4.0"></script>
 </body>
 </html>

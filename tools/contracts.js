@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.2.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.3.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -6,6 +6,7 @@
   const SB = supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co', 'sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
   const ST = { draft: ['작성중', ''], review_sent: ['검토용 발송', ''], pub_pending: ['야화랩 서명 대기', 'warn'], pub_signed: ['작가 발송 대기', 'warn'], sent: ['작가 서명 대기', 'warn'], opened: ['작가 열람함', 'warn'], signed: ['처리 대기', 'bad'], completed: ['완료', 'ok'], cancelled: ['취소', ''] };
   const TY = { general: '일반', special: '특약' };
+  const INFO = [['address', '주소'], ['name', '성명(본명)'], ['phone', '연락처'], ['bank_name', '은행명'], ['bank_no', '계좌번호'], ['bank_holder', '예금주'], ['rrn', '주민(사업자)등록번호']];
   const EVN = { created: '계약서 생성', review_sent: '검토용 발송', pub_request_sent: '야화랩 서명 요청 발송', opened: '열람', email_failed: '이메일 확인 실패', email_verified: '이메일 확인', consent_agreed: '동의', publisher_signed: '야화랩 서명', sent: '작가 서명 요청 발송', info_submitted: '작가 정보 입력', signed: '작가 서명', completed: '완료', mail_sent: '완료 메일 발송', mail_failed: '메일 발송 실패', complete_failed: '완료 처리 실패', pii_viewed: '개인정보 원문 열람', file_downloaded: '파일 내려받기', cancelled: '취소' };
   const root = document.getElementById('root');
   const h = (t, a, ...c) => { const e = document.createElement(t); Object.entries(a || {}).forEach(([k, v]) => { if (k === 'onclick') e.onclick = v; else if (v !== false && v != null) e.setAttribute(k, v); }); c.flat().forEach(x => { if (x == null || x === false) return; e.append(x instanceof Node ? x : document.createTextNode(String(x))); }); return e; };
@@ -37,7 +38,7 @@
     msg = h('div');
     const [au, wk, wa] = await Promise.all([SB.from('authors').select('id,pen_name,email').order('pen_name'), SB.from('works').select('id,title').order('title'), SB.from('work_authors').select('work_id,author_id')]);
     const A = au.data || [], W = wk.data || [], WA = wa.data || [], f = {};
-    const inp = (k, label, type = 'text', val = '') => { f[k] = h('input', { type, value: val }); return h('div', {}, h('label', {}, label), f[k]); };
+    const inp = (k, label, type = 'text', val = '', ph = '') => { f[k] = h('input', { type, value: val, placeholder: ph }); return h('div', {}, h('label', {}, label), f[k]); };
     f.type = h('select', {}, h('option', { value: 'general' }, '일반 계약'), h('option', { value: 'special' }, '특약 계약'));
     f.au = h('select', {}, h('option', { value: '' }, '직접 입력'), A.map(a => h('option', { value: a.id }, a.pen_name)));
     f.wk = h('select', {}, h('option', { value: '' }, '직접 입력'));
@@ -48,12 +49,15 @@
     f.type.onchange = () => { extra.hidden = f.type.value !== 'special'; };
     const body = h('div', { class: 'sec' },
       h('div', { class: 'g' }, h('div', {}, h('label', {}, '계약 종류'), f.type), h('div', {}, h('label', {}, '작가 불러오기(선택)'), f.au), h('div', {}, h('label', {}, '작품 불러오기(선택)'), f.wk)),
-      h('div', { class: 'g', style: 'margin-top:10px' }, inp('email', '작가 이메일(서명 링크 수신)', 'email'), inp('pen', '필명'), inp('title', '작품명(제호)'), inp('years', '계약 기간(년)', 'number', 3), inp('months', '인도 후 서비스 개시(개월)', 'number', 6), inp('deliv', '원고 인도일(미정이면 비움)', 'date'), inp('sa', '기본 작가 정산 %', 'number', 80)),
+      h('div', { class: 'g', style: 'margin-top:10px' }, inp('email', '작가 이메일(서명 링크 수신)', 'email'), inp('pen', '필명'), inp('title', '작품명(제호)'), inp('years', '계약 기간(년)', 'number', 3), inp('months', '인도 후 서비스 개시(개월)', 'number', 6), inp('deliv', '원고 인도일 (비우면 작가가 입력)', 'text', '', '완고인 경우, 즉시라고 남겨주시면 됩니다.'), inp('sa', '기본 작가 정산 %', 'number', 80)),
+      h('h2', { style: 'margin-top:16px' }, '작가 정보 (아는 것만 입력 · 비운 칸은 작가가 직접 입력)'),
+      h('div', { class: 'g' }, INFO.map(([k, l]) => inp('i_' + k, l, 'text', '', k === 'rrn' ? '계약서 작성 시 입력하셔도 됩니다.' : ''))),
       h('div', { style: 'margin-top:10px' }, extra),
       h('div', { style: 'margin-top:12px' }, h('button', { class: 'p', onclick: () => run(async () => {
-        const sa = +f.sa.value, terms = { term_years: +f.years.value, publish_months: +f.months.value, delivery_date: f.deliv.value || null, share_author: sa, share_publisher: 100 - sa };
+        const sa = +f.sa.value, terms = { term_years: +f.years.value, publish_months: +f.months.value, delivery_date: f.deliv.value.trim() || null, share_author: sa, share_publisher: 100 - sa };
         if (f.type.value === 'special') { const xa = +f.xa.value; terms.extra = { until: f.xu.value, share_author: xa, share_publisher: 100 - xa }; }
-        const r = await api({ action: 'create', contract_type: f.type.value, author_email: f.email.value, pen_name: f.pen.value, work_title: f.title.value, terms, author_id: f.au.value || null });
+        const r = await api({ action: 'create', contract_type: f.type.value, author_email: f.email.value, pen_name: f.pen.value, work_title: f.title.value, terms, author_id: f.au.value || null,
+          author_info: Object.fromEntries(INFO.map(([k]) => [k, f['i_' + k].value.trim()]).filter(([, v]) => v)) });
         detail(r.id);
       }) }, '만들기'), h('button', { onclick: list }, '취소')));
     root.replaceChildren(h('div', { class: 'top' }, h('div', {}, h('h1', {}, '새 계약서'), h('div', { class: 'k' }, '만든 뒤 “가계약서 발송”으로 먼저 검토받고, 확정되면 “서명 요청 시작”을 누르세요. 야화랩이 먼저 서명한 뒤 작가에게 자동으로 발송됩니다.'))), msg, body);
@@ -73,8 +77,8 @@
     const signOk = c.pub_signed_at ? '작가님께 서명 요청 메일을 다시 보냈습니다.' : '야화랩(admin@yahwalab.xyz)으로 서명 요청 메일을 보냈습니다. 야화랩이 서명하면 작가님께 자동으로 발송됩니다.';
     root.replaceChildren(
       h('div', { class: 'top' }, h('div', {}, h('h1', {}, c.work_title), h('div', { class: 'k' }, `${c.doc_no} · `, h('span', { class: 'tag' }, TY[c.contract_type]), ' ', h('span', { class: 'tag ' + stCls }, stText))), h('button', { onclick: list }, '← 목록')), msg,
-      h('div', { class: 'sec' }, h('h2', {}, '계약 조건'), `필명 ${c.pen_name || '-'} · ${c.author_email}`, h('br'), `기간 ${t.term_years}년 · 인도 후 ${t.publish_months}개월 이내 개시 · 인도일 ${t.delivery_date || '미정'} · 배분 ${t.share_author}:${t.share_publisher}`, t.extra ? [h('br'), `특약: ${t.extra.until}까지 ${t.extra.share_author}:${t.extra.share_publisher}`] : ''),
-      h('div', { class: 'sec' }, h('h2', {}, '작가 정보 (기본 가림)'), pii, reveal || ''),
+      h('div', { class: 'sec' }, h('h2', {}, '계약 조건'), `필명 ${c.pen_name || '-'} · ${c.author_email}`, h('br'), `기간 ${t.term_years}년 · 인도 후 ${t.publish_months}개월 이내 개시 · 인도일 ${t.delivery_date || '작가 입력'} · 배분 ${t.share_author}:${t.share_publisher}`, t.extra ? [h('br'), `특약: ${t.extra.until}까지 ${t.extra.share_author}:${t.extra.share_publisher}`] : ''),
+      h('div', { class: 'sec' }, h('h2', {}, '작가 정보 (기본 가림)'), pii, reveal || '', editable ? h('button', { onclick: () => infoEditor(c) }, '작가 정보·인도일 입력/수정') : ''),
       h('div', { class: 'sec' }, h('h2', {}, '진행'),
         editable ? act('가계약서(검토용) 발송', () => api({ action: 'send_review', id }), '', '검토용 계약서를 작가 메일로 보냈습니다.') : '',
         live ? act(signLabel, () => api({ action: 'send_sign', id }), 'p', signOk) : '',
@@ -82,6 +86,19 @@
         c.review_pdf_path ? dl('검토용 PDF', 'review') : '', c.final_pdf_path ? dl('계약서 PDF', 'contract') : '', c.cert_pdf_path ? dl('감사 추적 인증서', 'cert') : '',
         !['completed', 'cancelled'].includes(c.status) ? h('button', { onclick: () => { if (confirm('이 계약을 취소할까요? 보낸 서명 링크도 무효가 됩니다.')) run(() => api({ action: 'cancel', id })).then(() => detail(id)); } }, '계약 취소') : ''),
       h('div', { class: 'sec' }, h('h2', {}, '진행 기록'), h('div', { class: 'scroll' }, h('table', {}, h('tbody', {}, j.events.map(e => h('tr', {}, h('td', { class: 'mono' }, kst(e.created_at)), h('td', {}, EVN[e.event] || e.event), h('td', {}, (e.actor || '').replace('publisher:', '야화랩 ').replace('author:', '작가 ').replace('admin:', '관리자 ')), h('td', {}, e.ip || ''))))))));
+  }
+
+  /* ---------- 작가 정보 입력/수정 (서명 요청 전까지) ---------- */
+  function infoEditor(c) {
+    msg = h('div'); const f = {};
+    const inp = (k, label, ph = '') => { f[k] = h('input', { type: 'text', placeholder: ph }); return h('div', {}, h('label', {}, label), f[k]); };
+    const body = h('div', { class: 'sec' }, h('div', { class: 'k' }, '입력한 칸만 저장되고, 비워 둔 칸은 기존 값이 유지됩니다. 작가가 직접 입력할 항목은 비워 두세요.'),
+      h('div', { class: 'g', style: 'margin-top:10px' }, INFO.map(([k, l]) => inp('i_' + k, l, k === 'rrn' ? '계약서 작성 시 입력하셔도 됩니다.' : '')), inp('deliv', '원고 인도일', '완고인 경우, 즉시라고 남겨주시면 됩니다.')),
+      h('div', { style: 'margin-top:12px' }, h('button', { class: 'p', onclick: () => run(async () => {
+        const info = Object.fromEntries(INFO.map(([k]) => [k, f['i_' + k].value.trim()]).filter(([, v]) => v)), terms = f.deliv.value.trim() ? { delivery_date: f.deliv.value.trim() } : {};
+        await api({ action: 'update', id: c.id, author_info: info, terms }); detail(c.id);
+      }) }, '저장'), h('button', { onclick: () => detail(c.id) }, '취소')));
+    root.replaceChildren(h('div', { class: 'top' }, h('div', {}, h('h1', {}, '작가 정보 입력·수정'), h('div', { class: 'k' }, c.work_title))), msg, body);
   }
 
   /* ---------- 시작: 로그인·관리자 확인(다른 도구와 같은 방식) ---------- */

@@ -14,7 +14,7 @@
   *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.65 -apple-system,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
   .wrap{max-width:640px;margin:0 auto;padding:18px 16px 40px}h1{font-size:19px;margin:6px 0 2px}.sub{color:var(--sub);font-size:13px;margin:0 0 14px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:12px 0}
-  label{display:block;font-size:13px;color:var(--sub);margin:12px 0 4px}input[type=text],input[type=password],input[type=tel],input[type=email]{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--tx);font-size:16px}
+  label{display:block;font-size:13px;color:var(--sub);margin:12px 0 4px}input[type=text],input[type=password],input[type=tel],input[type=email],input[type=date]{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--tx);font-size:16px}
   button{width:100%;padding:14px;border:0;border-radius:10px;background:var(--pri);color:var(--prit);font-size:16px;font-weight:600;margin-top:16px}button.ghost{background:transparent;color:var(--tx);border:1px solid var(--line)}button:disabled{opacity:.45}
   .tabs{display:flex;gap:6px;margin:10px 0}.tabs button{margin:0;padding:10px 6px;font-size:14px;background:transparent;color:var(--tx);border:1px solid var(--line)}.tabs button.on{background:var(--pri);color:var(--prit);border-color:var(--pri)}
   .err{color:var(--err);font-size:14px;margin-top:10px;min-height:1px}.ok{color:var(--ok)}.note{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13.5px;margin:0 0 12px}
@@ -23,6 +23,7 @@
   #pad,.pv{width:100%;height:170px;background:#fff;border:1px dashed var(--line);border-radius:10px;touch-action:none;display:block}.pv{display:flex;align-items:center;justify-content:center;touch-action:auto}.pv canvas{max-width:100%;max-height:100%}
   input[type=file]{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:14px;color:var(--tx)}
   .chk{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:14px;color:var(--tx)}.chk input{margin-top:5px;width:18px;height:18px;flex:none}
+  .chk.one{align-items:center;line-height:1.4}.chk.one input{margin:0}.delrow{display:flex;gap:14px;align-items:center}.delrow input[type=date]{flex:1;min-width:0;width:auto}.delrow .chk{white-space:nowrap}
   .steps{display:flex;gap:6px;margin:8px 0 4px}.steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}.steps i.on{background:var(--pri)}
   .mask{-webkit-text-security:disc;text-security:disc}.req{color:var(--err);font-size:12px;font-style:normal;font-weight:400}input.bad{border-color:var(--err)}
   #busy{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px}#busy .bx{background:var(--card);border-radius:14px;padding:28px 22px;text-align:center;max-width:340px;width:100%}
@@ -56,7 +57,7 @@
       <label>계좌번호 <i class="req">*</i></label><input id="bank_no" name="ec_account" type="text" inputmode="numeric" autocomplete="off">
       <label>예금주 <i class="req">*</i></label><input id="bank_holder" type="text">
       <div id="rrnWrap"><label>주민(사업자)등록번호 <i class="req">*</i></label><input id="rrn" name="ec_idnum" class="mask" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="숫자만 입력"></div>
-      <div id="delWrap"><label>원고 인도일 <i class="req">*</i> <span id="delNote" class="req"></span></label><input id="delivery" type="text" maxlength="40" autocomplete="off" placeholder="완고인 경우, 즉시라고 남겨주시면 됩니다."></div>
+      <div id="delWrap"><label>원고 인도일 <i class="req">*</i> <span id="delNote" class="req"></span></label><div class="delrow"><input id="delivery" type="date"><label class="chk one" style="margin:0"><input type="checkbox" id="delNow"><span>즉시 (완고)</span></label></div><p class="sub" style="margin:6px 0 0">달력에서 날짜를 고르거나, 원고가 완성된 경우(완고)에는 '즉시'를 선택해 주세요.</p></div>
     </div>
     <div class="card"><div class="err" id="e2"></div><button id="next2">다음: 서명하기</button></div>
   </section>
@@ -79,6 +80,6 @@
 
   <section id="v4" class="card hide"><b id="doneT"></b><p id="doneM"></p></section>
 </div>
-<script src="/sign/sign.js?v=1.4.0"></script>
+<script src="/sign/sign.js?v=1.5.0"></script>
 </body>
 </html>

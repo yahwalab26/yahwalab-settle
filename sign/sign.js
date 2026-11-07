@@ -1,4 +1,4 @@
-/* 야화랩 전자계약 — 서명 페이지 (v1.4.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
+/* 야화랩 전자계약 — 서명 페이지 (v1.5.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
    CSP(script-src 'self') 때문에 인라인이 아닌 외부 파일로 둔다. */
 (function () {
   'use strict';
@@ -37,7 +37,7 @@
     for (const b of j.blocks) {
       if (b.t === 'title') add('title', 'div', b.text); else if (b.t === 'sub') add('sub2', 'div', b.text); else if (b.t === 'h') add('', 'h4', b.text);
       else if (b.t === 'p') add('', 'p', b.text); else if (b.t === 'li') add('li', 'p', b.text);
-      else if (b.t === 'check') { const l = document.createElement('label'); l.className = 'chk'; const c = document.createElement('input'); c.type = 'checkbox'; c.id = 'ai'; c.disabled = ROLE === 'publisher'; const sp = document.createElement('span'); sp.textContent = b.text; l.append(c, sp); box.appendChild(l); }
+      else if (b.t === 'check') { const l = document.createElement('label'); l.className = 'chk one'; const c = document.createElement('input'); c.type = 'checkbox'; c.id = 'ai'; c.disabled = ROLE === 'publisher'; const sp = document.createElement('span'); sp.textContent = b.text; l.append(c, sp); box.appendChild(l); }
       else if (b.t === 'box') { const d = document.createElement('div'); d.className = 'box'; b.lines.forEach((l, i) => { const p = document.createElement('p'); p.textContent = l; if (i === 0) p.style.fontWeight = '700'; d.appendChild(p); }); box.appendChild(d); }
     }
     const pub = ROLE === 'publisher';
@@ -48,20 +48,25 @@
       HAS_RRN = !!j.has_rrn; DEL_LOCK = !!j.delivery_locked; const pf = j.prefill || {};
       BASE.forEach(k => { if (pf[k]) $('#' + k).value = pf[k]; });
       $('#rrnWrap').classList.toggle('hide', HAS_RRN);
-      if (DEL_LOCK) { $('#delivery').value = j.delivery; $('#delivery').readOnly = true; $('#delNote').textContent = '(야화랩 입력)'; }
+      if (DEL_LOCK) {   // 야화랩이 정한 인도일은 수정 불가
+        if (j.delivery === '즉시') $('#delNow').checked = true; else $('#delivery').value = j.delivery;
+        $('#delivery').disabled = true; $('#delNow').disabled = true; $('#delNote').textContent = '(야화랩 입력)';
+      }
     }
     $('#signT').textContent = pub ? '동의 및 서명(도장)' : '동의 및 서명';
   }
 
   let HAS_RRN = false, DEL_LOCK = false;   // 야화랩이 미리 입력한 항목은 작가에게 묻지 않는다
   const BASE = ['address', 'name', 'phone', 'bank_name', 'bank_no', 'bank_holder'];
+  const val = k => (k === 'delivery' ? ($('#delNow').checked ? '즉시' : $('#delivery').value) : $('#' + k).value.trim());
+  $('#delNow').onchange = () => { $('#delivery').disabled = $('#delNow').checked; if ($('#delNow').checked) $('#delivery').value = ''; };
   const FIELDS = () => [...BASE, ...(HAS_RRN ? [] : ['rrn']), ...(DEL_LOCK ? [] : ['delivery'])];
   $('#next2').onclick = () => {
     if (ROLE === 'author') {
       FIELDS().concat(['rrn', 'delivery']).forEach(k => $('#' + k).classList.remove('bad'));
       if (!$('#ai') || !$('#ai').checked) { $('#e2').textContent = '제10조의2(생성형 AI의 사용 제한)의 "동의합니다"에 체크해 주세요.'; $('#doc').scrollTop = $('#doc').scrollHeight; return; }
-      const empty = FIELDS().filter(k => !$('#' + k).value.trim());
-      if (empty.length) { empty.forEach(k => $('#' + k).classList.add('bad')); $('#' + empty[0]).focus(); $('#e2').textContent = '모든 항목은 필수입니다. 빨간 칸을 입력해 주세요.'; return; }
+      const empty = FIELDS().filter(k => !val(k));
+      if (empty.length) { empty.forEach(k => $('#' + k).classList.add('bad')); const f0 = $('#' + empty[0]); if (f0.focus) f0.focus(); $('#e2').textContent = '모든 항목은 필수입니다. 빨간 칸을 입력해 주세요.'; return; }
       const rrn = $('#rrn').value.replace(/\D/g, ''); if (!HAS_RRN && ![10, 13].includes(rrn.length)) { $('#e2').textContent = '주민(사업자)등록번호 자릿수를 확인해 주세요. (주민 13자리 / 사업자 10자리)'; return; }
     }
     $('#e2').textContent = ''; show('v3'); setMode(MODE);
@@ -117,9 +122,9 @@
         show('v4'); $('#doneT').textContent = '야화랩 서명이 완료되었습니다';
         $('#doneM').textContent = j.mailOk === false ? j.message : '작가님께 서명 요청 메일(야화랩 서명이 완료된 계약서 첨부)을 자동으로 보냈습니다.';
       } else {
-        const info = Object.fromEntries(FIELDS().map(k => [k, $('#' + k).value.trim()]));
+        const info = Object.fromEntries(FIELDS().map(k => [k, val(k)]));
         await api({ action: 'submit', info, consents: { esign: true, privacy: true, rrn: true, ai: true }, ...sig });
-        FIELDS().forEach(k => { $('#' + k).value = ''; });
+        FIELDS().forEach(k => { $('#' + k).value = ''; }); $('#delNow').checked = false;
         // 계약서·인증서 생성과 메일 발송을 한 단계씩 진행(서버 시간 제한 때문에 나눔)
         const LABEL = { contract: '계약서를 만드는 중입니다', cert: '감사 추적 인증서를 만드는 중입니다', mail: '이메일로 보내는 중입니다' };
         let r = null, bad = 0;

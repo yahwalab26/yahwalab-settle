@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.3.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.4.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -6,6 +6,12 @@
   const SB = supabase.createClient('https://wddixxdrndgvjgicwunu.supabase.co', 'sb_publishable_fIrxIqOmX_-BFpSELdmvXQ_kkYSkaCx');
   const ST = { draft: ['작성중', ''], review_sent: ['검토용 발송', ''], pub_pending: ['야화랩 서명 대기', 'warn'], pub_signed: ['작가 발송 대기', 'warn'], sent: ['작가 서명 대기', 'warn'], opened: ['작가 열람함', 'warn'], signed: ['처리 대기', 'bad'], completed: ['완료', 'ok'], cancelled: ['취소', ''] };
   const TY = { general: '일반', special: '특약' };
+  // 원고 인도일: 달력에서 날짜 선택 또는 '즉시(완고)' 체크. 값은 'YYYY-MM-DD' 또는 '즉시', 비우면 작가가 입력
+  const delivField = (label) => {
+    const d = h('input', { type: 'date', style: 'flex:1;min-width:0;width:auto' }), c = h('input', { type: 'checkbox', style: 'width:auto;height:auto;margin:0' });
+    c.onchange = () => { d.disabled = c.checked; if (c.checked) d.value = ''; };
+    return { get: () => (c.checked ? '즉시' : d.value), el: h('div', {}, h('label', {}, label), h('div', { style: 'display:flex;align-items:center;gap:12px' }, d, h('label', { style: 'display:flex;align-items:center;gap:6px;margin:0;white-space:nowrap' }, c, '즉시 (완고)'))) };
+  };
   const INFO = [['address', '주소'], ['name', '성명(본명)'], ['phone', '연락처'], ['bank_name', '은행명'], ['bank_no', '계좌번호'], ['bank_holder', '예금주'], ['rrn', '주민(사업자)등록번호']];
   const EVN = { created: '계약서 생성', review_sent: '검토용 발송', pub_request_sent: '야화랩 서명 요청 발송', opened: '열람', email_failed: '이메일 확인 실패', email_verified: '이메일 확인', consent_agreed: '동의', publisher_signed: '야화랩 서명', sent: '작가 서명 요청 발송', info_submitted: '작가 정보 입력', signed: '작가 서명', completed: '완료', mail_sent: '완료 메일 발송', mail_failed: '메일 발송 실패', complete_failed: '완료 처리 실패', pii_viewed: '개인정보 원문 열람', file_downloaded: '파일 내려받기', cancelled: '취소' };
   const root = document.getElementById('root');
@@ -49,12 +55,12 @@
     f.type.onchange = () => { extra.hidden = f.type.value !== 'special'; };
     const body = h('div', { class: 'sec' },
       h('div', { class: 'g' }, h('div', {}, h('label', {}, '계약 종류'), f.type), h('div', {}, h('label', {}, '작가 불러오기(선택)'), f.au), h('div', {}, h('label', {}, '작품 불러오기(선택)'), f.wk)),
-      h('div', { class: 'g', style: 'margin-top:10px' }, inp('email', '작가 이메일(서명 링크 수신)', 'email'), inp('pen', '필명'), inp('title', '작품명(제호)'), inp('years', '계약 기간(년)', 'number', 3), inp('months', '인도 후 서비스 개시(개월)', 'number', 6), inp('deliv', '원고 인도일 (비우면 작가가 입력)', 'text', '', '완고인 경우, 즉시라고 남겨주시면 됩니다.'), inp('sa', '기본 작가 정산 %', 'number', 80)),
+      h('div', { class: 'g', style: 'margin-top:10px' }, inp('email', '작가 이메일(서명 링크 수신)', 'email'), inp('pen', '필명'), inp('title', '작품명(제호)'), inp('years', '계약 기간(년)', 'number', 3), inp('months', '인도 후 서비스 개시(개월)', 'number', 6), (f.deliv = delivField('원고 인도일 (비우면 작가가 입력)'), f.deliv.el), inp('sa', '기본 작가 정산 %', 'number', 80)),
       h('h2', { style: 'margin-top:16px' }, '작가 정보 (아는 것만 입력 · 비운 칸은 작가가 직접 입력)'),
       h('div', { class: 'g' }, INFO.map(([k, l]) => inp('i_' + k, l, 'text', '', k === 'rrn' ? '계약서 작성 시 입력하셔도 됩니다.' : ''))),
       h('div', { style: 'margin-top:10px' }, extra),
       h('div', { style: 'margin-top:12px' }, h('button', { class: 'p', onclick: () => run(async () => {
-        const sa = +f.sa.value, terms = { term_years: +f.years.value, publish_months: +f.months.value, delivery_date: f.deliv.value.trim() || null, share_author: sa, share_publisher: 100 - sa };
+        const sa = +f.sa.value, terms = { term_years: +f.years.value, publish_months: +f.months.value, delivery_date: f.deliv.get() || null, share_author: sa, share_publisher: 100 - sa };
         if (f.type.value === 'special') { const xa = +f.xa.value; terms.extra = { until: f.xu.value, share_author: xa, share_publisher: 100 - xa }; }
         const r = await api({ action: 'create', contract_type: f.type.value, author_email: f.email.value, pen_name: f.pen.value, work_title: f.title.value, terms, author_id: f.au.value || null,
           author_info: Object.fromEntries(INFO.map(([k]) => [k, f['i_' + k].value.trim()]).filter(([, v]) => v)) });
@@ -93,9 +99,9 @@
     msg = h('div'); const f = {};
     const inp = (k, label, ph = '') => { f[k] = h('input', { type: 'text', placeholder: ph }); return h('div', {}, h('label', {}, label), f[k]); };
     const body = h('div', { class: 'sec' }, h('div', { class: 'k' }, '입력한 칸만 저장되고, 비워 둔 칸은 기존 값이 유지됩니다. 작가가 직접 입력할 항목은 비워 두세요.'),
-      h('div', { class: 'g', style: 'margin-top:10px' }, INFO.map(([k, l]) => inp('i_' + k, l, k === 'rrn' ? '계약서 작성 시 입력하셔도 됩니다.' : '')), inp('deliv', '원고 인도일', '완고인 경우, 즉시라고 남겨주시면 됩니다.')),
+      h('div', { class: 'g', style: 'margin-top:10px' }, INFO.map(([k, l]) => inp('i_' + k, l, k === 'rrn' ? '계약서 작성 시 입력하셔도 됩니다.' : '')), (f.deliv = delivField('원고 인도일 (비우면 변경 없음)'), f.deliv.el)),
       h('div', { style: 'margin-top:12px' }, h('button', { class: 'p', onclick: () => run(async () => {
-        const info = Object.fromEntries(INFO.map(([k]) => [k, f['i_' + k].value.trim()]).filter(([, v]) => v)), terms = f.deliv.value.trim() ? { delivery_date: f.deliv.value.trim() } : {};
+        const info = Object.fromEntries(INFO.map(([k]) => [k, f['i_' + k].value.trim()]).filter(([, v]) => v)), terms = f.deliv.get() ? { delivery_date: f.deliv.get() } : {};
         await api({ action: 'update', id: c.id, author_info: info, terms }); detail(c.id);
       }) }, '저장'), h('button', { onclick: () => detail(c.id) }, '취소')));
     root.replaceChildren(h('div', { class: 'top' }, h('div', {}, h('h1', {}, '작가 정보 입력·수정'), h('div', { class: 'k' }, c.work_title))), msg, body);

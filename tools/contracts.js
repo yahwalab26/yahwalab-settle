@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.9.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.10.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -40,7 +40,8 @@
     return data;
   }
   const run = async (fn, okText) => { try { const r = await fn(); if (okText) toast(okText, 'ok'); return r; } catch (e) { toast(e.message, 'bad'); } };
-  const gate = (t) => { root.replaceChildren(h('div', { class: 'gate' }, t)); };
+  const gate = (t, sub, link) => { root.replaceChildren(h('div', { class: 'gate' }, h('p', { class: 'gt' }, t), sub ? h('p', { class: 'k' }, sub) : '', link && link[0] ? h('a', { class: 'btn p', href: link[0], target: link[2] ? '_blank' : null, rel: link[2] ? 'noopener' : null }, link[1]) : '')); };
+  const appbar = document.getElementById('appbar'); if (appbar && window.top === window.self) appbar.hidden = false;   // 단독 페이지일 때만 상단 바 표시(정산 사이트 안에 끼워 열면 숨김)
 
   /* ---------- 목록 ---------- */
   const ACTIVE = ['draft', 'review_sent', 'pub_pending', 'pub_signed', 'sent', 'opened'];
@@ -178,11 +179,11 @@
   async function init() {
     try {
       const { data: { session } } = await SB.auth.getSession();
-      if (!session) return gate('로그인이 필요합니다. 정산 사이트에서 로그인한 뒤 이 화면을 새로고침해 주세요.');
+      if (!session) { addEventListener('visibilitychange', () => { if (!document.hidden) location.reload(); }); return gate('로그인이 필요합니다', '정산 사이트에서 로그인한 뒤 이 탭으로 돌아오면 자동으로 열립니다.', ['/', '정산 사이트에서 로그인', true]); }
       const pf = await SB.from('profiles').select('role').eq('id', session.user.id).maybeSingle();
-      if (pf.error || !pf.data || pf.data.role === 'author') return gate('관리자만 볼 수 있는 화면입니다.');
+      if (pf.error || !pf.data || pf.data.role === 'author') return gate('관리자만 볼 수 있는 화면입니다.', '', ['/', '정산 사이트로 돌아가기']);
       await list();
-    } catch (e) { gate('불러오지 못했습니다: ' + String((e && e.message) || e)); }
+    } catch (e) { gate('불러오지 못했습니다', String((e && e.message) || e), ['', '']); }
   }
   let t0 = 0; ['keydown', 'pointerdown', 'scroll', 'wheel'].forEach(ev => addEventListener(ev, () => { const n = Date.now(); if (n - t0 > 5000) { t0 = n; try { parent !== window && parent.postMessage({ t: 'yw-act' }, location.origin); } catch (e) { /* 무시 */ } } }, { passive: true, capture: true }));
   init();

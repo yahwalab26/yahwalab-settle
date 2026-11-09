@@ -1,4 +1,4 @@
-/* 야화랩 전자계약 — 서명 페이지 (v1.7.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
+/* 야화랩 전자계약 — 서명 페이지 (v1.8.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
    CSP(script-src 'self') 때문에 인라인이 아닌 외부 파일로 둔다. */
 (function () {
   'use strict';
@@ -13,6 +13,7 @@
     const d = String(s).replace(/\D/g, '').slice(0, 11), a = d.startsWith('02') ? 2 : 3; if (d.length <= a) return d;
     const r = d.slice(a); return r.length <= 4 ? `${d.slice(0, a)}-${r}` : `${d.slice(0, a)}-${r.slice(0, -4)}-${r.slice(-4)}`;
   }
+  const doneList = arr => { const ul = $('#doneL'); ul.replaceChildren(...arr.map(t => { const li = document.createElement('li'); li.textContent = t; return li; })); ul.classList.toggle('hide', !arr.length); };
   const IDS = ['v0', 'v1', 'v2', 'v3', 'v4'];
   function show(id) {   // 화면 전환 + 진행 트랙(done/cur) 갱신 + 키보드·스크린리더 초점 이동
     IDS.forEach(x => $('#' + x).classList.toggle('hide', x !== id));
@@ -53,7 +54,7 @@
     }
     const pub = ROLE === 'publisher';
     $('#note').textContent = pub ? '내용을 확인한 뒤 서명(또는 도장)해 주세요. 완료되면 작가님께 서명 요청 메일이 자동으로 발송됩니다.' : '야화랩의 서명(도장)이 완료된 계약서입니다. 내용을 확인한 뒤 정보를 입력하고 서명해 주세요.';
-    ['infoCard', 'c2w', 'c3w'].forEach(id => $('#' + id).classList.toggle('hide', pub));
+    ['infoCard', 'c2w', 'c3w', 'cAllW'].forEach(id => $('#' + id).classList.toggle('hide', pub));
     $('#tSeal').classList.toggle('hide', !(pub && j.has_seal));
     if (!pub) {   // 야화랩이 미리 입력한 정보 채우기
       HAS_RRN = !!j.has_rrn; DEL_LOCK = !!j.delivery_locked; const pf = j.prefill || {};
@@ -69,7 +70,7 @@
 
   let HAS_RRN = false, DEL_LOCK = false;   // 야화랩이 미리 입력한 항목은 작가에게 묻지 않는다
   const BASE = ['address', 'name', 'phone', 'bank_name', 'bank_no', 'bank_holder'];
-  const val = k => (k === 'delivery' ? ($('#delNow').checked ? '즉시' : $('#delivery').value) : $('#' + k).value.trim());
+  const val = k => (k === 'delivery' ? ($('#delNow').checked ? '즉시' : $('#delivery').value) : k === 'bank_no' ? $('#bank_no').value.replace(/\D/g, '') : $('#' + k).value.trim());   // 계좌번호는 입력 때 하이픈을 허용하고 저장은 숫자만
   $('#delNow').onchange = () => { $('#delivery').disabled = $('#delNow').checked; if ($('#delNow').checked) $('#delivery').value = ''; };
   const FIELDS = () => [...BASE, ...(HAS_RRN ? [] : ['rrn']), ...(DEL_LOCK ? [] : ['delivery'])];
   // ---- 입력칸: 자동 서식 · 칸별 오류 ----
@@ -99,16 +100,20 @@
   };
   $('#back3').onclick = () => show('v2');
 
+  // ---- 동의: 전체 동의 + 칸별 표시 ----
+  const CK = ['c1', 'c2', 'c3'], vis = () => CK.filter(id => !$('#' + id).closest('.chk').classList.contains('hide')), box = id => $('#' + id).closest('.chk');
+  $('#cAll').onchange = e => vis().forEach(id => { $('#' + id).checked = e.target.checked; box(id).classList.remove('miss'); });
+  CK.forEach(id => $('#' + id).addEventListener('change', () => { box(id).classList.remove('miss'); const v = vis(); $('#cAll').checked = v.length > 0 && v.every(x => $('#' + x).checked); }));
   // ---- 서명 방법: 직접 그리기 / 이미지 첨부 / 등록된 도장(야화랩만) ----
   const cv = $('#pad'), ctx = cv.getContext('2d'); let drawing = false, strokes = 0, last = null;
-  function fit() { const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1; if (!r.width) return; cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); ctx.setTransform(d, 0, 0, d, 0, 0); ctx.lineWidth = 2.6; ctx.lineCap = ctx.lineJoin = 'round'; ctx.strokeStyle = '#111'; strokes = 0; }
+  function fit() { const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1; if (!r.width) return; cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d); ctx.setTransform(d, 0, 0, d, 0, 0); ctx.lineWidth = 2.6; ctx.lineCap = ctx.lineJoin = 'round'; ctx.strokeStyle = '#111'; strokes = 0; $('.padbox').classList.remove('signed'); }
   const pt = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
-  cv.addEventListener('pointerdown', e => { drawing = true; last = pt(e); cv.setPointerCapture(e.pointerId); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(last.x + .1, last.y + .1); ctx.stroke(); });
+  cv.addEventListener('pointerdown', e => { drawing = true; $('.padbox').classList.add('signed'); last = pt(e); cv.setPointerCapture(e.pointerId); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(last.x + .1, last.y + .1); ctx.stroke(); });
   cv.addEventListener('pointermove', e => { if (!drawing) return; const p = pt(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); strokes += Math.hypot(p.x - last.x, p.y - last.y); last = p; });
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => cv.addEventListener(ev, () => { drawing = false; }));
   $('#clear').onclick = fit;
   function setMode(m) {
-    MODE = m; document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+    MODE = m; document.querySelectorAll('.tabs button').forEach(b => { b.classList.toggle('on', b.dataset.m === m); b.setAttribute('aria-selected', String(b.dataset.m === m)); });
     ['draw', 'img', 'seal'].forEach(k => $('#m_' + k).classList.toggle('hide', k !== m)); if (m === 'draw') fit(); $('#e3').textContent = '';
   }
   document.querySelectorAll('.tabs button').forEach(b => { b.onclick = () => setMode(b.dataset.m); });
@@ -139,7 +144,8 @@
 
   $('#submit').onclick = async e => {
     $('#e3').textContent = ''; const pub = ROLE === 'publisher';
-    if (!($('#c1').checked && (pub || ($('#c2').checked && $('#c3').checked)))) { $('#e3').textContent = '필수 동의 항목에 모두 체크해 주세요.'; return; }
+    const miss = ['c1', ...(pub ? [] : ['c2', 'c3'])].filter(id => !$('#' + id).checked);
+    if (miss.length) { miss.forEach(id => box(id).classList.add('miss')); $('#e3').textContent = '필수 동의 항목에 모두 체크해 주세요.'; $('#' + miss[0]).focus(); return; }
     let sig; try { sig = getSig(); } catch (x) { fail('e3', x); return; }
     busy(e.target, true); wait(true, pub ? '서명을 처리하는 중입니다' : '서명을 저장하는 중입니다', pub ? '작가님께 서명 요청 메일을 보내고 있습니다. 잠시만 기다려 주세요.' : '계약서와 감사 추적 인증서를 만들어 이메일로 보내고 있습니다. 10~30초 걸릴 수 있으니 창을 닫지 말고 기다려 주세요.');
     try {
@@ -159,6 +165,7 @@
           if (r.done) break; wait(true, LABEL[r.step === 'contract' ? 'cert' : 'mail'] || '처리 중입니다', '창을 닫지 말고 기다려 주세요.');
         }
         show('v4'); $('#doneT').textContent = '서명이 완료되었습니다';
+        doneList(r && r.done && r.mailOk !== false ? ['메일함에서 완료된 계약서와 감사 추적 인증서(PDF 2개)를 확인해 주세요.', '메일이 보이지 않으면 스팸함도 확인해 주세요.'] : []);
         $('#doneM').textContent = r && r.done ? (r.mailOk === false ? '서명은 완료되었습니다. 완료 문서 발송에 문제가 있어 야화랩에서 확인 후 다시 보내드립니다.' : '완료된 계약서와 감사 추적 인증서를 이메일로 보내드렸습니다. 메일함을 확인해 주세요.') : '서명은 접수되었습니다. 완료 문서는 야화랩에서 확인 후 이메일로 보내드립니다.';
       }
     } catch (x) { fail('e3', x); busy(e.target, false); } finally { wait(false); }

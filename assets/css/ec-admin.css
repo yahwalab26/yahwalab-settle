@@ -1,0 +1,27 @@
+/* assets/css/ec-admin.css v1.0.0 — tools/contracts.html(관리자 전자계약 도구) 전용. 토큰은 ec.css */
+body{font-size:14px;line-height:1.6}
+.wrap{max-width:1100px;margin:0 auto;padding:calc(22px + env(safe-area-inset-top,0px)) 18px calc(60px + env(safe-area-inset-bottom,0px))}
+h1{font-size:20px;margin:0 0 4px;font-weight:700}h2{font-size:15px;margin:0 0 8px}
+.k{color:var(--ec-mute);font-size:12.5px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
+select,input[type=text],input[type=date],input[type=email],input[type=number]{height:34px;width:100%;max-width:100%;padding:0 8px;border:1px solid var(--ec-line);border-radius:var(--ec-r-s);background:var(--ec-paper);color:var(--ec-ink);font:inherit}
+button{height:34px;padding:0 12px;border:1px solid var(--ec-line);border-radius:var(--ec-r-s);background:var(--ec-paper);color:var(--ec-ink);font:inherit;cursor:pointer}
+button:hover{background:var(--ec-hl)}button:disabled{opacity:.5;cursor:default}
+button.p{background:var(--ec-ink);border-color:var(--ec-ink);color:var(--ec-on-ink)}button.p:hover{opacity:.88;background:var(--ec-ink)}
+button.danger{color:var(--ec-bad);border-color:var(--ec-bad)}button.danger:hover{background:var(--ec-bad-bg)}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.sec{background:var(--ec-paper);border:1px solid var(--ec-line);border-radius:var(--ec-r-s);padding:14px;margin-bottom:14px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.g label{display:block;margin-bottom:3px;font-size:12.5px;color:var(--ec-mute)}
+.delrow{display:flex;align-items:center;gap:12px}.delrow input[type=date]{flex:1;min-width:0;width:auto}
+.g .chk,.chk{display:flex;align-items:center;gap:6px;margin:0;white-space:nowrap;font-size:inherit;color:var(--ec-ink)}.chk input{width:auto;height:auto;margin:0}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:640px;font-size:13px}
+th,td{padding:8px;border-bottom:1px solid var(--ec-line2);text-align:left;white-space:nowrap}
+th{font-weight:600;font-size:12.5px;color:var(--ec-ink2);background:var(--ec-bg)}
+tr.r{cursor:pointer}tr.r:hover{background:var(--ec-hl)}
+.tag{display:inline-block;padding:1px 9px;border:1px solid var(--ec-line);border-radius:999px;background:var(--ec-paper);font-size:12px;color:var(--ec-ink2)}
+.tag.ok{background:var(--ec-ok-bg);color:var(--ec-ok);border-color:transparent}.tag.warn{background:var(--ec-warn-bg);color:var(--ec-warn);border-color:transparent}.tag.bad{background:var(--ec-bad-bg);color:var(--ec-bad);border-color:transparent}
+.gate{padding:24px;border:1px solid var(--ec-line);border-radius:var(--ec-r-s);background:var(--ec-paper);text-align:center}
+.mono{font-variant-numeric:tabular-nums}
+@media (pointer:coarse){button,select,input[type=text],input[type=date],input[type=email],input[type=number]{height:40px}}
+@media (max-width:560px){.wrap{padding:calc(16px + env(safe-area-inset-top,0px)) 12px calc(48px + env(safe-area-inset-bottom,0px))}}

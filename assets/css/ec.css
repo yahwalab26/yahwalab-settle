@@ -1,0 +1,46 @@
+/* assets/css/ec.css v1.0.0 — 전자계약 공용: 디자인 토큰 · 기본 · 알림(toast) · 진행 트랙
+   · 색·모서리·글꼴 값은 :root 토큰에서만 정의한다. 사이트 전체 디자인 개편 때 이 블록만 바꾸거나 전역 토큰에 연결한다.
+   · 페이지 전용 규칙은 ec-admin.css(관리자 도구) / ec-sign.css(서명 페이지). */
+:root{
+  --ec-bg:#F3F3F4;--ec-paper:#fff;--ec-ink:#17171A;--ec-ink2:#46474D;--ec-mute:#6A6B73;
+  --ec-line:#D6D7DB;--ec-line2:#E8E8EB;--ec-hl:#EDEDF0;--ec-on-ink:#fff;
+  --ec-accent:#2F6FDE;--ec-accent-bg:#E8F0FD;
+  --ec-ok:#1F7A3E;--ec-ok-bg:#E7F4EC;--ec-warn:#8A5A00;--ec-warn-bg:#FFF4D6;--ec-bad:#C4251B;--ec-bad-bg:#FBE9E7;
+  --ec-r-s:7px;--ec-r-m:10px;--ec-r-l:14px;
+  --ec-ui:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+  color-scheme:light}
+/* 다크 모드는 <html data-ec-dark>를 켠 페이지(서명 페이지)만 적용 */
+@media (prefers-color-scheme:dark){:root[data-ec-dark]{
+  --ec-bg:#121214;--ec-paper:#1c1c1f;--ec-ink:#f2f2f4;--ec-ink2:#d2d2d8;--ec-mute:#a0a0a8;
+  --ec-line:#35353b;--ec-line2:#2a2a30;--ec-hl:#26262b;--ec-on-ink:#111;
+  --ec-accent:#7BA7F5;--ec-accent-bg:#1f2a40;
+  --ec-ok:#5bd183;--ec-ok-bg:#183323;--ec-warn:#f0c15a;--ec-warn-bg:#3a2f12;--ec-bad:#ef7777;--ec-bad-bg:#3b1c1a;color-scheme:dark}}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--ec-bg);color:var(--ec-ink);font-family:var(--ec-ui)}
+:focus-visible{outline:2px solid var(--ec-accent);outline-offset:2px}
+.ec-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* 알림: 화면이 다시 그려져도 사라지지 않는다. 성공은 몇 초 뒤 자동으로 닫히고, 오류는 직접 닫을 때까지 남는다 */
+.ec-toasts{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.ec-toast{pointer-events:auto;display:flex;align-items:flex-start;gap:10px;width:100%;max-width:520px;padding:11px 8px 11px 14px;border-radius:var(--ec-r-m);background:var(--ec-ink);color:var(--ec-on-ink);font-size:14px;line-height:1.55;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+.ec-toast::before{content:'✓';flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:#3FB36B;color:#fff;margin-top:1px}
+.ec-toast.bad::before{content:'!';background:#E5584C}
+.ec-toast span{flex:1;min-width:0;overflow-wrap:anywhere}
+.ec-toast .x{flex:none;height:auto;margin:0;padding:0 8px;border:0;background:none;color:inherit;opacity:.7;font-size:20px;line-height:1.2;cursor:pointer}
+.ec-toast .x:hover{opacity:1;background:none}
+
+/* 진행 트랙: 순서가 있는 단계(관리자 계약 진행 · 작가 서명 3단계)에 공통으로 쓴다.
+   li.done / li.cur 로 상태를 주고, 번호는 CSS 카운터가 매긴다(숨긴 단계는 번호에서 빠짐) */
+.ec-track{list-style:none;margin:0;padding:0;display:flex;counter-reset:ec-s}
+.ec-track li{flex:1 1 0;min-width:0;position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 2px;font-size:12.5px;line-height:1.35;text-align:center;color:var(--ec-mute);counter-increment:ec-s}
+.ec-track li+li::before{content:'';position:absolute;top:13px;left:calc(-50% + 17px);right:calc(50% + 17px);height:2px;background:var(--ec-line)}
+.ec-track .n{position:relative;z-index:1;width:26px;height:26px;border-radius:50%;border:2px solid var(--ec-line);background:var(--ec-paper);display:grid;place-items:center;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.ec-track .n::before{content:counter(ec-s)}
+.ec-track li.cur{color:var(--ec-ink);font-weight:600}
+.ec-track li.cur .n{border-color:var(--ec-accent);background:var(--ec-accent-bg);color:var(--ec-accent)}
+.ec-track li.done{color:var(--ec-ink2)}
+.ec-track li.done .n{border-color:var(--ec-ink);background:var(--ec-ink);color:var(--ec-on-ink)}
+.ec-track li.done .n::before{content:'✓'}
+.ec-track li.cur::before,.ec-track li.done::before{background:var(--ec-ink)}

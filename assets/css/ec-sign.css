@@ -1,0 +1,39 @@
+/* assets/css/ec-sign.css v1.0.0 — sign/index.html(작가·야화랩 서명 페이지) 전용. 토큰은 ec.css. 휴대폰 우선 */
+body{font-size:15px;line-height:1.65;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+.wrap{max-width:640px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:19px;margin:6px 0 2px}
+.sub{margin:0 0 14px;color:var(--ec-mute);font-size:13px}
+#track{margin:16px 0 6px}
+section:focus{outline:none}
+.card{margin:12px 0;padding:18px;border:1px solid var(--ec-line);border-radius:var(--ec-r-l);background:var(--ec-paper)}
+label{display:block;margin:12px 0 4px;font-size:13px;color:var(--ec-mute)}
+input[type=text],input[type=password],input[type=tel],input[type=email],input[type=date]{width:100%;padding:12px;border:1px solid var(--ec-line);border-radius:var(--ec-r-m);background:transparent;color:var(--ec-ink);font:inherit;font-size:16px}
+input.bad{border-color:var(--ec-bad)}
+button{width:100%;margin-top:16px;padding:14px;border:0;border-radius:var(--ec-r-m);background:var(--ec-ink);color:var(--ec-on-ink);font:inherit;font-size:16px;font-weight:600;cursor:pointer}
+button.ghost{border:1px solid var(--ec-line);background:transparent;color:var(--ec-ink)}
+button:disabled{opacity:.45}
+.tabs{display:flex;gap:6px;margin:10px 0}
+.tabs button{margin:0;min-height:44px;padding:10px 6px;border:1px solid var(--ec-line);background:transparent;color:var(--ec-ink);font-size:14px}
+.tabs button.on{border-color:var(--ec-ink);background:var(--ec-ink);color:var(--ec-on-ink)}
+.err{min-height:1px;margin-top:10px;color:var(--ec-bad);font-size:14px}
+.ok{color:var(--ec-ok)}
+.note{margin:0 0 12px;padding:10px 12px;border:1px solid var(--ec-line);border-radius:var(--ec-r-m);background:var(--ec-bg);font-size:13.5px}
+.doc{max-height:46vh;overflow:auto;padding:14px;border:1px solid var(--ec-line);border-radius:var(--ec-r-m);background:var(--ec-bg);font-size:13.5px}
+.doc .title{font-size:16px;font-weight:700;text-align:center}.doc .sub2{margin-bottom:8px;font-weight:700;text-align:center}
+.doc h4{margin:14px 0 4px;font-size:14px}.doc p{margin:2px 0}.doc .li{padding-left:12px}
+.doc .box{margin:10px 0;padding:8px 10px;border:1px solid var(--ec-line);border-radius:8px}
+#pad,.pv{display:block;width:100%;height:170px;border:1px dashed var(--ec-line);border-radius:var(--ec-r-m);background:#fff;touch-action:none}
+.pv{display:flex;align-items:center;justify-content:center;touch-action:auto}.pv canvas{max-width:100%;max-height:100%}
+input[type=file]{width:100%;padding:10px;border:1px solid var(--ec-line);border-radius:var(--ec-r-m);color:var(--ec-ink);font-size:14px}
+.chk{display:flex;align-items:flex-start;gap:10px;margin:10px 0;font-size:14px;color:var(--ec-ink)}
+.chk input{flex:none;width:18px;height:18px;margin-top:5px}
+.chk.one{align-items:center;line-height:1.4}.chk.one input{margin:0}
+.delrow{display:flex;align-items:center;gap:14px}.delrow input[type=date]{flex:1;min-width:0;width:auto}.delrow .chk{white-space:nowrap}
+.mask{-webkit-text-security:disc;text-security:disc}
+.req{color:var(--ec-bad);font-size:12px;font-style:normal;font-weight:400}
+#busy{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.55)}
+#busy .bx{width:100%;max-width:340px;padding:28px 22px;border-radius:var(--ec-r-l);background:var(--ec-paper);text-align:center}
+.spin{width:42px;height:42px;margin:0 auto 14px;border:4px solid var(--ec-line);border-top-color:var(--ec-ink);border-radius:50%;animation:sp .9s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:3s}}
+.hide{display:none!important}.row{display:flex;gap:8px}.row>*{flex:1}

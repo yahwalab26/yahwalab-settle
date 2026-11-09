@@ -1,4 +1,4 @@
-/* assets/css/ec-admin.css v1.4.0 — tools/contracts.html(관리자 전자계약 도구) 전용. 토큰은 ec.css */
+/* assets/css/ec-admin.css v1.5.0 — tools/contracts.html(관리자 전자계약 도구) 전용. 토큰은 ec.css */
 body{font-size:14px;line-height:1.6}
 .wrap{max-width:1100px;margin:0 auto;padding:calc(22px + env(safe-area-inset-top,0px)) 18px calc(60px + env(safe-area-inset-bottom,0px))}
 h1{font-size:20px;margin:0 0 4px;font-weight:700}h2{font-size:15px;margin:0 0 8px}
@@ -67,3 +67,15 @@ input.q{width:240px}
 details.sec summary{cursor:pointer;font-weight:600}details.sec[open] summary{margin-bottom:8px}
 @media (max-width:560px){.choices{grid-template-columns:1fr}}
 button.p.danger{background:var(--ec-bad);border-color:var(--ec-bad);color:#fff}button.p.danger:hover{background:var(--ec-bad);opacity:.88}
+
+/* 단독 페이지: 상단 바 · 안내 카드 · 링크 버튼 */
+.appbar{position:sticky;top:0;z-index:20;padding-top:env(safe-area-inset-top,0px);background:var(--ec-paper);border-bottom:1px solid var(--ec-line)}
+.appbar[hidden]{display:none}
+.appbar .in{display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto;padding:0 18px;height:46px}
+.appbar .back{display:inline-flex;align-items:center;min-height:44px;color:var(--ec-ink);font-size:14px;text-decoration:none}.appbar .back:hover{text-decoration:underline}
+.appbar .ttl{color:var(--ec-mute);font-size:13px;font-weight:600}
+.appbar:not([hidden]) ~ .wrap{padding-top:22px}
+.gate .gt{margin:0 0 4px;font-size:16px;font-weight:700}.gate .k{margin:0 0 16px}.gate p:last-child{margin-bottom:0}
+a.btn{display:inline-flex;align-items:center;height:36px;padding:0 16px;border-radius:var(--ec-r-s);font-size:14px;text-decoration:none}
+a.btn.p{background:var(--ec-ink);color:var(--ec-on-ink)}a.btn.p:hover{opacity:.88}
+@media (max-width:560px){.appbar .in{padding:0 12px}}

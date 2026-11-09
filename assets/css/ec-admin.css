@@ -1,4 +1,4 @@
-/* assets/css/ec-admin.css v1.0.0 — tools/contracts.html(관리자 전자계약 도구) 전용. 토큰은 ec.css */
+/* assets/css/ec-admin.css v1.1.0 — tools/contracts.html(관리자 전자계약 도구) 전용. 토큰은 ec.css */
 body{font-size:14px;line-height:1.6}
 .wrap{max-width:1100px;margin:0 auto;padding:calc(22px + env(safe-area-inset-top,0px)) 18px calc(60px + env(safe-area-inset-bottom,0px))}
 h1{font-size:20px;margin:0 0 4px;font-weight:700}h2{font-size:15px;margin:0 0 8px}
@@ -25,3 +25,13 @@ tr.r{cursor:pointer}tr.r:hover{background:var(--ec-hl)}
 .mono{font-variant-numeric:tabular-nums}
 @media (pointer:coarse){button,select,input[type=text],input[type=date],input[type=email],input[type=number]{height:40px}}
 @media (max-width:560px){.wrap{padding:calc(16px + env(safe-area-inset-top,0px)) 12px calc(48px + env(safe-area-inset-bottom,0px))}}
+
+/* 상세 화면 */
+.stat .ec-track{max-width:640px;margin:4px 0 16px}
+.next{margin:0 0 12px;font-size:15px;font-weight:600;line-height:1.55}
+.acts.gap{margin-top:12px}
+.dl{display:grid;grid-template-columns:8.5em 1fr;gap:7px 12px;margin:0}.dl dt{color:var(--ec-mute);font-size:12.5px;padding-top:1px}.dl dd{margin:0;overflow-wrap:anywhere}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}.cols>div+div{border-left:1px solid var(--ec-line2);padding-left:28px}
+.end{display:flex;justify-content:flex-end;margin-top:-4px}
+@media (max-width:760px){.cols{grid-template-columns:1fr}.cols>div+div{border-left:0;padding-left:0;border-top:1px solid var(--ec-line2);margin-top:16px;padding-top:16px}}
+@media (max-width:560px){.dl{grid-template-columns:1fr;gap:0}.dl dd{margin-bottom:8px}}

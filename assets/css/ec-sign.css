@@ -1,4 +1,4 @@
-/* assets/css/ec-sign.css v1.1.0 — sign/index.html(작가·야화랩 서명 페이지) 전용. 토큰은 ec.css. 휴대폰 우선 */
+/* assets/css/ec-sign.css v1.2.0 — sign/index.html(작가·야화랩 서명 페이지) 전용. 토큰은 ec.css. 휴대폰 우선 */
 body{font-size:15px;line-height:1.65;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
 .wrap{max-width:640px;margin:0 auto;padding:18px 16px 40px}
 h1{font-size:19px;margin:6px 0 2px}
@@ -47,3 +47,15 @@ input[type=file]{width:100%;padding:10px;border:1px solid var(--ec-line);border-
 [aria-invalid=true]{border-color:var(--ec-bad)}
 .pw{display:flex;gap:8px}.pw input{flex:1;min-width:0}.pw button{width:auto;margin:0;padding:0 16px;font-size:14px;font-weight:500}
 .hintline{margin:5px 0 0}
+
+/* 서명 단계 · 완료 화면 */
+.lbl{margin:14px 0 4px;font-size:13px;color:var(--ec-mute)}
+.chk.all{padding-bottom:12px;border-bottom:1px solid var(--ec-line2);font-weight:600}
+.chk.miss{outline:2px solid var(--ec-bad);outline-offset:3px;border-radius:6px}
+.padbox{position:relative}
+.padhint{position:absolute;inset:0;display:grid;place-items:center;color:#6A6B73;font-size:15px;pointer-events:none}
+.padbox.signed .padhint{display:none}
+.done{text-align:center;padding:28px 20px}
+.okic{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:var(--ec-ok-bg);color:var(--ec-ok);font-size:28px;font-weight:700}
+.done b{display:block;font-size:19px}.done p{margin:8px 0 0}
+.nextlist{margin:16px 0 0;padding:14px 16px 14px 32px;border-radius:var(--ec-r-m);background:var(--ec-bg);text-align:left;font-size:14px}.nextlist li{margin:3px 0}

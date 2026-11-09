@@ -9,7 +9,7 @@ const NAVN={today:'오늘',overview:'통계 요약',home:'판매 현황',upload:
 const LASTP={};
 function setNav(id){const a=Object.keys(AREAS).find(k=>AREAS[k].includes(id));LASTP[a]=id;
   document.querySelectorAll('#nav a').forEach(x=>{x.classList.toggle('on',x.dataset.a===a);x.href='#/'+(LASTP[x.dataset.a]||AREAS[x.dataset.a][0])});
-  const sub=$('#sub'),L=AREAS[a];sub.hidden=L.length<2;sub.innerHTML=L.map(p=>`<a href="#/${p}"${p===id?' class="on" aria-current="page"':''}>${NAVN[p]}</a>`).join('')}
+  const sub=$('#sub'),L=AREAS[a];sub.hidden=L.length<2;sub.innerHTML=L.map(p=>`<a href="#/${p}"${p===id?' class="on" aria-current="page"':''}>${NAVN[p]}</a>`).join('')+(a==='tools'?'<a href="/contracts/" target="_blank" rel="noopener" aria-label="전자계약 (새 탭에서 열림)">전자계약 ↗</a>':'')}  /* 전자계약은 별도 단독 페이지(/contracts/) — 도구 영역 맨 끝에서 새 탭으로 연다 */
 /* 엑셀 라이브러리(SheetJS)는 '엑셀로 저장'·판매 파일 업로드 때만 불러옴(첫 화면 로딩 절약) */
 let XLP=null;
 function needXLSX(){if(typeof XLSX!=='undefined')return Promise.resolve();if(XLP)return XLP;

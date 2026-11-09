@@ -9,7 +9,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>전자계약 서명 | 야화랩</title>
 <link rel="stylesheet" href="/assets/css/ec.css?v=1.0.0">
-<link rel="stylesheet" href="/assets/css/ec-sign.css?v=1.0.0">
+<link rel="stylesheet" href="/assets/css/ec-sign.css?v=1.1.0">
 </head>
 <body>
 <div class="wrap">
@@ -31,17 +31,26 @@
   </section>
 
   <section id="v2" class="hide">
-    <div class="card"><div class="note" id="note"></div><b>계약서 내용</b><p class="sub">끝까지 읽어 주세요.</p><div class="doc" id="doc"></div></div>
-    <div class="card" id="infoCard"><b>작가 정보 입력</b> <span class="req">모든 항목은 필수입니다</span>
-      <label>주소 <i class="req">*</i></label><input id="address" name="ec_address" type="text" autocomplete="off">
-      <label>성명(본명) <i class="req">*</i></label><input id="name" name="ec_name" type="text" autocomplete="off">
-      <label>연락처 <i class="req">*</i></label><input id="phone" name="ec_phone" type="tel" inputmode="tel" autocomplete="off">
-      <p class="sub" style="margin:14px 0 0">계좌번호 (은행명 / 계좌번호 / 예금주)</p>
-      <label>은행명 <i class="req">*</i></label><input id="bank_name" type="text" placeholder="예: 신한은행">
-      <label>계좌번호 <i class="req">*</i></label><input id="bank_no" name="ec_account" type="text" inputmode="numeric" autocomplete="off">
-      <label>예금주 <i class="req">*</i></label><input id="bank_holder" type="text">
-      <div id="rrnWrap"><label>주민(사업자)등록번호 <i class="req">*</i></label><input id="rrn" name="ec_idnum" class="mask" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="숫자만 입력"></div>
-      <div id="delWrap"><label>원고 인도일 <i class="req">*</i> <span id="delNote" class="req"></span></label><div class="delrow"><input id="delivery" type="date"><label class="chk one" style="margin:0"><input type="checkbox" id="delNow"><span>즉시 (완고)</span></label></div><p class="sub" style="margin:6px 0 0">달력에서 날짜를 고르거나, 원고가 완성된 경우(완고)에는 '즉시'를 선택해 주세요.</p></div>
+    <div class="card"><div class="note" id="note"></div><b>계약서 내용</b><p class="sub">아래 내용을 끝까지 읽어 주세요. 마지막에 동의 체크가 있습니다.</p><div class="doc" id="doc"></div></div>
+    <div class="card" id="infoCard"><b>작가 정보 입력</b>
+      <p class="sub" style="margin:2px 0 0">모든 항목이 필수입니다.</p>
+      <div class="grp"><h3>기본 정보</h3>
+        <div class="fld"><label for="name">성명(본명)</label><input id="name" name="ec_name" type="text" autocomplete="off" aria-describedby="fe_name"><div class="fe" id="fe_name"></div></div>
+        <div class="fld"><label for="phone">연락처</label><input id="phone" name="ec_phone" type="tel" inputmode="tel" autocomplete="off" placeholder="010-0000-0000" aria-describedby="fe_phone"><div class="fe" id="fe_phone"></div></div>
+        <div class="fld"><label for="address">주소</label><input id="address" name="ec_address" type="text" autocomplete="off" aria-describedby="fe_address"><div class="fe" id="fe_address"></div></div>
+      </div>
+      <div class="grp"><h3>정산 계좌</h3>
+        <div class="fld"><label for="bank_name">은행명</label><input id="bank_name" type="text" list="banks" placeholder="예: 신한은행" aria-describedby="fe_bank_name"><div class="fe" id="fe_bank_name"></div></div>
+        <div class="fld"><label for="bank_no">계좌번호</label><input id="bank_no" name="ec_account" type="text" inputmode="numeric" autocomplete="off" placeholder="숫자만 입력" aria-describedby="fe_bank_no"><div class="fe" id="fe_bank_no"></div></div>
+        <div class="fld"><label for="bank_holder">예금주</label><input id="bank_holder" type="text" aria-describedby="fe_bank_holder"><div class="fe" id="fe_bank_holder"></div></div>
+      </div>
+      <div class="grp" id="rrnWrap"><h3>세금 신고</h3>
+        <div class="fld"><label for="rrn">주민(사업자)등록번호</label><div class="pw"><input id="rrn" name="ec_idnum" class="mask" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="숫자만 입력" aria-describedby="rrnCnt fe_rrn"><button type="button" class="ghost" id="rrnToggle" aria-pressed="false">보기</button></div><div class="sub hintline" id="rrnCnt">주민 13자리 · 사업자 10자리</div><div class="fe" id="fe_rrn"></div></div>
+      </div>
+      <div class="grp" id="delWrap"><h3>원고 인도일 <span id="delNote" class="sub"></span></h3>
+        <div class="fld"><div class="delrow"><input id="delivery" type="date" aria-label="원고 인도일" aria-describedby="fe_delivery"><label class="chk one" style="margin:0"><input type="checkbox" id="delNow"><span>즉시 (완고)</span></label></div><p class="sub" style="margin:6px 0 0">달력에서 날짜를 고르거나, 원고가 완성된 경우(완고)에는 '즉시'를 선택해 주세요.</p><div class="fe" id="fe_delivery"></div></div>
+      </div>
+      <datalist id="banks"><option value="국민은행"><option value="신한은행"><option value="우리은행"><option value="하나은행"><option value="농협은행"><option value="기업은행"><option value="SC제일은행"><option value="카카오뱅크"><option value="토스뱅크"><option value="케이뱅크"><option value="우체국"><option value="새마을금고"><option value="신협"><option value="수협은행"><option value="부산은행"><option value="대구은행"><option value="광주은행"><option value="전북은행"><option value="경남은행"><option value="제주은행"><option value="산업은행"><option value="씨티은행"></datalist>
     </div>
     <div class="card"><div class="err" id="e2" role="alert"></div><button id="next2">다음: 서명하기</button></div>
   </section>
@@ -64,6 +73,6 @@
 
   <section id="v4" class="card hide" role="status"><b id="doneT"></b><p id="doneM"></p></section>
 </div>
-<script src="/sign/sign.js?v=1.6.0"></script>
+<script src="/sign/sign.js?v=1.7.0"></script>
 </body>
 </html>

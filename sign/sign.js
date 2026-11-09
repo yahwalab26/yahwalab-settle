@@ -1,4 +1,4 @@
-/* 야화랩 전자계약 — 서명 페이지 (v1.6.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
+/* 야화랩 전자계약 — 서명 페이지 (v1.7.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
    CSP(script-src 'self') 때문에 인라인이 아닌 외부 파일로 둔다. */
 (function () {
   'use strict';
@@ -8,6 +8,10 @@
   async function api(body) {
     let r; try { r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: T, s: SESSION, ...body }) }); } catch { throw new Error('네트워크 오류입니다. 잠시 후 다시 시도해 주세요.'); }
     const j = await r.json().catch(() => ({})); if (!j.ok) throw new Error(j.message || '오류가 발생했습니다.'); return j;
+  }
+  function fmtPhone(s) {   // 숫자만 모아 010-1234-5678 / 02-123-4567 모양으로
+    const d = String(s).replace(/\D/g, '').slice(0, 11), a = d.startsWith('02') ? 2 : 3; if (d.length <= a) return d;
+    const r = d.slice(a); return r.length <= 4 ? `${d.slice(0, a)}-${r}` : `${d.slice(0, a)}-${r.slice(0, -4)}-${r.slice(-4)}`;
   }
   const IDS = ['v0', 'v1', 'v2', 'v3', 'v4'];
   function show(id) {   // 화면 전환 + 진행 트랙(done/cur) 갱신 + 키보드·스크린리더 초점 이동
@@ -53,7 +57,7 @@
     $('#tSeal').classList.toggle('hide', !(pub && j.has_seal));
     if (!pub) {   // 야화랩이 미리 입력한 정보 채우기
       HAS_RRN = !!j.has_rrn; DEL_LOCK = !!j.delivery_locked; const pf = j.prefill || {};
-      BASE.forEach(k => { if (pf[k]) $('#' + k).value = pf[k]; });
+      BASE.forEach(k => { if (pf[k]) $('#' + k).value = pf[k]; }); $('#phone').value = fmtPhone($('#phone').value);
       $('#rrnWrap').classList.toggle('hide', HAS_RRN);
       if (DEL_LOCK) {   // 야화랩이 정한 인도일은 수정 불가
         if (j.delivery === '즉시') $('#delNow').checked = true; else $('#delivery').value = j.delivery;
@@ -68,13 +72,28 @@
   const val = k => (k === 'delivery' ? ($('#delNow').checked ? '즉시' : $('#delivery').value) : $('#' + k).value.trim());
   $('#delNow').onchange = () => { $('#delivery').disabled = $('#delNow').checked; if ($('#delNow').checked) $('#delivery').value = ''; };
   const FIELDS = () => [...BASE, ...(HAS_RRN ? [] : ['rrn']), ...(DEL_LOCK ? [] : ['delivery'])];
+  // ---- 입력칸: 자동 서식 · 칸별 오류 ----
+  const MSG = { name: '성명을 입력해 주세요.', phone: '연락처를 입력해 주세요.', address: '주소를 입력해 주세요.', bank_name: '은행명을 입력해 주세요.', bank_no: '계좌번호를 입력해 주세요.', bank_holder: '예금주를 입력해 주세요.', rrn: '주민(사업자)등록번호를 입력해 주세요.', delivery: '원고 인도일을 고르거나 ‘즉시’를 선택해 주세요.' };
+  const setErr = (k, m) => { const el = $('#' + k), fe = $('#fe_' + k); if (fe) fe.textContent = m || ''; el.classList.toggle('bad', !!m); if (m) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid'); };
+  ['name', 'phone', 'address', 'bank_name', 'bank_no', 'bank_holder', 'rrn', 'delivery'].forEach(k => $('#' + k).addEventListener('input', () => setErr(k, '')));
+  $('#delNow').addEventListener('change', () => setErr('delivery', ''));
+  $('#phone').addEventListener('input', e => { e.target.value = fmtPhone(e.target.value); });
+  $('#bank_no').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^\d-]/g, ''); });
+  $('#rrn').addEventListener('input', e => { const v = e.target.value.replace(/\D/g, '').slice(0, 13); e.target.value = v; $('#rrnCnt').textContent = v ? `${v.length}자리 입력됨 (주민 13자리 · 사업자 10자리)` : '주민 13자리 · 사업자 10자리'; });
+  $('#rrnToggle').onclick = e => { const on = $('#rrn').classList.toggle('mask') === false; e.target.textContent = on ? '가리기' : '보기'; e.target.setAttribute('aria-pressed', String(on)); };
   $('#next2').onclick = () => {
     if (ROLE === 'author') {
-      FIELDS().concat(['rrn', 'delivery']).forEach(k => $('#' + k).classList.remove('bad'));
-      if (!$('#ai') || !$('#ai').checked) { $('#e2').textContent = '제10조의2(생성형 AI의 사용 제한)의 "동의합니다"에 체크해 주세요.'; $('#doc').scrollTop = $('#doc').scrollHeight; return; }
-      const empty = FIELDS().filter(k => !val(k));
-      if (empty.length) { empty.forEach(k => $('#' + k).classList.add('bad')); const f0 = $('#' + empty[0]); if (f0.focus) f0.focus(); $('#e2').textContent = '모든 항목은 필수입니다. 빨간 칸을 입력해 주세요.'; return; }
-      const rrn = $('#rrn').value.replace(/\D/g, ''); if (!HAS_RRN && ![10, 13].includes(rrn.length)) { $('#e2').textContent = '주민(사업자)등록번호 자릿수를 확인해 주세요. (주민 13자리 / 사업자 10자리)'; return; }
+      const ks = FIELDS(), errs = []; ks.forEach(k => setErr(k, ''));
+      ks.forEach(k => { if (!val(k)) errs.push([k, MSG[k]]); });
+      const has = k => !errs.some(x => x[0] === k), digits = s => s.replace(/\D/g, '');
+      if (has('phone') && ![9, 10, 11].includes(digits(val('phone')).length)) errs.push(['phone', '연락처 자릿수를 확인해 주세요. 예: 010-1234-5678']);
+      if (has('bank_no') && (digits(val('bank_no')).length < 8 || digits(val('bank_no')).length > 16)) errs.push(['bank_no', '계좌번호 자릿수를 확인해 주세요. (숫자 8~16자리)']);
+      if (!HAS_RRN && has('rrn') && ![10, 13].includes(digits(val('rrn')).length)) errs.push(['rrn', '자릿수를 확인해 주세요. 주민등록번호 13자리 · 사업자등록번호 10자리']);
+      errs.forEach(([k, m]) => setErr(k, m));
+      const aiMiss = !$('#ai') || !$('#ai').checked, msgs = [];
+      if (aiMiss) msgs.push('계약서 마지막의 제10조의2(생성형 AI의 사용 제한) “동의합니다”에 체크해 주세요.');
+      if (errs.length) msgs.push(`입력이 필요한 칸이 ${new Set(errs.map(x => x[0])).size}곳 있습니다. 빨간 안내를 확인해 주세요.`);
+      if (msgs.length) { $('#e2').textContent = msgs.join(' '); if (aiMiss) { const ai = $('#ai'); if (ai) { ai.scrollIntoView({ block: 'center' }); ai.focus({ preventScroll: true }); } } else $('#' + errs[0][0]).focus(); return; }
     }
     $('#e2').textContent = ''; show('v3'); setMode(MODE);
   };

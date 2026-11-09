@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.5.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.6.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -76,27 +76,50 @@
   }
 
   /* ---------- 상세 ---------- */
+  const STEPS = ['작성', '검토', '야화랩 서명', '작가 서명', '완료'], CUR = { draft: 1, review_sent: 2, pub_pending: 3, pub_signed: 4, sent: 4, opened: 4, signed: 4, completed: 6 };
+  const NEXT = {
+    draft: '작가 정보와 조건을 확인한 뒤, 가계약서를 보내 작가에게 검토받으세요.',
+    review_sent: '검토용 계약서를 보냈습니다. 작가 확인이 끝나면 서명 요청을 시작하세요.',
+    pub_pending: '야화랩 서명을 기다리는 중입니다. admin@yahwalab.xyz로 간 메일의 링크에서 서명하세요.',
+    pub_signed: '야화랩 서명이 끝났습니다. 작가님께 서명 요청 메일을 보내는 단계입니다.',
+    sent: '작가님의 서명을 기다리는 중입니다.',
+    opened: '작가님이 계약서를 열어 보았습니다. 서명을 기다리는 중입니다.',
+    signed: '서명은 접수됐지만 계약서·인증서 만들기가 끝나지 않았습니다. 아래 버튼으로 이어서 처리하세요.',
+    completed: '계약이 완료되었습니다. 계약서와 감사 추적 인증서는 작가님과 야화랩 메일로 발송됩니다.',
+    cancelled: '취소된 계약입니다. 보낸 서명 링크는 더 이상 쓸 수 없습니다.'
+  };
+  const rows = pairs => h('dl', { class: 'dl' }, pairs.flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, v == null || v === '' ? '-' : v)]));
   async function detail(id) {
     const j = await run(() => api({ action: 'get', id })); if (!j) return;
-    const c = j.contract, t = c.terms, [stText, stCls] = ST[c.status] || [c.status, ''];
+    const c = j.contract, t = c.terms, [stText, stCls] = ST[c.status] || [c.status, ''], cur = CUR[c.status];
     const act = (label, fn, cls, okText) => h('button', { class: cls || '', onclick: ev => withBusy(ev.target, () => run(fn, okText || '완료했습니다.'), '처리 중…').then(() => detail(id)) }, label);
-    const dl = (label, kind) => h('button', { onclick: () => run(async () => { window.open((await api({ action: 'download', id, kind })).url, '_blank', 'noopener'); }) }, label);
-    const pii = h('div', {}, j.masked ? [`성명 ${j.masked.name} · 주민/사업자번호 ${j.masked.rrn} · 연락처 ${j.masked.phone}`, h('br'), `주소 ${j.masked.address} · 계좌 ${j.masked.bank}`] : '작가가 아직 정보를 입력하지 않았습니다.');
-    const reveal = j.masked && h('button', { onclick: async () => { if (!confirm('개인정보 원문을 화면에 표시합니다. 열람 기록이 남습니다.')) return; const r = await run(() => api({ action: 'reveal', id })); if (r) { const i = r.info; pii.replaceChildren(`성명 ${i.name} · 번호 ${i.rrn} · 연락처 ${i.phone}`, h('br'), `주소 ${i.address} · ${i.bank_name} ${i.bank_no} (${i.bank_holder})`); } } }, '개인정보 원문 보기');
+    const dlBtn = (label, kind) => h('button', { onclick: () => run(async () => { window.open((await api({ action: 'download', id, kind })).url, '_blank', 'noopener'); }) }, label);
+    const m = j.masked, pii = h('div', {}, m ? rows([['성명', m.name], ['주민/사업자번호', m.rrn], ['연락처', m.phone], ['주소', m.address], ['계좌', m.bank]]) : h('div', { class: 'k' }, '작가가 아직 정보를 입력하지 않았습니다.'));
+    const reveal = m && h('button', { onclick: async () => { if (!confirm('개인정보 원문을 화면에 표시합니다. 열람 기록이 남습니다.')) return; const r = await run(() => api({ action: 'reveal', id })); if (r) { const i = r.info; pii.replaceChildren(rows([['성명', i.name], ['주민/사업자번호', i.rrn], ['연락처', i.phone], ['주소', i.address], ['계좌', `${i.bank_name} ${i.bank_no} (${i.bank_holder})`]])); } } }, '원문 보기 (열람 기록 남음)');
     const editable = ['draft', 'review_sent'].includes(c.status), live = ['draft', 'review_sent', 'pub_pending', 'pub_signed', 'sent', 'opened'].includes(c.status);
     const signLabel = c.pub_signed_at ? '작가에게 서명 요청 재발송' : (c.status === 'pub_pending' ? '야화랩 서명 메일 재발송' : '서명 요청 시작 (야화랩 서명 메일 발송)');
     const signOk = c.pub_signed_at ? '작가님께 서명 요청 메일을 다시 보냈습니다.' : '야화랩(admin@yahwalab.xyz)으로 서명 요청 메일을 보냈습니다. 야화랩이 서명하면 작가님께 자동으로 발송됩니다.';
+    const retry = c.status === 'signed' || (c.status === 'completed' && !c.final_mail_sent_at);
+    const buttons = [
+      editable && act('가계약서(검토용) 발송', () => api({ action: 'send_review', id }), c.status === 'draft' ? 'p' : '', '검토용 계약서를 작가 메일로 보냈습니다.'),
+      live && act(signLabel, () => api({ action: 'send_sign', id }), c.status === 'review_sent' ? 'p' : '', signOk),
+      retry && act('완료 처리 재시도', async () => { let r; for (let i = 0; i < 6; i++) { r = await api({ action: 'retry_complete', id }); if (r.done) break; } return r; }, 'p', '완료 처리를 이어서 실행했습니다. 상태를 확인해 주세요.'),
+      c.status === 'completed' && act('완료 메일 재발송', () => api({ action: 'retry_complete', id, force: true }), '', '완료 메일을 다시 보냈습니다.')
+    ].filter(Boolean);
+    const files = [c.review_pdf_path && dlBtn('검토용 PDF', 'review'), c.final_pdf_path && dlBtn('계약서 PDF', 'contract'), c.cert_pdf_path && dlBtn('감사 추적 인증서', 'cert')].filter(Boolean);
+    const ds = t.delivery_date || '작가가 입력';
     root.replaceChildren(
       h('div', { class: 'top' }, h('div', {}, h('h1', {}, c.work_title), h('div', { class: 'k' }, `${c.doc_no} · `, h('span', { class: 'tag' }, TY[c.contract_type]), ' ', h('span', { class: 'tag ' + stCls }, stText))), h('button', { onclick: list }, '← 목록')),
-      h('div', { class: 'sec' }, h('h2', {}, '계약 조건'), `필명 ${c.pen_name || '-'} · ${c.author_email}`, h('br'), `기간 ${t.term_years}년 · 인도 후 ${t.publish_months}개월 이내 개시 · 인도일 ${t.delivery_date || '작가 입력'} · 배분 ${t.share_author}:${t.share_publisher}`, t.extra ? [h('br'), `특약: ${t.extra.until}까지 ${t.extra.share_author}:${t.extra.share_publisher}`] : ''),
-      h('div', { class: 'sec' }, h('h2', {}, '작가 정보 (기본 가림)'), pii, reveal || '', editable ? h('button', { onclick: () => infoEditor(c) }, '작가 정보·인도일 입력/수정') : ''),
-      h('div', { class: 'sec' }, h('h2', {}, '진행'), h('div', { class: 'acts' },
-        editable ? act('가계약서(검토용) 발송', () => api({ action: 'send_review', id }), '', '검토용 계약서를 작가 메일로 보냈습니다.') : '',
-        live ? act(signLabel, () => api({ action: 'send_sign', id }), 'p', signOk) : '',
-        (c.status === 'signed' || (c.status === 'completed' && !c.final_mail_sent_at)) ? act('완료 처리 재시도', async () => { let r; for (let i = 0; i < 6; i++) { r = await api({ action: 'retry_complete', id }); if (r.done) break; } return r; }, 'p', '완료 처리를 이어서 실행했습니다. 상태를 확인해 주세요.') : '', c.status === 'completed' ? act('완료 메일 재발송', () => api({ action: 'retry_complete', id, force: true }), '', '완료 메일을 다시 보냈습니다.') : '',
-        c.review_pdf_path ? dl('검토용 PDF', 'review') : '', c.final_pdf_path ? dl('계약서 PDF', 'contract') : '', c.cert_pdf_path ? dl('감사 추적 인증서', 'cert') : '',
-        !['completed', 'cancelled'].includes(c.status) ? h('button', { class: 'danger', onclick: () => { if (confirm('이 계약을 취소할까요? 보낸 서명 링크도 무효가 됩니다.')) run(() => api({ action: 'cancel', id }), '계약을 취소했습니다.').then(() => detail(id)); } }, '계약 취소') : '')),
-      h('div', { class: 'sec' }, h('h2', {}, '진행 기록'), h('div', { class: 'scroll' }, h('table', {}, h('tbody', {}, j.events.map(e => h('tr', {}, h('td', { class: 'mono' }, kst(e.created_at)), h('td', {}, EVN[e.event] || e.event), h('td', {}, (e.actor || '').replace('publisher:', '야화랩 ').replace('author:', '작가 ').replace('admin:', '관리자 ')), h('td', {}, e.ip || ''))))))));
+      h('div', { class: 'sec stat' },
+        cur ? h('ol', { class: 'ec-track', 'aria-label': '계약 진행 단계' }, STEPS.map((s, i) => h('li', { class: i + 1 < cur ? 'done' : i + 1 === cur ? 'cur' : '', 'aria-current': i + 1 === cur ? 'step' : null }, h('span', { class: 'n' }), h('span', {}, s)))) : '',
+        h('p', { class: 'next' }, NEXT[c.status] || ''), buttons.length ? h('div', { class: 'acts' }, buttons) : ''),
+      h('div', { class: 'sec cols' },
+        h('div', {}, h('h2', {}, '계약 조건'), rows([['필명', c.pen_name], ['작가 이메일', c.author_email], ['계약 기간', `${t.term_years}년`], ['서비스 개시', `인도 후 ${t.publish_months}개월 이내`], ['원고 인도일', ds], ['정산 비율', `작가 ${t.share_author}% · 야화랩 ${t.share_publisher}%`], ...(t.extra ? [['특약', `${t.extra.until}까지 작가 ${t.extra.share_author}% · 야화랩 ${t.extra.share_publisher}%`]] : [])])),
+        h('div', {}, h('h2', {}, '작가 정보 (기본 가림)'), pii, h('div', { class: 'acts gap' }, reveal || '', editable ? h('button', { onclick: () => infoEditor(c) }, '작가 정보·인도일 입력/수정') : ''))),
+      files.length ? h('div', { class: 'sec' }, h('h2', {}, '문서'), h('div', { class: 'acts' }, files)) : '',
+      h('div', { class: 'sec' }, h('h2', {}, '진행 기록'), h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, h('tr', {}, ...['일시', '내용', '처리자', 'IP'].map(x => h('th', {}, x)))), h('tbody', {}, j.events.map(e => h('tr', {}, h('td', { class: 'mono' }, kst(e.created_at)), h('td', {}, EVN[e.event] || e.event), h('td', {}, (e.actor || '').replace('publisher:', '야화랩 ').replace('author:', '작가 ').replace('admin:', '관리자 ')), h('td', {}, e.ip || ''))))))),
+      !['completed', 'cancelled'].includes(c.status) ? h('div', { class: 'end' }, h('button', { class: 'danger', onclick: () => { if (confirm('이 계약을 취소할까요? 보낸 서명 링크도 무효가 됩니다.')) run(() => api({ action: 'cancel', id }), '계약을 취소했습니다.').then(() => detail(id)); } }, '계약 취소')) : ''
+    );
   }
 
   /* ---------- 작가 정보 입력/수정 (서명 요청 전까지) ---------- */

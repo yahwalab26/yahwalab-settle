@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.8.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.9.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -26,6 +26,11 @@
     tbox.append(t); while (tbox.children.length > 3) tbox.firstChild.remove();
     if (kind !== 'bad') setTimeout(() => t.remove(), Math.max(5000, text.length * 130));
   };
+  const ask = (title, text, ok = '확인', danger = false) => new Promise(res => {   // 브라우저 기본 confirm 대신 사이트 모양 대화상자(Esc·초점 가둠은 <dialog>가 처리)
+    const d = h('dialog', { class: 'ec-dialog', 'aria-labelledby': 'dlgT' }, h('h2', { id: 'dlgT' }, title), h('p', {}, text),
+      h('div', { class: 'btns' }, h('button', { type: 'button', autofocus: danger ? '' : null, onclick: () => d.close('no') }, '닫기'), h('button', { type: 'button', class: danger ? 'p danger' : 'p', autofocus: danger ? null : '', onclick: () => d.close('yes') }, ok)));
+    d.addEventListener('close', () => { res(d.returnValue === 'yes'); d.remove(); }); document.body.append(d); d.showModal();
+  });
   const withBusy = async (btn, fn, label) => { const t0 = btn.textContent; btn.disabled = true; if (label) btn.textContent = label; try { return await fn(); } finally { btn.disabled = false; btn.textContent = t0; } };
 
   async function api(body) {
@@ -129,7 +134,7 @@
     const act = (label, fn, cls, okText) => h('button', { class: cls || '', onclick: ev => withBusy(ev.target, () => run(fn, okText || '완료했습니다.'), '처리 중…').then(() => detail(id)) }, label);
     const dlBtn = (label, kind) => h('button', { onclick: () => run(async () => { window.open((await api({ action: 'download', id, kind })).url, '_blank', 'noopener'); }) }, label);
     const m = j.masked, pii = h('div', {}, m ? rows([['성명', m.name], ['주민/사업자번호', m.rrn], ['연락처', m.phone], ['주소', m.address], ['계좌', m.bank]]) : h('div', { class: 'k' }, '작가가 아직 정보를 입력하지 않았습니다.'));
-    const reveal = m && h('button', { onclick: async () => { if (!confirm('개인정보 원문을 화면에 표시합니다. 열람 기록이 남습니다.')) return; const r = await run(() => api({ action: 'reveal', id })); if (r) { const i = r.info; pii.replaceChildren(rows([['성명', i.name], ['주민/사업자번호', i.rrn], ['연락처', i.phone], ['주소', i.address], ['계좌', `${i.bank_name} ${i.bank_no} (${i.bank_holder})`]])); } } }, '원문 보기 (열람 기록 남음)');
+    const reveal = m && h('button', { onclick: async () => { if (!await ask('개인정보 원문 보기', '개인정보 원문을 화면에 표시합니다. 열람 기록이 남습니다.', '원문 보기')) return; const r = await run(() => api({ action: 'reveal', id })); if (r) { const i = r.info; pii.replaceChildren(rows([['성명', i.name], ['주민/사업자번호', i.rrn], ['연락처', i.phone], ['주소', i.address], ['계좌', `${i.bank_name} ${i.bank_no} (${i.bank_holder})`]])); } } }, '원문 보기 (열람 기록 남음)');
     const editable = ['draft', 'review_sent'].includes(c.status), live = ['draft', 'review_sent', 'pub_pending', 'pub_signed', 'sent', 'opened'].includes(c.status);
     const signLabel = c.pub_signed_at ? '작가에게 서명 요청 재발송' : (c.status === 'pub_pending' ? '야화랩 서명 메일 재발송' : '서명 요청 시작 (야화랩 서명 메일 발송)');
     const signOk = c.pub_signed_at ? '작가님께 서명 요청 메일을 다시 보냈습니다.' : '야화랩(admin@yahwalab.xyz)으로 서명 요청 메일을 보냈습니다. 야화랩이 서명하면 작가님께 자동으로 발송됩니다.';
@@ -152,7 +157,7 @@
         h('div', {}, h('h2', {}, '작가 정보 (기본 가림)'), pii, h('div', { class: 'acts gap' }, reveal || '', editable ? h('button', { onclick: () => infoEditor(c) }, '작가 정보·인도일 입력/수정') : ''))),
       files.length ? h('div', { class: 'sec' }, h('h2', {}, '문서'), h('div', { class: 'acts' }, files)) : '',
       h('div', { class: 'sec' }, h('h2', {}, '진행 기록'), h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, h('tr', {}, ...['일시', '내용', '처리자', 'IP'].map(x => h('th', {}, x)))), h('tbody', {}, j.events.map(e => h('tr', {}, h('td', { class: 'mono' }, kst(e.created_at)), h('td', {}, EVN[e.event] || e.event), h('td', {}, (e.actor || '').replace('publisher:', '야화랩 ').replace('author:', '작가 ').replace('admin:', '관리자 ')), h('td', {}, e.ip || ''))))))),
-      !['completed', 'cancelled'].includes(c.status) ? h('div', { class: 'end' }, h('button', { class: 'danger', onclick: () => { if (confirm('이 계약을 취소할까요? 보낸 서명 링크도 무효가 됩니다.')) run(() => api({ action: 'cancel', id }), '계약을 취소했습니다.').then(() => detail(id)); } }, '계약 취소')) : ''
+      !['completed', 'cancelled'].includes(c.status) ? h('div', { class: 'end' }, h('button', { class: 'danger', onclick: async () => { if (await ask('계약 취소', '이 계약을 취소할까요? 보낸 서명 링크도 무효가 됩니다.', '계약 취소', true)) run(() => api({ action: 'cancel', id }), '계약을 취소했습니다.').then(() => detail(id)); } }, '계약 취소')) : ''
     );
   }
 
@@ -161,8 +166,8 @@
     const f = {};
     const inp = (k, label, ph = '') => { const id = uid(); f[k] = h('input', { id, type: 'text', placeholder: ph }); return h('div', {}, h('label', { for: id }, label), f[k]); };
     const body = h('div', { class: 'sec' }, h('div', { class: 'k' }, '입력한 칸만 저장되고, 비워 둔 칸은 기존 값이 유지됩니다. 작가가 직접 입력할 항목은 비워 두세요.'),
-      h('div', { class: 'g', style: 'margin-top:10px' }, INFO.map(([k, l]) => inp('i_' + k, l, k === 'rrn' ? '계약서 작성 시 입력하셔도 됩니다.' : '')), (f.deliv = delivField('원고 인도일 (비우면 변경 없음)'), f.deliv.el)),
-      h('div', { style: 'margin-top:12px' }, h('button', { class: 'p', onclick: ev => withBusy(ev.target, () => run(async () => {
+      h('div', { class: 'g sp' }, INFO.map(([k, l]) => inp('i_' + k, l, k === 'rrn' ? '계약서 작성 시 입력하셔도 됩니다.' : '')), (f.deliv = delivField('원고 인도일 (비우면 변경 없음)'), f.deliv.el)),
+      h('div', { class: 'acts gap' }, h('button', { class: 'p', onclick: ev => withBusy(ev.target, () => run(async () => {
         const info = Object.fromEntries(INFO.map(([k]) => [k, f['i_' + k].value.trim()]).filter(([, v]) => v)), terms = f.deliv.get() ? { delivery_date: f.deliv.get() } : {};
         await api({ action: 'update', id: c.id, author_info: info, terms }); detail(c.id);
       }, '작가 정보를 저장했습니다.'), '저장 중…') }, '저장'), h('button', { onclick: () => detail(c.id) }, '취소')));

@@ -1,4 +1,4 @@
-/* 야화랩 전자계약 — 서명 페이지 (v1.5.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
+/* 야화랩 전자계약 — 서명 페이지 (v1.6.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
    CSP(script-src 'self') 때문에 인라인이 아닌 외부 파일로 둔다. */
 (function () {
   'use strict';
@@ -10,14 +10,21 @@
     const j = await r.json().catch(() => ({})); if (!j.ok) throw new Error(j.message || '오류가 발생했습니다.'); return j;
   }
   const IDS = ['v0', 'v1', 'v2', 'v3', 'v4'];
-  function show(id) { IDS.forEach(x => $('#' + x).classList.toggle('hide', x !== id)); const n = { v1: 1, v2: 2, v3: 3, v4: 3 }[id] || 0; [1, 2, 3].forEach(i => $('#s' + i).classList.toggle('on', i <= n)); scrollTo(0, 0); }
+  function show(id) {   // 화면 전환 + 진행 트랙(done/cur) 갱신 + 키보드·스크린리더 초점 이동
+    IDS.forEach(x => $('#' + x).classList.toggle('hide', x !== id));
+    const n = { v1: 1, v2: 2, v3: 3, v4: 4 }[id] || 0;
+    [1, 2, 3].forEach(i => { const li = $('#s' + i); if (!li) return; li.classList.toggle('done', i < n); li.classList.toggle('cur', i === n); if (i === n) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current'); });
+    scrollTo(0, 0); if (id !== 'v0') { const el = $('#' + id); el.tabIndex = -1; el.focus({ preventScroll: true }); }
+  }
   const busy = (b, on) => { b.disabled = on; },
-    wait = (on, t, m) => { $('#busy').classList.toggle('hide', !on); if (on) { $('#busyT').textContent = t; $('#busyM').textContent = m; } }, fail = (id, e) => { $('#' + id).textContent = e.message || String(e); };
+    guard = e => { e.preventDefault(); e.returnValue = ''; },   // 처리 중에 창을 닫거나 이동하면 경고
+    wait = (on, t, m) => { $('#busy').classList.toggle('hide', !on); if (on) { $('#busyT').textContent = t; $('#busyM').textContent = m; addEventListener('beforeunload', guard); } else removeEventListener('beforeunload', guard); }, fail = (id, e) => { $('#' + id).textContent = e.message || String(e); };
 
   (async () => {
     if (!T) { $('#v0').textContent = '유효하지 않은 링크입니다.'; return; }
     try {
       const j = await api({ action: 'open' }); ROLE = j.role;
+      if (ROLE === 'publisher') { $('#s1').remove(); $('#t2').textContent = '계약서 확인'; $('#t3').textContent = '서명(도장)'; }   // 야화랩은 이메일 확인 단계가 없다
       $('#ttl').textContent = ROLE === 'publisher' ? '야화랩 서명(출판사)' : '전자계약 서명';
       $('#sub').textContent = `${j.publisher} · ${j.work_title}`;
       if (ROLE === 'publisher' && j.session) { SESSION = j.session; await loadDoc(); show('v2'); } else show('v1');   // 야화랩(출판사)은 이메일 확인 없이 진행

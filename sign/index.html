@@ -2,14 +2,14 @@
 <html lang="ko" data-ec-dark>
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://wddixxdrndgvjgicwunu.supabase.co; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>전자계약 서명 | 야화랩</title>
-<link rel="stylesheet" href="/assets/css/ec.css?v=1.0.0">
-<link rel="stylesheet" href="/assets/css/ec-sign.css?v=1.2.0">
+<link rel="stylesheet" href="/assets/css/ec.css?v=1.1.0">
+<link rel="stylesheet" href="/assets/css/ec-sign.css?v=1.3.0">
 </head>
 <body>
 <div class="wrap">
@@ -26,14 +26,14 @@
     <b>이메일 주소 확인</b>
     <p class="sub">계약서를 받으신 이메일 주소를 입력해 주세요.</p>
     <input id="email" type="email" autocomplete="email" inputmode="email" placeholder="example@email.com">
-    <p class="sub" style="margin:10px 0 0">전자 계약서 수신 이메일 주소를 입력하시면 서명이 진행됩니다.</p>
+    <p class="sub mt10">전자 계약서 수신 이메일 주소를 입력하시면 서명이 진행됩니다.</p>
     <div class="err" id="e1" role="alert"></div><button id="verify">확인</button>
   </section>
 
   <section id="v2" class="hide">
     <div class="card"><div class="note" id="note"></div><b>계약서 내용</b><p class="sub">아래 내용을 끝까지 읽어 주세요. 마지막에 동의 체크가 있습니다.</p><div class="doc" id="doc"></div></div>
     <div class="card" id="infoCard"><b>작가 정보 입력</b>
-      <p class="sub" style="margin:2px 0 0">모든 항목이 필수입니다.</p>
+      <p class="sub mt2">모든 항목이 필수입니다.</p>
       <div class="grp"><h3>기본 정보</h3>
         <div class="fld"><label for="name">성명(본명)</label><input id="name" name="name" type="text" autocomplete="name" aria-describedby="fe_name"><div class="fe" id="fe_name"></div></div>
         <div class="fld"><label for="phone">연락처</label><input id="phone" name="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" aria-describedby="fe_phone"><div class="fe" id="fe_phone"></div></div>
@@ -48,7 +48,7 @@
         <div class="fld"><label for="rrn">주민(사업자)등록번호</label><div class="pw"><input id="rrn" name="ec_idnum" class="mask" type="text" inputmode="numeric" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="숫자만 입력" aria-describedby="rrnCnt fe_rrn"><button type="button" class="ghost" id="rrnToggle" aria-pressed="false">보기</button></div><div class="sub hintline" id="rrnCnt">주민 13자리 · 사업자 10자리</div><div class="fe" id="fe_rrn"></div></div>
       </div>
       <div class="grp" id="delWrap"><h3>원고 인도일 <span id="delNote" class="sub"></span></h3>
-        <div class="fld"><div class="delrow"><input id="delivery" type="date" aria-label="원고 인도일" aria-describedby="fe_delivery"><label class="chk one" style="margin:0"><input type="checkbox" id="delNow"><span>즉시 (완고)</span></label></div><p class="sub" style="margin:6px 0 0">달력에서 날짜를 고르거나, 원고가 완성된 경우(완고)에는 '즉시'를 선택해 주세요.</p><div class="fe" id="fe_delivery"></div></div>
+        <div class="fld"><div class="delrow"><input id="delivery" type="date" aria-label="원고 인도일" aria-describedby="fe_delivery"><label class="chk one flush"><input type="checkbox" id="delNow"><span>즉시 (완고)</span></label></div><p class="sub mt6">달력에서 날짜를 고르거나, 원고가 완성된 경우(완고)에는 '즉시'를 선택해 주세요.</p><div class="fe" id="fe_delivery"></div></div>
       </div>
       <datalist id="banks"><option value="국민은행"><option value="신한은행"><option value="우리은행"><option value="하나은행"><option value="농협은행"><option value="기업은행"><option value="SC제일은행"><option value="카카오뱅크"><option value="토스뱅크"><option value="케이뱅크"><option value="우체국"><option value="새마을금고"><option value="신협"><option value="수협은행"><option value="부산은행"><option value="대구은행"><option value="광주은행"><option value="전북은행"><option value="경남은행"><option value="제주은행"><option value="산업은행"><option value="씨티은행"></datalist>
     </div>
@@ -70,10 +70,10 @@
     <div class="err" id="e3" role="alert"></div><button id="submit">서명 완료</button>
   </section>
 
-  <div id="busy" class="hide" role="alert" aria-live="assertive"><div class="bx"><div class="spin"></div><b id="busyT">처리 중입니다</b><p class="sub" id="busyM" style="margin:8px 0 0"></p></div></div>
+  <div id="busy" class="hide" role="alert" aria-live="assertive"><div class="bx"><div class="spin"></div><b id="busyT">처리 중입니다</b><p class="sub mt8" id="busyM"></p></div></div>
 
-  <section id="v4" class="card hide done" role="status"><div class="okic" aria-hidden="true">✓</div><b id="doneT"></b><p id="doneM"></p><ul class="nextlist hide" id="doneL"></ul><p class="sub" style="margin:14px 0 0">이 창은 닫으셔도 됩니다.</p></section>
+  <section id="v4" class="card hide done" role="status"><div class="okic" aria-hidden="true">✓</div><b id="doneT"></b><p id="doneM"></p><ul class="nextlist hide" id="doneL"></ul><p class="sub mt14">이 창은 닫으셔도 됩니다.</p></section>
 </div>
-<script src="/sign/sign.js?v=1.8.0"></script>
+<script src="/sign/sign.js?v=1.9.0"></script>
 </body>
 </html>

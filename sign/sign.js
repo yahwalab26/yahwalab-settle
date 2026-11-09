@@ -1,4 +1,4 @@
-/* 야화랩 전자계약 — 서명 페이지 (v1.8.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
+/* 야화랩 전자계약 — 서명 페이지 (v1.9.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
    CSP(script-src 'self') 때문에 인라인이 아닌 외부 파일로 둔다. */
 (function () {
   'use strict';
@@ -50,7 +50,7 @@
       if (b.t === 'title') add('title', 'div', b.text); else if (b.t === 'sub') add('sub2', 'div', b.text); else if (b.t === 'h') add('', 'h4', b.text);
       else if (b.t === 'p') add('', 'p', b.text); else if (b.t === 'li') add('li', 'p', b.text);
       else if (b.t === 'check') { const l = document.createElement('label'); l.className = 'chk one'; const c = document.createElement('input'); c.type = 'checkbox'; c.id = 'ai'; c.disabled = ROLE === 'publisher'; const sp = document.createElement('span'); sp.textContent = b.text; l.append(c, sp); box.appendChild(l); }
-      else if (b.t === 'box') { const d = document.createElement('div'); d.className = 'box'; b.lines.forEach((l, i) => { const p = document.createElement('p'); p.textContent = l; if (i === 0) p.style.fontWeight = '700'; d.appendChild(p); }); box.appendChild(d); }
+      else if (b.t === 'box') { const d = document.createElement('div'); d.className = 'box'; b.lines.forEach((l, i) => { const p = document.createElement('p'); p.textContent = l; d.appendChild(p); }); box.appendChild(d); }
     }
     const pub = ROLE === 'publisher';
     $('#note').textContent = pub ? '내용을 확인한 뒤 서명(또는 도장)해 주세요. 완료되면 작가님께 서명 요청 메일이 자동으로 발송됩니다.' : '야화랩의 서명(도장)이 완료된 계약서입니다. 내용을 확인한 뒤 정보를 입력하고 서명해 주세요.';
@@ -96,9 +96,11 @@
       if (errs.length) msgs.push(`입력이 필요한 칸이 ${new Set(errs.map(x => x[0])).size}곳 있습니다. 빨간 안내를 확인해 주세요.`);
       if (msgs.length) { $('#e2').textContent = msgs.join(' '); if (aiMiss) { const ai = $('#ai'); if (ai) { ai.scrollIntoView({ block: 'center' }); ai.focus({ preventScroll: true }); } } else $('#' + errs[0][0]).focus(); return; }
     }
-    $('#e2').textContent = ''; show('v3'); setMode(MODE);
+    $('#e2').textContent = ''; show('v3'); history.pushState({ s: 3 }, ''); setMode(MODE);
   };
-  $('#back3').onclick = () => show('v2');
+  // 뒤로가기: 3단계에서 브라우저 뒤로가기를 눌러도 페이지를 떠나지 않고 2단계(입력값 유지)로 돌아온다
+  $('#back3').onclick = () => (history.state && history.state.s === 3 ? history.back() : show('v2'));
+  addEventListener('popstate', () => { if (!$('#v3').classList.contains('hide') && $('#busy').classList.contains('hide')) show('v2'); });
 
   // ---- 동의: 전체 동의 + 칸별 표시 ----
   const CK = ['c1', 'c2', 'c3'], vis = () => CK.filter(id => !$('#' + id).closest('.chk').classList.contains('hide')), box = id => $('#' + id).closest('.chk');

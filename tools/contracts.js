@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.7.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.8.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -65,28 +65,47 @@
   async function form() {
     const [au, wk, wa] = await Promise.all([SB.from('authors').select('id,pen_name,email').order('pen_name'), SB.from('works').select('id,title').order('title'), SB.from('work_authors').select('work_id,author_id')]);
     const A = au.data || [], W = wk.data || [], WA = wa.data || [], f = {};
-    const inp = (k, label, type = 'text', val = '', ph = '') => { const id = uid(); f[k] = h('input', { id, type, value: val, placeholder: ph }); return h('div', {}, h('label', { for: id }, label), f[k]); };
-    f.type = h('select', {}, h('option', { value: 'general' }, '일반 계약'), h('option', { value: 'special' }, '특약 계약'));
+    // 입력칸 한 묶음: 라벨(필수 표시) + 입력 + 안내 + 칸 바로 아래 오류 문구
+    const fld = (k, label, el, o = {}) => { const id = uid(); el.id = id; el.setAttribute('aria-describedby', id + 'e'); f[k] = el; el.addEventListener('input', () => setErr(k, '')); return h('div', { class: 'fld' }, h('label', { for: id }, label, o.req ? h('span', { class: 'rq' }, ' 필수') : ''), el, o.hint || '', h('div', { class: 'fe', id: id + 'e' })); };
+    const setErr = (k, m) => { const el = f[k]; el.setAttribute('aria-invalid', m ? 'true' : 'false'); document.getElementById(el.id + 'e').textContent = m; };
+    const inp = (k, label, type = 'text', val = '', ph = '', req = false, hint = '') => fld(k, label, h('input', { type, value: val, placeholder: ph }), { req, hint });
+    const typeVal = () => document.querySelector('input[name=ctype]:checked').value;
+    const choice = (val, title, desc, on) => { const r = h('input', { type: 'radio', name: 'ctype', value: val, checked: on ? '' : null }); r.onchange = () => { sp.hidden = typeVal() !== 'special'; }; return h('label', { class: 'choice' }, r, h('span', {}, h('b', {}, title), h('span', { class: 'k' }, desc))); };
     f.au = h('select', {}, h('option', { value: '' }, '직접 입력'), A.map(a => h('option', { value: a.id }, a.pen_name)));
     f.wk = h('select', {}, h('option', { value: '' }, '직접 입력'));
     const fillWorks = () => { const ids = new Set(WA.filter(x => String(x.author_id) === f.au.value).map(x => String(x.work_id))); f.wk.replaceChildren(h('option', { value: '' }, '직접 입력'), W.filter(w => !f.au.value || ids.has(String(w.id))).map(w => h('option', { value: w.id }, w.title))); };
-    f.au.onchange = () => { const a = A.find(x => String(x.id) === f.au.value); if (a) { f.email.value = a.email || ''; f.pen.value = a.pen_name || ''; } fillWorks(); };
-    f.wk.onchange = () => { const w = W.find(x => String(x.id) === f.wk.value); if (w) f.title.value = w.title; };
-    const extra = h('div', { class: 'g', hidden: true }, inp('xu', '특약 적용 종료일', 'date'), inp('xa', '특약 작가 %', 'number', 90));
-    f.type.onchange = () => { extra.hidden = f.type.value !== 'special'; };
-    const body = h('div', { class: 'sec' },
-      h('div', { class: 'g' }, lab(f.type, '계약 종류'), lab(f.au, '작가 불러오기(선택)'), lab(f.wk, '작품 불러오기(선택)')),
-      h('div', { class: 'g', style: 'margin-top:10px' }, inp('email', '작가 이메일(서명 링크 수신)', 'email'), inp('pen', '필명'), inp('title', '작품명(제호)'), inp('years', '계약 기간(년)', 'number', 3), inp('months', '인도 후 서비스 개시(개월)', 'number', 6), (f.deliv = delivField('원고 인도일 (비우면 작가가 입력)'), f.deliv.el), inp('sa', '기본 작가 정산 %', 'number', 80)),
-      h('h2', { style: 'margin-top:16px' }, '작가 정보 (아는 것만 입력 · 비운 칸은 작가가 직접 입력)'),
-      h('div', { class: 'g' }, INFO.map(([k, l]) => inp('i_' + k, l, 'text', '', k === 'rrn' ? '계약서 작성 시 입력하셔도 됩니다.' : ''))),
-      h('div', { style: 'margin-top:10px' }, extra),
-      h('div', { style: 'margin-top:12px' }, h('button', { class: 'p', onclick: ev => withBusy(ev.target, () => run(async () => {
+    const share = h('div', { class: 'k' }, '작가 80% · 야화랩 20%');
+    const sp = h('div', { class: 'sec', hidden: true }, h('h2', {}, '특약'), h('div', { class: 'k hint' }, '정해진 기간 동안만 다른 정산 비율을 적용합니다.'), h('div', { class: 'g' }, inp('xu', '특약 적용 종료일', 'date', '', '', true), inp('xa', '특약 작가 정산 %', 'number', 90, '', true)));
+    const body = h('div', {},
+      h('div', { class: 'sec' }, h('h2', {}, '계약 종류'), h('div', { class: 'choices', role: 'radiogroup', 'aria-label': '계약 종류' }, choice('general', '일반 계약', '기본 정산 비율을 적용합니다.', true), choice('special', '특약 계약', '기간 한정 특별 정산 비율을 추가합니다.', false))),
+      h('div', { class: 'sec' }, h('h2', {}, '작가와 작품'), h('div', { class: 'k hint' }, '목록에서 고르면 아래 칸이 자동으로 채워집니다. 목록에 없으면 직접 입력하세요.'),
+        h('div', { class: 'g' }, lab(f.au, '작가 불러오기'), lab(f.wk, '작품 불러오기')),
+        h('div', { class: 'g sp' }, inp('email', '작가 이메일 (서명 링크를 받는 주소)', 'email', '', '', true), inp('pen', '필명', 'text', '', '', true), inp('title', '작품명(제호)', 'text', '', '', true))),
+      h('div', { class: 'sec' }, h('h2', {}, '계약 조건'),
+        h('div', { class: 'g' }, inp('years', '계약 기간(년)', 'number', 3, '', true), inp('months', '인도 후 서비스 개시(개월)', 'number', 6, '', true), (f.deliv = delivField('원고 인도일 (비우면 작가가 입력)'), f.deliv.el), inp('sa', '작가 정산 %', 'number', 80, '', true, share))),
+      sp,
+      h('details', { class: 'sec' }, h('summary', {}, '작가 정보 미리 입력 (선택)'), h('div', { class: 'k hint' }, '아는 것만 입력하세요. 비운 칸은 작가가 직접 입력합니다.'), h('div', { class: 'g sp' }, INFO.map(([k, l]) => inp('i_' + k, l, 'text', '', k === 'rrn' ? '계약서 작성 시 입력하셔도 됩니다.' : '')))),
+      h('div', { class: 'acts' }, h('button', { class: 'p', onclick: ev => { if (!validate()) return; withBusy(ev.target, () => run(async () => {
         const sa = +f.sa.value, terms = { term_years: +f.years.value, publish_months: +f.months.value, delivery_date: f.deliv.get() || null, share_author: sa, share_publisher: 100 - sa };
-        if (f.type.value === 'special') { const xa = +f.xa.value; terms.extra = { until: f.xu.value, share_author: xa, share_publisher: 100 - xa }; }
-        const r = await api({ action: 'create', contract_type: f.type.value, author_email: f.email.value, pen_name: f.pen.value, work_title: f.title.value, terms, author_id: f.au.value || null,
+        if (typeVal() === 'special') { const xa = +f.xa.value; terms.extra = { until: f.xu.value, share_author: xa, share_publisher: 100 - xa }; }
+        const r = await api({ action: 'create', contract_type: typeVal(), author_email: f.email.value.trim(), pen_name: f.pen.value.trim(), work_title: f.title.value.trim(), terms, author_id: f.au.value || null,
           author_info: Object.fromEntries(INFO.map(([k]) => [k, f['i_' + k].value.trim()]).filter(([, v]) => v)) });
         detail(r.id);
-      }, '계약서를 만들었습니다. 다음으로 “가계약서 발송”을 눌러 작가님께 검토를 요청하세요.'), '만드는 중…') }, '만들기'), h('button', { onclick: list }, '취소')));
+      }, '계약서를 만들었습니다. 다음으로 “가계약서 발송”을 눌러 작가님께 검토를 요청하세요.'), '만드는 중…'); } }, '만들기'), h('button', { onclick: list }, '취소')));
+    f.au.onchange = () => { const a = A.find(x => String(x.id) === f.au.value); if (a) { f.email.value = a.email || ''; f.pen.value = a.pen_name || ''; ['email', 'pen'].forEach(k => setErr(k, '')); } fillWorks(); };
+    f.wk.onchange = () => { const w = W.find(x => String(x.id) === f.wk.value); if (w) { f.title.value = w.title; setErr('title', ''); } };
+    f.sa.addEventListener('input', () => { const n = +f.sa.value; share.textContent = f.sa.value !== '' && n >= 0 && n <= 100 ? `작가 ${n}% · 야화랩 ${100 - n}%` : '0~100 사이 숫자'; });
+    const pct = (k, label) => { const v = f[k].value; if (v === '' || !Number.isInteger(+v) || +v < 0 || +v > 100) { bad(k, label + '은 0~100 사이 정수로 입력해 주세요.'); } };
+    let first = null; const bad = (k, m) => { setErr(k, m); first = first || f[k]; };
+    const validate = () => {
+      first = null; ['email', 'pen', 'title', 'years', 'months', 'sa', 'xu', 'xa'].forEach(k => setErr(k, ''));
+      const em = f.email.value.trim(); if (!em) bad('email', '작가 이메일을 입력해 주세요.'); else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) bad('email', '이메일 형식을 확인해 주세요. 예: name@example.com');
+      if (!f.pen.value.trim()) bad('pen', '필명을 입력해 주세요.'); if (!f.title.value.trim()) bad('title', '작품명(제호)을 입력해 주세요.');
+      if (!(+f.years.value >= 1)) bad('years', '1년 이상으로 입력해 주세요.'); if (f.months.value === '' || !(+f.months.value >= 0)) bad('months', '0 이상의 개월 수를 입력해 주세요.');
+      pct('sa', '정산 비율');
+      if (typeVal() === 'special') { if (!f.xu.value) bad('xu', '특약이 끝나는 날짜를 골라 주세요.'); pct('xa', '특약 정산 비율'); }
+      if (first) { first.focus(); toast('빨간 안내가 있는 칸을 확인해 주세요.', 'bad'); return false; } return true;
+    };
     root.replaceChildren(h('div', { class: 'top' }, h('div', {}, h('h1', {}, '새 계약서'), h('div', { class: 'k' }, '만든 뒤 “가계약서 발송”으로 먼저 검토받고, 확정되면 “서명 요청 시작”을 누르세요. 야화랩이 먼저 서명한 뒤 작가에게 자동으로 발송됩니다.'))), body);
   }
 

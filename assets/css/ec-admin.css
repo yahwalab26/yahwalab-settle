@@ -1,4 +1,4 @@
-/* assets/css/ec-admin.css v1.1.0 — tools/contracts.html(관리자 전자계약 도구) 전용. 토큰은 ec.css */
+/* assets/css/ec-admin.css v1.2.0 — tools/contracts.html(관리자 전자계약 도구) 전용. 토큰은 ec.css */
 body{font-size:14px;line-height:1.6}
 .wrap{max-width:1100px;margin:0 auto;padding:calc(22px + env(safe-area-inset-top,0px)) 18px calc(60px + env(safe-area-inset-bottom,0px))}
 h1{font-size:20px;margin:0 0 4px;font-weight:700}h2{font-size:15px;margin:0 0 8px}
@@ -35,3 +35,22 @@ tr.r{cursor:pointer}tr.r:hover{background:var(--ec-hl)}
 .end{display:flex;justify-content:flex-end;margin-top:-4px}
 @media (max-width:760px){.cols{grid-template-columns:1fr}.cols>div+div{border-left:0;padding-left:0;border-top:1px solid var(--ec-line2);margin-top:16px;padding-top:16px}}
 @media (max-width:560px){.dl{grid-template-columns:1fr;gap:0}.dl dd{margin-bottom:8px}}
+
+/* 목록: 상태 필터 · 검색 · 휴대폰 카드 */
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{height:30px;padding:0 12px;border-radius:999px;font-size:13px}
+.chip[aria-pressed=true]{background:var(--ec-ink);border-color:var(--ec-ink);color:var(--ec-on-ink)}.chip[aria-pressed=true]:hover{background:var(--ec-ink)}
+.chip.fix:not([aria-pressed=true]){color:var(--ec-bad);border-color:var(--ec-bad)}
+input.q{width:240px}
+.cnt{margin:0 0 4px}.empty{padding:18px 4px}
+@media (pointer:coarse){.chip{height:36px}}
+@media (max-width:640px){
+  input.q{width:100%}
+  .tbl .scroll{overflow:visible}.tbl table,.tbl tbody{display:block;min-width:0}.tbl thead{display:none}
+  .tbl tr.r{display:grid;grid-template-columns:1fr auto;gap:3px 10px;padding:12px 2px;border-bottom:1px solid var(--ec-line2)}
+  .tbl td{padding:0;border:0;white-space:normal}
+  .tbl .c-id,.tbl .c-type{display:none}
+  .tbl .c-title{grid-column:1;grid-row:1;font-weight:600}.tbl .c-stat{grid-column:2;grid-row:1}
+  .tbl .c-pen{grid-column:1;grid-row:2;color:var(--ec-mute);font-size:12.5px}.tbl .c-date{grid-column:2;grid-row:2;color:var(--ec-mute);font-size:12.5px;text-align:right}
+}

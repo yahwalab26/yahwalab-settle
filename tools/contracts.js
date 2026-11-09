@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.6.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.7.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -38,11 +38,26 @@
   const gate = (t) => { root.replaceChildren(h('div', { class: 'gate' }, t)); };
 
   /* ---------- 목록 ---------- */
+  const ACTIVE = ['draft', 'review_sent', 'pub_pending', 'pub_signed', 'sent', 'opened'];
+  const GROUP = { all: ['전체', () => true], active: ['진행 중', c => ACTIVE.includes(c.status)], fix: ['처리 필요', c => c.status === 'signed'], done: ['완료', c => c.status === 'completed'], cancelled: ['취소', c => c.status === 'cancelled'] };
+  let FL = { f: 'all', q: '' };   // 보기 조건은 상세에 다녀와도 유지
   async function list() {
     root.replaceChildren(h('div', { class: 'top' }, h('div', {}, h('h1', {}, '전자계약'), h('div', { class: 'k' }, '일반·특약 계약서 · 가계약서(검토용) · 전자서명 · 감사 추적 인증서')), h('button', { class: 'p', onclick: form }, '+ 새 계약서')), h('div', { class: 'sec', id: 'lst' }, '불러오는 중…'));
     const j = await run(() => api({ action: 'list' })); if (!j) return $('#lst').replaceChildren(h('div', { class: 'k' }, '목록을 불러오지 못했습니다. '), h('button', { onclick: list }, '다시 시도'));
-    const rows = j.items.map(c => { const [t, cls] = ST[c.status] || [c.status, '']; return h('tr', { class: 'r', tabindex: '0', onclick: () => detail(c.id), onkeydown: e => { if (e.key === 'Enter') detail(c.id); } }, h('td', { class: 'mono' }, kst(c.created_at)), h('td', {}, c.doc_no), h('td', {}, h('span', { class: 'tag' }, TY[c.contract_type])), h('td', {}, c.pen_name || ''), h('td', {}, c.work_title), h('td', {}, h('span', { class: 'tag ' + cls }, t))); });
-    $('#lst').replaceChildren(rows.length ? h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, h('tr', {}, ...['생성', '문서 ID', '종류', '필명', '작품', '상태'].map(x => h('th', {}, x)))), h('tbody', {}, rows))) : h('div', { class: 'k' }, '아직 계약서가 없습니다. 오른쪽 위 “새 계약서”로 시작하세요.'));
+    const items = j.items;
+    if (!items.length) return $('#lst').replaceChildren(h('div', { class: 'k' }, '아직 계약서가 없습니다. 오른쪽 위 “새 계약서”로 시작하세요.'));
+    const chips = h('div', { class: 'chips', role: 'group', 'aria-label': '상태별 보기' }), tbl = h('div', { class: 'tbl' });
+    const sq = h('input', { type: 'text', class: 'q', value: FL.q, placeholder: '필명·작품·문서 ID 검색', 'aria-label': '계약서 검색', autocomplete: 'off' });
+    const drawChips = () => chips.replaceChildren(...Object.entries(GROUP).map(([k, [label, fn]]) => { const n = items.filter(fn).length; return (k === 'cancelled' && !n) ? null : h('button', { class: 'chip' + (k === 'fix' && n ? ' fix' : ''), type: 'button', 'aria-pressed': String(FL.f === k), onclick: () => { FL.f = k; drawChips(); drawTable(); } }, `${label} ${n}`); }).filter(Boolean));
+    const drawTable = () => {
+      const q = FL.q.trim().toLowerCase(), rows = items.filter(GROUP[FL.f][1]).filter(c => !q || [c.pen_name, c.work_title, c.doc_no, c.author_email].some(x => String(x || '').toLowerCase().includes(q)));
+      if (!rows.length) return tbl.replaceChildren(h('div', { class: 'k empty', role: 'status' }, '조건에 맞는 계약서가 없습니다. ', h('button', { onclick: () => { FL = { f: 'all', q: '' }; sq.value = ''; drawChips(); drawTable(); } }, '필터 해제')));
+      const trs = rows.map(c => { const [t, cls] = ST[c.status] || [c.status, '']; return h('tr', { class: 'r', tabindex: '0', onclick: () => detail(c.id), onkeydown: e => { if (e.key === 'Enter') detail(c.id); } }, h('td', { class: 'mono c-date' }, kst(c.created_at)), h('td', { class: 'c-id' }, c.doc_no), h('td', { class: 'c-type' }, h('span', { class: 'tag' }, TY[c.contract_type])), h('td', { class: 'c-pen' }, c.pen_name || ''), h('td', { class: 'c-title' }, c.work_title), h('td', { class: 'c-stat' }, h('span', { class: 'tag ' + cls }, t))); });
+      tbl.replaceChildren(h('div', { class: 'k cnt', role: 'status' }, `${rows.length}건`), h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, h('tr', {}, ...['생성', '문서 ID', '종류', '필명', '작품', '상태'].map(x => h('th', {}, x)))), h('tbody', {}, trs))));
+    };
+    sq.addEventListener('input', () => { FL.q = sq.value; drawTable(); });
+    drawChips(); drawTable();
+    $('#lst').replaceChildren(h('div', { class: 'bar' }, chips, sq), tbl);
   }
   const $ = s => document.querySelector(s);
 

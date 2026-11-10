@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.10.1 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.11.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -26,9 +26,13 @@
     tbox.append(t); while (tbox.children.length > 3) tbox.firstChild.remove();
     if (kind !== 'bad') setTimeout(() => t.remove(), Math.max(5000, text.length * 130));
   };
-  const ask = (title, text, ok = '확인', danger = false) => new Promise(res => {   // 브라우저 기본 confirm 대신 사이트 모양 대화상자(Esc·초점 가둠은 <dialog>가 처리)
+  const ask = (title, text, ok = '확인', danger = false, typed = '') => new Promise(res => {   // 브라우저 기본 confirm 대신 사이트 모양 대화상자. typed가 있으면 그 문구를 직접 입력해야 진행(삭제 등)
+    const inp = typed ? h('input', { type: 'text', id: 'dlgIn', autocomplete: 'off', autofocus: '' }) : null;
+    const okBtn = h('button', { type: 'button', class: danger ? 'p danger' : 'p', autofocus: danger || typed ? null : '', onclick: () => d.close('yes') }, ok); if (typed) okBtn.disabled = true;
+    if (inp) { inp.addEventListener('input', () => { okBtn.disabled = inp.value.trim() !== typed; }); inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !okBtn.disabled) d.close('yes'); }); }
     const d = h('dialog', { class: 'ec-dialog', 'aria-labelledby': 'dlgT' }, h('h2', { id: 'dlgT' }, title), h('p', {}, text),
-      h('div', { class: 'btns' }, h('button', { type: 'button', autofocus: danger ? '' : null, onclick: () => d.close('no') }, '닫기'), h('button', { type: 'button', class: danger ? 'p danger' : 'p', autofocus: danger ? null : '', onclick: () => d.close('yes') }, ok)));
+      inp ? h('div', { class: 'typed' }, h('label', { for: 'dlgIn' }, `확인을 위해 “${typed}”를 입력해 주세요.`), inp) : '',
+      h('div', { class: 'btns' }, h('button', { type: 'button', autofocus: danger && !typed ? '' : null, onclick: () => d.close('no') }, '닫기'), okBtn));
     d.addEventListener('close', () => { res(d.returnValue === 'yes'); d.remove(); }); document.body.append(d); d.showModal();
   });
   const withBusy = async (btn, fn, label) => { const t0 = btn.textContent; btn.disabled = true; if (label) btn.textContent = label; try { return await fn(); } finally { btn.disabled = false; btn.textContent = t0; } };
@@ -158,7 +162,15 @@
         h('div', {}, h('h2', {}, '작가 정보 (기본 가림)'), pii, h('div', { class: 'acts gap' }, reveal || '', editable ? h('button', { onclick: () => infoEditor(c) }, '작가 정보·인도일 입력/수정') : ''))),
       files.length ? h('div', { class: 'sec' }, h('h2', {}, '문서'), h('div', { class: 'acts' }, files)) : '',
       h('div', { class: 'sec' }, h('h2', {}, '진행 기록'), h('div', { class: 'scroll' }, h('table', {}, h('thead', {}, h('tr', {}, ...['일시', '내용', '처리자', 'IP'].map(x => h('th', {}, x)))), h('tbody', {}, j.events.map(e => h('tr', {}, h('td', { class: 'mono' }, kst(e.created_at)), h('td', {}, EVN[e.event] || e.event), h('td', {}, (e.actor || '').replace('publisher:', '야화랩 ').replace('author:', '작가 ').replace('admin:', '관리자 ')), h('td', {}, e.ip || ''))))))),
-      !['completed', 'cancelled'].includes(c.status) ? h('div', { class: 'end' }, h('button', { class: 'danger', onclick: async () => { if (await ask('계약 취소', '이 계약을 취소할까요? 보낸 서명 링크도 무효가 됩니다.', '계약 취소', true)) run(() => api({ action: 'cancel', id }), '계약을 취소했습니다.').then(() => detail(id)); } }, '계약 취소')) : ''
+      h('div', { class: 'sec zone' }, h('h2', {}, '계약 취소·삭제'),
+        !['completed', 'cancelled'].includes(c.status) ? h('div', { class: 'zrow' }, h('div', {}, h('b', {}, '계약 취소'), h('div', { class: 'k' }, '진행을 중단하고 보낸 서명 링크를 쓸 수 없게 합니다. 기록은 남습니다.')),
+          h('button', { class: 'danger', onclick: async () => { if (await ask('계약 취소', '이 계약을 취소할까요? 보낸 서명 링크도 무효가 됩니다.', '계약 취소', true)) run(() => api({ action: 'cancel', id }), '계약을 취소했습니다.').then(() => detail(id)); } }, '계약 취소')) : '',
+        h('div', { class: 'zrow' }, h('div', {}, h('b', {}, '계약 삭제'), h('div', { class: 'k' }, c.status === 'completed' ? '완료된 계약은 취소할 수 없고 삭제만 할 수 있습니다. 계약서·인증서·진행 기록이 영구 삭제됩니다.' : '계약 데이터·업로드 파일·진행 기록을 영구 삭제합니다. 되돌릴 수 없습니다.')),
+          h('button', { class: 'danger', onclick: async () => {
+            const msg = `${c.doc_no} · ${c.work_title}\n이 계약의 데이터, 업로드 파일, 진행 기록이 모두 지워지며 복구할 수 없습니다.` + (c.status === 'draft' ? '' : '\n작가와 야화랩 메일로 이미 발송된 내용은 지워지지 않습니다.');
+            if (!await ask('계약 삭제', msg, '영구 삭제', true, '삭제')) return;
+            const r = await run(() => api({ action: 'delete', id, confirm: '삭제' }), '계약을 삭제했습니다.'); if (!r) return; if (r.warn) toast(r.warn, 'bad'); list();
+          } }, '계약 삭제')))
     );
   }
 

@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.11.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.12.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -35,6 +35,7 @@
       h('div', { class: 'btns' }, h('button', { type: 'button', autofocus: danger && !typed ? '' : null, onclick: () => d.close('no') }, '닫기'), okBtn));
     d.addEventListener('close', () => { res(d.returnValue === 'yes'); d.remove(); }); document.body.append(d); d.showModal();
   });
+  const setHash = h => { if (location.hash !== h) history.pushState(null, '', location.pathname + location.search + h); };   // 화면 위치를 주소에 기억(새로고침·뒤로가기용)
   const withBusy = async (btn, fn, label) => { const t0 = btn.textContent; btn.disabled = true; if (label) btn.textContent = label; try { return await fn(); } finally { btn.disabled = false; btn.textContent = t0; } };
 
   async function api(body) {
@@ -52,6 +53,7 @@
   const GROUP = { all: ['전체', () => true], active: ['진행 중', c => ACTIVE.includes(c.status)], fix: ['처리 필요', c => c.status === 'signed'], done: ['완료', c => c.status === 'completed'], cancelled: ['취소', c => c.status === 'cancelled'] };
   let FL = { f: 'all', q: '' };   // 보기 조건은 상세에 다녀와도 유지
   async function list() {
+    setHash('');
     root.replaceChildren(h('div', { class: 'top' }, h('div', {}, h('h1', {}, '전자계약'), h('div', { class: 'k' }, '일반·특약 계약서 · 가계약서(검토용) · 전자서명 · 감사 추적 인증서')), h('button', { class: 'p', onclick: form }, '+ 새 계약서')), h('div', { class: 'sec', id: 'lst' }, '불러오는 중…'));
     const j = await run(() => api({ action: 'list' })); if (!j) return $('#lst').replaceChildren(h('div', { class: 'k' }, '목록을 불러오지 못했습니다. '), h('button', { onclick: list }, '다시 시도'));
     const items = j.items;
@@ -73,6 +75,7 @@
 
   /* ---------- 새 계약서 ---------- */
   async function form() {
+    setHash('#new');
     const [au, wk, wa] = await Promise.all([SB.from('authors').select('id,pen_name,email').order('pen_name'), SB.from('works').select('id,title').order('title'), SB.from('work_authors').select('work_id,author_id')]);
     const A = au.data || [], W = wk.data || [], WA = wa.data || [], f = {};
     // 입력칸 한 묶음: 라벨(필수 표시) + 입력 + 안내 + 칸 바로 아래 오류 문구
@@ -134,7 +137,8 @@
   };
   const rows = pairs => h('dl', { class: 'dl' }, pairs.flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, v == null || v === '' ? '-' : v)]));
   async function detail(id) {
-    const j = await run(() => api({ action: 'get', id })); if (!j) return;
+    const j = await run(() => api({ action: 'get', id })); if (!j) return false;
+    setHash('#c-' + id);
     const c = j.contract, t = c.terms, [stText, stCls] = ST[c.status] || [c.status, ''], cur = CUR[c.status];
     const act = (label, fn, cls, okText) => h('button', { class: cls || '', onclick: ev => withBusy(ev.target, () => run(fn, okText || '완료했습니다.'), '처리 중…').then(() => detail(id)) }, label);
     const dlBtn = (label, kind) => h('button', { onclick: () => run(async () => { window.open((await api({ action: 'download', id, kind })).url, '_blank', 'noopener'); }) }, label);
@@ -172,6 +176,7 @@
             const r = await run(() => api({ action: 'delete', id, confirm: '삭제' }), '계약을 삭제했습니다.'); if (!r) return; if (r.warn) toast(r.warn, 'bad'); list();
           } }, '계약 삭제')))
     );
+    return true;
   }
 
   /* ---------- 작가 정보 입력/수정 (서명 요청 전까지) ---------- */
@@ -194,7 +199,12 @@
       if (!session) { addEventListener('visibilitychange', () => { if (!document.hidden) location.reload(); }); return gate('로그인이 필요합니다', '정산 사이트에서 로그인한 뒤 이 탭으로 돌아오면 자동으로 열립니다.', ['/', '정산 사이트에서 로그인', true]); }
       const pf = await SB.from('profiles').select('role').eq('id', session.user.id).maybeSingle();
       if (pf.error || !pf.data || pf.data.role === 'author') return gate('관리자만 볼 수 있는 화면입니다.', '', ['/', '정산 사이트로 돌아가기']);
-      await list();
+      const route = async () => {   // 주소(#)에 따라 화면 복원: #c-계약ID = 계약서, #new = 새 계약서, 그 외 = 목록
+        const m = location.hash.match(/^#c-([\w-]+)$/);
+        if (m) { if (!(await detail(m[1]))) await list(); } else if (location.hash === '#new') await form(); else await list();
+        scrollTo(0, 0);
+      };
+      await route(); addEventListener('popstate', route);
     } catch (e) { gate('불러오지 못했습니다', String((e && e.message) || e), ['', '']); }
   }
   let t0 = 0; ['keydown', 'pointerdown', 'scroll', 'wheel'].forEach(ev => addEventListener(ev, () => { const n = Date.now(); if (n - t0 > 5000) { t0 = n; try { parent !== window && parent.postMessage({ t: 'yw-act' }, location.origin); } catch (e) { /* 무시 */ } } }, { passive: true, capture: true }));

@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.10.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.10.1 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -39,7 +39,7 @@
     if (!data || !data.ok) throw new Error((data && data.message) || '오류가 발생했습니다.');
     return data;
   }
-  const run = async (fn, okText) => { try { const r = await fn(); if (okText) toast(okText, 'ok'); return r; } catch (e) { toast(e.message, 'bad'); } };
+  const run = async (fn, okText) => { try { const r = await fn(); if (okText) toast(okText, 'ok'); return r; } catch (e) { toast(e.message === 'BAD_STATUS' ? '지금 상태에서는 할 수 없는 작업입니다. 이미 완료되었거나 취소된 계약일 수 있습니다. 최신 상태로 화면을 새로 불러왔습니다.' : e.message, 'bad'); } };
   const gate = (t, sub, link) => { root.replaceChildren(h('div', { class: 'gate' }, h('p', { class: 'gt' }, t), sub ? h('p', { class: 'k' }, sub) : '', link && link[0] ? h('a', { class: 'btn p', href: link[0], target: link[2] ? '_blank' : null, rel: link[2] ? 'noopener' : null }, link[1]) : '')); };
   const appbar = document.getElementById('appbar'); if (appbar && window.top === window.self) appbar.hidden = false;   // 단독 페이지일 때만 상단 바 표시(정산 사이트 안에 끼워 열면 숨김)
 

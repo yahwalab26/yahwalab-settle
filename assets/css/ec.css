@@ -1,4 +1,4 @@
-/* assets/css/ec.css v1.1.0 — 전자계약 공용: 디자인 토큰 · 기본 · 알림(toast) · 진행 트랙
+/* assets/css/ec.css v1.2.0 — 전자계약 공용: 디자인 토큰 · 기본 · 알림(toast) · 진행 트랙
    · 색·모서리·글꼴 값은 :root 토큰에서만 정의한다. 사이트 전체 디자인 개편 때 이 블록만 바꾸거나 전역 토큰에 연결한다.
    · 페이지 전용 규칙은 ec-admin.css(관리자 도구) / ec-sign.css(서명 페이지). */
 :root{
@@ -48,5 +48,5 @@ body{margin:0;background:var(--ec-bg);color:var(--ec-ink);font-family:var(--ec-u
 /* 확인 대화상자(<dialog>) */
 .ec-dialog{width:calc(100% - 32px);max-width:420px;padding:20px;border:1px solid var(--ec-line);border-radius:var(--ec-r-l);background:var(--ec-paper);color:var(--ec-ink);font:inherit;box-shadow:0 12px 40px rgba(0,0,0,.25)}
 .ec-dialog::backdrop{background:rgba(0,0,0,.45)}
-.ec-dialog h2{margin:0 0 6px;font-size:16px}.ec-dialog p{margin:0 0 18px;font-size:14px;line-height:1.6;color:var(--ec-ink2)}
+.ec-dialog h2{margin:0 0 6px;font-size:16px}.ec-dialog p{margin:0 0 18px;white-space:pre-line;font-size:14px;line-height:1.6;color:var(--ec-ink2)}
 .ec-dialog .btns{display:flex;justify-content:flex-end;gap:8px}

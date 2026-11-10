@@ -1,4 +1,4 @@
-/* assets/css/ec-sign.css v1.3.0 — sign/index.html(작가·야화랩 서명 페이지) 전용. 토큰은 ec.css. 휴대폰 우선 */
+/* assets/css/ec-sign.css v1.4.0 — sign/index.html(작가·야화랩 서명 페이지) 전용. 토큰은 ec.css. 휴대폰 우선 */
 body{font-size:15px;line-height:1.65;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
 .wrap{max-width:640px;margin:0 auto;padding:18px 16px 40px}
 h1{font-size:19px;margin:6px 0 2px}
@@ -63,3 +63,7 @@ input[type=file]{width:100%;padding:10px;border:1px solid var(--ec-line);border-
 /* 인라인 style 제거(CSP style-src 'self')용 간격 */
 .sub.mt2{margin:2px 0 0}.sub.mt6{margin:6px 0 0}.sub.mt8{margin:8px 0 0}.sub.mt10{margin:10px 0 0}.sub.mt14{margin:14px 0 0}.chk.flush{margin:0}
 .doc .box p:first-child{font-weight:600}
+
+/* 야화랩이 미리 입력한 칸: 수정 불가 */
+input.locked{background:var(--ec-bg);color:var(--ec-ink2);cursor:default}
+.lk{margin-left:4px;padding:1px 7px;border-radius:999px;background:var(--ec-hl);color:var(--ec-ink2);font-size:11.5px}

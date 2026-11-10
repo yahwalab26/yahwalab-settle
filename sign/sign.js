@@ -1,4 +1,4 @@
-/* 야화랩 전자계약 — 서명 페이지 (v1.9.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
+/* 야화랩 전자계약 — 서명 페이지 (v1.10.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
    CSP(script-src 'self') 때문에 인라인이 아닌 외부 파일로 둔다. */
 (function () {
   'use strict';
@@ -58,7 +58,8 @@
     $('#tSeal').classList.toggle('hide', !(pub && j.has_seal));
     if (!pub) {   // 야화랩이 미리 입력한 정보 채우기
       HAS_RRN = !!j.has_rrn; DEL_LOCK = !!j.delivery_locked; const pf = j.prefill || {};
-      BASE.forEach(k => { if (pf[k]) $('#' + k).value = pf[k]; }); $('#phone').value = fmtPhone($('#phone').value);
+      BASE.forEach(k => { if (!pf[k]) return; const el = $('#' + k); el.value = pf[k]; el.readOnly = true; el.classList.add('locked'); LOCK.add(k); const lb = document.querySelector(`label[for=${k}]`); if (lb) lb.insertAdjacentHTML('beforeend', ' <span class="lk">야화랩 입력 · 수정 불가</span>'); });   // 출판사가 미리 입력한 값은 작가가 고칠 수 없다
+    $('#phone').value = fmtPhone($('#phone').value);
       $('#rrnWrap').classList.toggle('hide', HAS_RRN);
       if (DEL_LOCK) {   // 야화랩이 정한 인도일은 수정 불가
         if (j.delivery === '즉시') $('#delNow').checked = true; else $('#delivery').value = j.delivery;
@@ -68,6 +69,7 @@
     $('#signT').textContent = pub ? '동의 및 서명(도장)' : '동의 및 서명';
   }
 
+  const LOCK = new Set();
   let HAS_RRN = false, DEL_LOCK = false;   // 야화랩이 미리 입력한 항목은 작가에게 묻지 않는다
   const BASE = ['address', 'name', 'phone', 'bank_name', 'bank_no', 'bank_holder'];
   const val = k => (k === 'delivery' ? ($('#delNow').checked ? '즉시' : $('#delivery').value) : k === 'bank_no' ? $('#bank_no').value.replace(/\D/g, '') : $('#' + k).value.trim());   // 계좌번호는 입력 때 하이픈을 허용하고 저장은 숫자만
@@ -85,11 +87,13 @@
   $('#next2').onclick = () => {
     if (ROLE === 'author') {
       const ks = FIELDS(), errs = []; ks.forEach(k => setErr(k, ''));
-      ks.forEach(k => { if (!val(k)) errs.push([k, MSG[k]]); });
+      const RULE = { name: [2, 30, '성명은 2자 이상 입력해 주세요.'], address: [5, 200, '주소는 5자 이상, 시·도부터 상세 주소까지 입력해 주세요.'], bank_name: [2, 20, '은행명을 2자 이상 입력해 주세요. 예: 신한은행'], bank_holder: [2, 30, '예금주를 2자 이상 입력해 주세요.'] };   // 서버(ec-sign)의 검사 기준과 같게 — 서명 전에 여기서 걸러낸다
+      ks.forEach(k => { const v = val(k), r = RULE[k]; if (!v) errs.push([k, MSG[k]]); else if (r && (v.length < r[0] || v.length > r[1])) errs.push([k, r[2]]); });
       const has = k => !errs.some(x => x[0] === k), digits = s => s.replace(/\D/g, '');
       if (has('phone') && ![9, 10, 11].includes(digits(val('phone')).length)) errs.push(['phone', '연락처 자릿수를 확인해 주세요. 예: 010-1234-5678']);
-      if (has('bank_no') && (digits(val('bank_no')).length < 8 || digits(val('bank_no')).length > 16)) errs.push(['bank_no', '계좌번호 자릿수를 확인해 주세요. (숫자 8~16자리)']);
+      if (has('bank_no') && (digits(val('bank_no')).length < 6 || digits(val('bank_no')).length > 30)) errs.push(['bank_no', '계좌번호 자릿수를 확인해 주세요. (숫자 6자리 이상)']);
       if (!HAS_RRN && has('rrn') && ![10, 13].includes(digits(val('rrn')).length)) errs.push(['rrn', '자릿수를 확인해 주세요. 주민등록번호 13자리 · 사업자등록번호 10자리']);
+      errs.forEach((x, i) => { if (LOCK.has(x[0])) errs[i] = [x[0], '야화랩이 입력한 내용에 문제가 있습니다. 야화랩에 문의해 주세요.']; });
       errs.forEach(([k, m]) => setErr(k, m));
       const aiMiss = !$('#ai') || !$('#ai').checked, msgs = [];
       if (aiMiss) msgs.push('계약서 마지막의 제10조의2(생성형 AI의 사용 제한) “동의합니다”에 체크해 주세요.');
@@ -170,6 +174,10 @@
         doneList(r && r.done && r.mailOk !== false ? ['메일함에서 완료된 계약서와 감사 추적 인증서(PDF 2개)를 확인해 주세요.', '메일이 보이지 않으면 스팸함도 확인해 주세요.'] : []);
         $('#doneM').textContent = r && r.done ? (r.mailOk === false ? '서명은 완료되었습니다. 완료 문서 발송에 문제가 있어 야화랩에서 확인 후 다시 보내드립니다.' : '완료된 계약서와 감사 추적 인증서를 이메일로 보내드렸습니다. 메일함을 확인해 주세요.') : '서명은 접수되었습니다. 완료 문서는 야화랩에서 확인 후 이메일로 보내드립니다.';
       }
-    } catch (x) { fail('e3', x); busy(e.target, false); } finally { wait(false); }
+    } catch (x) {
+      const KEY = { 성명: 'name', 주소: 'address', 연락처: 'phone', 은행명: 'bank_name', 계좌번호: 'bank_no', 예금주: 'bank_holder', 주민: 'rrn', 인도일: 'delivery' }, m = String((x && x.message) || x), hit = Object.keys(KEY).find(w => m.includes(w) && m.includes('확인'));
+      if (hit && !pub && !LOCK.has(KEY[hit]) && !$('#' + KEY[hit]).closest('.grp.hide, #infoCard.hide')) { show('v2'); setErr(KEY[hit], m); $('#e2').textContent = '입력하신 정보를 확인해 주세요. 서명은 아직 저장되지 않았습니다.'; $('#' + KEY[hit]).focus(); } else fail('e3', x);
+      busy(e.target, false);
+    } finally { wait(false); }
   };
 })();

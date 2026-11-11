@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.12.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.12.1 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -169,7 +169,7 @@
       h('div', { class: 'sec zone' }, h('h2', {}, '계약 취소·삭제'),
         !['completed', 'cancelled'].includes(c.status) ? h('div', { class: 'zrow' }, h('div', {}, h('b', {}, '계약 취소'), h('div', { class: 'k' }, '진행을 중단하고 보낸 서명 링크를 쓸 수 없게 합니다. 기록은 남습니다.')),
           h('button', { class: 'danger', onclick: async () => { if (await ask('계약 취소', '이 계약을 취소할까요? 보낸 서명 링크도 무효가 됩니다.', '계약 취소', true)) run(() => api({ action: 'cancel', id }), '계약을 취소했습니다.').then(() => detail(id)); } }, '계약 취소')) : '',
-        h('div', { class: 'zrow' }, h('div', {}, h('b', {}, '계약 삭제'), h('div', { class: 'k' }, c.status === 'completed' ? '완료된 계약은 취소할 수 없고 삭제만 할 수 있습니다. 계약서·인증서·진행 기록이 영구 삭제됩니다.' : '계약 데이터·업로드 파일·진행 기록을 영구 삭제합니다. 되돌릴 수 없습니다.')),
+        h('div', { class: 'zrow' }, h('div', {}, h('b', {}, '계약 삭제'), h('div', { class: 'k' }, c.status === 'completed' ? '완료된 계약은 취소할 수 없습니다. 삭제하면 계약서·인증서·진행 기록·업로드 파일이 모두 지워지고 DB에 남지 않습니다.' : '계약 데이터·진행 기록·업로드 파일이 모두 지워지고 DB에 남지 않습니다. 되돌릴 수 없습니다.')),
           h('button', { class: 'danger', onclick: async () => {
             const msg = `${c.doc_no} · ${c.work_title}\n이 계약의 데이터, 업로드 파일, 진행 기록이 모두 지워지며 복구할 수 없습니다.` + (c.status === 'draft' ? '' : '\n작가와 야화랩 메일로 이미 발송된 내용은 지워지지 않습니다.');
             if (!await ask('계약 삭제', msg, '영구 삭제', true, '삭제')) return;

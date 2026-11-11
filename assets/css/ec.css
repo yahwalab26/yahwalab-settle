@@ -1,11 +1,12 @@
-/* assets/css/ec.css v1.2.0 — 전자계약 공용: 디자인 토큰 · 기본 · 알림(toast) · 진행 트랙
-   · 색·모서리·글꼴 값은 :root 토큰에서만 정의한다. 사이트 전체 디자인 개편 때 이 블록만 바꾸거나 전역 토큰에 연결한다.
+/* assets/css/ec.css v1.3.0 — 전자계약 공용: 디자인 토큰 · 기본 · 알림(toast) · 진행 트랙
+   · 색·모서리·글꼴 값은 :root 토큰에서만 정의한다. 사이트 전역 토큰(tokens.css: --ink --soft --line --ok --bad)에 연결되어 있다 — tokens.css를 먼저 불러올 것(없으면 괄호 안 기본값을 쓴다).
+   · 연결하지 않은 것: --ec-mute(전역 #7a7a7a는 작은 글씨 대비 4.5:1 미만), --ec-line(입력칸 테두리용), 강조색(전역에 없음)
    · 페이지 전용 규칙은 ec-admin.css(관리자 도구) / ec-sign.css(서명 페이지). */
 :root{
-  --ec-bg:#F3F3F4;--ec-paper:#fff;--ec-ink:#17171A;--ec-ink2:#46474D;--ec-mute:#6A6B73;
-  --ec-line:#D6D7DB;--ec-line2:#E8E8EB;--ec-hl:#EDEDF0;--ec-on-ink:#fff;
+  --ec-bg:var(--soft,#F3F3F4);--ec-paper:#fff;--ec-ink:var(--ink,#17171A);--ec-ink2:#46474D;--ec-mute:#6A6B73;   /* 전역 --mute를 #6a6a6a 이하로 어둡게 바꾸면 --ec-mute:var(--mute,#6A6B73)로 연결 가능 */
+  --ec-line:#D6D7DB;--ec-line2:var(--line,#E8E8EB);--ec-hl:#EDEDF0;--ec-on-ink:#fff;
   --ec-accent:#2F6FDE;--ec-accent-bg:#E8F0FD;
-  --ec-ok:#1F7A3E;--ec-ok-bg:#E7F4EC;--ec-warn:#8A5A00;--ec-warn-bg:#FFF4D6;--ec-bad:#C4251B;--ec-bad-bg:#FBE9E7;
+  --ec-ok:var(--ok,#1F7A3E);--ec-ok-bg:#E7F4EC;--ec-warn:#8A5A00;--ec-warn-bg:#FFF4D6;--ec-bad:var(--bad,#C4251B);--ec-bad-bg:#FBE9E7;
   --ec-r-s:7px;--ec-r-m:10px;--ec-r-l:14px;
   --ec-ui:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
   color-scheme:light}

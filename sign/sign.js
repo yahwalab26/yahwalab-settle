@@ -1,4 +1,4 @@
-/* 야화랩 전자계약 — 서명 페이지 (v1.10.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
+/* 야화랩 전자계약 — 서명 페이지 (v1.11.0). 야화랩(출판사)과 작가가 같은 주소를 쓰고, 링크 종류에 따라 역할이 정해진다.
    CSP(script-src 'self') 때문에 인라인이 아닌 외부 파일로 둔다. */
 (function () {
   'use strict';
@@ -7,13 +7,30 @@
   let SESSION = null, ROLE = null, MODE = 'draw', IMG = null;
   async function api(body) {
     let r; try { r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: T, s: SESSION, ...body }) }); } catch { throw new Error('네트워크 오류입니다. 잠시 후 다시 시도해 주세요.'); }
-    const j = await r.json().catch(() => ({})); if (!j.ok) throw new Error(j.message || '오류가 발생했습니다.'); return j;
+    const j = await r.json().catch(() => ({})); if (!j.ok) { const er = new Error(j.message || '오류가 발생했습니다.'); er.code = j.code; throw er; } return j;
   }
   function fmtPhone(s) {   // 숫자만 모아 010-1234-5678 / 02-123-4567 모양으로
     const d = String(s).replace(/\D/g, '').slice(0, 11), a = d.startsWith('02') ? 2 : 3; if (d.length <= a) return d;
     const r = d.slice(a); return r.length <= 4 ? `${d.slice(0, a)}-${r}` : `${d.slice(0, a)}-${r.slice(0, -4)}-${r.slice(-4)}`;
   }
   const doneList = arr => { const ul = $('#doneL'); ul.replaceChildren(...arr.map(t => { const li = document.createElement('li'); li.textContent = t; return li; })); ul.classList.toggle('hide', !arr.length); };
+  const CONTACT = 'editor@yahwalab.xyz';
+  const PROB = {   // 서버 code → [제목, 안내(null이면 서버 문구 그대로)]
+    BAD_TOKEN: ['열 수 없는 링크입니다', '링크가 잘못되었거나 일부만 복사되었을 수 있습니다. 메일의 서명 요청 버튼을 눌러 다시 열어 보세요.'],
+    NOT_FOUND: ['열 수 없는 링크입니다', '링크가 잘못되었거나 새 링크로 교체되었을 수 있습니다. 가장 최근에 받은 서명 요청 메일의 버튼으로 열어 보세요.'],
+    EXPIRED: ['링크 유효기간이 지났습니다', null],
+    ALREADY_DONE: ['이미 서명이 완료된 계약입니다', '완료된 계약서와 감사 추적 인증서는 이메일로 발송되었습니다. 메일이 보이지 않으면 스팸함도 확인해 주세요.'],
+    CANCELLED: ['취소된 계약입니다', '서명이 더 필요하다면 아래 문의처로 알려 주세요.'],
+    NOT_OPEN: ['지금은 서명할 수 없는 상태입니다', null]
+  };
+  function linkProblem(e) {   // 열 수 없는 링크: 이유와 다음 행동(새 링크 요청)을 안내
+    const known = PROB[e && e.code]; let body = (known && known[1]) || (e && e.message) || '잠시 후 다시 시도해 주세요.'; if (known && body.startsWith(known[0] + '.')) body = body.slice(known[0].length + 1).trim();   // 제목과 같은 문장은 반복하지 않음
+    const v0 = $('#v0'), node = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; };
+    v0.className = 'card done'; v0.replaceChildren(node('div', 'okic warn', '!'), node('b', '', known ? known[0] : '문서를 불러오지 못했습니다'), node('p', '', body));
+    if (known) { const p = node('p', 'sub mt14', '새 링크 요청·문의: '), a = node('a', '', CONTACT); a.href = 'mailto:' + CONTACT + '?subject=' + encodeURIComponent('[전자계약] 서명 링크 문의'); p.append(a); v0.append(p); }
+    else { const b = node('button', '', '다시 시도'); b.onclick = () => location.reload(); v0.append(b); }
+    $('#track').classList.add('hide');
+  }
   const IDS = ['v0', 'v1', 'v2', 'v3', 'v4'];
   function show(id) {   // 화면 전환 + 진행 트랙(done/cur) 갱신 + 키보드·스크린리더 초점 이동
     IDS.forEach(x => $('#' + x).classList.toggle('hide', x !== id));
@@ -23,17 +40,17 @@
   }
   const busy = (b, on) => { b.disabled = on; },
     guard = e => { e.preventDefault(); e.returnValue = ''; },   // 처리 중에 창을 닫거나 이동하면 경고
-    wait = (on, t, m) => { $('#busy').classList.toggle('hide', !on); if (on) { $('#busyT').textContent = t; $('#busyM').textContent = m; addEventListener('beforeunload', guard); } else removeEventListener('beforeunload', guard); }, fail = (id, e) => { $('#' + id).textContent = e.message || String(e); };
+    wait = (on, t, m) => { $('#busy').classList.toggle('hide', !on); if (on) { $('#busyT').textContent = t; $('#busyM').textContent = m; addEventListener('beforeunload', guard); } else removeEventListener('beforeunload', guard); }, fail = (id, e) => { $('#' + id).textContent = (e.message || String(e)) + (['EXPIRED', 'LOCKED'].includes(e.code) ? ` (문의: ${CONTACT})` : ''); };
 
   (async () => {
-    if (!T) { $('#v0').textContent = '유효하지 않은 링크입니다.'; return; }
+    if (!T) { linkProblem({ code: 'BAD_TOKEN' }); return; }
     try {
       const j = await api({ action: 'open' }); ROLE = j.role;
       if (ROLE === 'publisher') { $('#s1').remove(); $('#t2').textContent = '계약서 확인'; $('#t3').textContent = '서명(도장)'; }   // 야화랩은 이메일 확인 단계가 없다
       $('#ttl').textContent = ROLE === 'publisher' ? '야화랩 서명(출판사)' : '전자계약 서명';
       $('#sub').textContent = `${j.publisher} · ${j.work_title}`;
       if (ROLE === 'publisher' && j.session) { SESSION = j.session; await loadDoc(); show('v2'); } else show('v1');   // 야화랩(출판사)은 이메일 확인 없이 진행
-    } catch (e) { $('#v0').textContent = e.message; }
+    } catch (e) { linkProblem(e); }
   })();
 
   $('#verify').onclick = async e => {

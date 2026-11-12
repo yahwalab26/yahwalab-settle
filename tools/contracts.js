@@ -1,4 +1,4 @@
-/* tools/contracts.js v1.12.1 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
+/* tools/contracts.js v1.13.0 — 야화랩 전자계약 관리자 도구 (정산 사이트 iframe 겸 단독 페이지)
    서버: Edge Function ec-admin (관리자 JWT + is_admin(aal2) 확인). 읽기 전용 참조: authors·works·work_authors.
    규칙: 인라인 스크립트 없음(CSP script-src 'self'), 개인정보는 기본 마스킹·'원문 보기'는 서버에 기록. */
 (function () {
@@ -52,9 +52,19 @@
   const ACTIVE = ['draft', 'review_sent', 'pub_pending', 'pub_signed', 'sent', 'opened'];
   const GROUP = { all: ['전체', () => true], active: ['진행 중', c => ACTIVE.includes(c.status)], fix: ['처리 필요', c => c.status === 'signed'], done: ['완료', c => c.status === 'completed'], cancelled: ['취소', c => c.status === 'cancelled'] };
   let FL = { f: 'all', q: '' };   // 보기 조건은 상세에 다녀와도 유지
+  const deletedLogBox = () => {   // 삭제 기록: 문서번호·상태·삭제자·시각만(개인정보 없음). 처음 펼칠 때 불러온다
+    const body = h('div', { class: 'scroll' }), box = h('details', { class: 'sec logbox' }, h('summary', {}, '삭제 기록'), h('div', { class: 'k hint' }, '삭제한 계약의 문서번호·상태·삭제자·시각만 남습니다. 작가 정보와 계약 내용은 남지 않습니다.'), body); let loaded = false;
+    box.addEventListener('toggle', async () => {
+      if (!box.open || loaded) return; body.replaceChildren(h('div', { class: 'k' }, '불러오는 중…'));
+      const j = await run(() => api({ action: 'deleted_log' })); if (!j) return body.replaceChildren(h('div', { class: 'k' }, '불러오지 못했습니다. 접었다가 다시 열어 주세요.'));
+      loaded = true; const it = j.items || [];
+      body.replaceChildren(it.length ? h('table', {}, h('thead', {}, h('tr', {}, ...['삭제 시각', '문서번호', '상태', '삭제자'].map(x => h('th', {}, x)))), h('tbody', {}, it.map(e => h('tr', {}, h('td', { class: 'mono' }, kst(e.deleted_at)), h('td', {}, e.doc_no), h('td', {}, (ST[e.status] || [e.status])[0]), h('td', {}, String(e.deleted_by || '').replace('admin:', '')))))) : h('div', { class: 'k' }, '삭제 기록이 없습니다.'));
+    });
+    return box;
+  };
   async function list() {
     setHash('');
-    root.replaceChildren(h('div', { class: 'top' }, h('div', {}, h('h1', {}, '전자계약'), h('div', { class: 'k' }, '일반·특약 계약서 · 가계약서(검토용) · 전자서명 · 감사 추적 인증서')), h('button', { class: 'p', onclick: form }, '+ 새 계약서')), h('div', { class: 'sec', id: 'lst' }, '불러오는 중…'));
+    root.replaceChildren(h('div', { class: 'top' }, h('div', {}, h('h1', {}, '전자계약'), h('div', { class: 'k' }, '일반·특약 계약서 · 가계약서(검토용) · 전자서명 · 감사 추적 인증서')), h('button', { class: 'p', onclick: form }, '+ 새 계약서')), h('div', { class: 'sec', id: 'lst' }, '불러오는 중…'), deletedLogBox());
     const j = await run(() => api({ action: 'list' })); if (!j) return $('#lst').replaceChildren(h('div', { class: 'k' }, '목록을 불러오지 못했습니다. '), h('button', { onclick: list }, '다시 시도'));
     const items = j.items;
     if (!items.length) return $('#lst').replaceChildren(h('div', { class: 'k' }, '아직 계약서가 없습니다. 오른쪽 위 “새 계약서”로 시작하세요.'));

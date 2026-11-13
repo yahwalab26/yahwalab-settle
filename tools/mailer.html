@@ -100,6 +100,8 @@ html,body{height:auto}
 <div class="field" data-for="intro seoji proof"><span>레이블</span><div class="seg2" id="lblseg" role="group" aria-label="레이블"></div></div>
 <label class="field" data-for="reject accept proof contract intro seoji" data-sec2><span>작품명</span><input id="title" autocomplete="off"></label>
 <label class="field" data-for="accept"><span>작품 호평 코멘트 <i>(선택)</i></span><textarea id="comment"></textarea></label>
+<label class="field" data-for="accept"><span>작가 비율 <i>(%, 숫자만)</i></span><input id="rate" inputmode="decimal" autocomplete="off" value="80"></label>
+<label class="field" data-for="accept"><span>1차 출간 플랫폼</span><input id="plat" autocomplete="off" value="리디북스"></label>
 <label class="field" data-for="proof"><span>교정 차수 <i>(숫자만, 비우면 생략)</i></span><input id="round" inputmode="numeric" autocomplete="off" placeholder="예: 1"></label>
 <label class="field" data-for="proof"><span>간단한 리뷰 <i>(선택)</i></span><textarea id="review"></textarea></label>
 <label class="field" data-for="proof"><span>기한</span><input id="deadline" type="date"></label>
@@ -152,7 +154,7 @@ function drawItems(){
 }
 
 var $=function(s){return document.querySelector(s)};
-var ID={"작가명":"author","작품명":"title","작품 호평 코멘트":"comment","기한":"deadline","프로모션 접수 시기":"promo","출간 목표 월":"release","작가 이메일":"email","서명 유효기간":"valid","담당자 이름":"manager","출간월":"sjmonth","기간":"sjdue","글자수":"sjchars","금액":"sjrange","가격":"sjprice"};
+var ID={"작가명":"author","작품명":"title","작품 호평 코멘트":"comment","작가 비율":"rate","1차 출간 플랫폼":"plat","기한":"deadline","프로모션 접수 시기":"promo","출간 목표 월":"release","작가 이메일":"email","서명 유효기간":"valid","담당자 이름":"manager","출간월":"sjmonth","기간":"sjdue","글자수":"sjchars","금액":"sjrange","가격":"sjprice"};
 var DOCK='<p class="need" hidden></p><button class="btn primary block" data-act="ca">제목과 본문 전체 복사</button><div class="btnrow"><button class="btn sm" data-act="cs">제목 복사</button><button class="btn sm" data-act="cb">본문 복사</button><button class="btn sm" data-act="clear">입력 비우기</button></div>';
 document.querySelectorAll("[data-dock]").forEach(function(d){d.innerHTML=DOCK});
 
@@ -178,8 +180,8 @@ function build(){
     s="[야화랩] 투고 작품 검토 결과 및 계약 제안 안내드립니다.";
     var l2=title?"먼저 <"+title+">"+josa(title,"을","를")+" 투고해 주셔서 감사드립니다.":"먼저 원고를 투고해 주셔서 감사드립니다.";
     var cm=$("#comment").value.trim();
-    var bar="────────────────────────";
-    b=greet+"\n야화랩 편집부입니다.\n\n"+l2+"\n\n"+(cm?cm+"\n\n":"")+"편집부 검토 결과, 작가님의 작품을 야화랩에서 전자책으로 출간하고 싶어 계약을 제안드립니다.\n아래에 주요 계약 조건을 안내드립니다.\n\n"+bar+"\n계약 형태: 전자책 계약\n계약 비율: 작가님 80 : 야화랩 20\n유통처: 리디북스, 교보문고, 알라딘, YES24, 북큐브\n(유통사는 단계적으로 확대 중입니다.)\n"+bar+"\n\n회신해 주시면 가계약서를 전달드리겠습니다.\n또한 계약과 관련해 궁금하신 점이 있으시면 편하게 문의해 주세요.\n\n작가님과 좋은 인연을 이어 갈 수 있기를 기대합니다.\n감사합니다.\n\n야화랩 편집부 드림";
+    var bar="────────────────────────",rt=need($("#rate").value.replace(/[^\d.]/g,""),"작가 비율"),pl=need($("#plat").value.trim(),"1차 출간 플랫폼");
+    b=greet+"\n야화랩 편집부입니다.\n\n"+l2+"\n\n"+(cm?cm+"\n\n":"")+"편집부 검토 결과, 작가님의 작품을 야화랩에서 전자책으로 출간하고 싶어 계약을 제안드립니다.\n아래에 주요 계약 조건을 안내드립니다.\n\n"+bar+"\n-계약 형태: 전자책 계약\n-계약 비율: "+rt+"%\n-표지 디자인: 내부 제작\n-1차 출간 플랫폼: "+pl+"\n"+bar+"\n\n회신해 주시면 가계약서를 전달드리겠습니다.\n또한 계약과 관련해 궁금하신 점이 있으시면 편하게 문의해 주세요.\n\n작가님과 좋은 인연을 이어 갈 수 있기를 기대합니다.\n감사합니다.\n\n야화랩 편집부 드림";
   }else if(cur==="contract"){
     var TK={"작품명":title,"프로모션 접수 시기":$("#promo").value.trim(),"출간 목표 월":$("#release").value.trim()};
     var sub=function(x){return x.replace(TOKRE,function(_,k){return need(TK[k],k)})};
@@ -252,7 +254,7 @@ TYPES.forEach(function(t){
   var b=document.createElement("button");b.className="sw";b.type="button";b.textContent=t[1];b.dataset.k=t[0];
   b.addEventListener("click",function(){cur=t[0];render()});$("#types").appendChild(b);
 });
-["author","title","comment","round","review","deadline","promo","release","inq","email","valid","manager","sjmonth","sjdue","sjchars","sjrange","sjprice"].forEach(function(id){$("#"+id).addEventListener("input",render)});
+["author","title","comment","round","review","deadline","promo","release","inq","rate","plat","email","valid","manager","sjmonth","sjdue","sjchars","sjrange","sjprice"].forEach(function(id){$("#"+id).addEventListener("input",render)});
 $("#inq").addEventListener("change",render);
 LABELS.forEach(function(nm){
   var b=document.createElement("button");b.className="sw";b.type="button";b.textContent=nm;b.dataset.k=nm;
@@ -264,7 +266,7 @@ document.addEventListener("click",function(e){
   if(a==="cs")copy(m.s,"제목을 복사했습니다.");
   else if(a==="cb")copy(m.b,"본문을 복사했습니다.");
   else if(a==="ca")copy(m.s+"\n\n"+m.b,"제목과 본문을 복사했습니다.");
-  else if(a==="clear"){["author","title","comment","round","review","deadline","promo","release","email","manager","sjmonth","sjdue","sjchars","sjrange","sjprice"].forEach(function(id){$("#"+id).value=""});$("#valid").value="14";LB=Object.assign({},LB_DEF);GI=[];$("#inq").checked=false;drawItems();render()}
+  else if(a==="clear"){["author","title","comment","round","review","deadline","promo","release","email","manager","sjmonth","sjdue","sjchars","sjrange","sjprice"].forEach(function(id){$("#"+id).value=""});$("#valid").value="14";$("#rate").value="80";$("#plat").value="리디북스";LB=Object.assign({},LB_DEF);GI=[];$("#inq").checked=false;drawItems();render()}
 });
 PRE_LABEL.forEach(function(lb,i){
   var b=document.createElement("button");b.type="button";b.className="btn sm";b.textContent=lb;

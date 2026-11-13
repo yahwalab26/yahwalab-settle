@@ -8,8 +8,10 @@ const IS_B=false,B_MSG='',B_BLOCK=[];   /* v2.18.0 컷오버: 실행 차단 해�
   if(error){let m=error.message;try{m=(await error.context.json()).error||m}catch(e){dbg('서버 오류 본문 읽기',e)}return{error:m}}return{data}}
 let STAT={},PLOADED=false;
 async function loadPeople(){const[,p,pr]=await Promise.all([loadRefs(),SB.from('persons').select('id,name_masked,phone_masked,created_at').order('created_at',{ascending:false}),SB.from('profiles').select('person_id,must_change_password').eq('role','author')]);
-  PEOPLE=p.data||[];STAT={};(pr.data||[]).forEach(x=>{if(x.person_id)STAT[x.person_id]=x.must_change_password});PLOADED=true;renderPeople();loadDec()}
-let DEC={};
+  PEOPLE=p.data||[];STAT={};(pr.data||[]).forEach(x=>{if(x.person_id)STAT[x.person_id]=x.must_change_password});PLOADED=true;renderPeople();return loadDec()}
+let DEC={},DECOK=false,PPR=null;
+/* 작가 목록·실명(DEC)이 한 번도 안 받아졌을 때만 받는다. 월 정산서 이름 표기에 필요 — 홈 입장 때는 받지 않고, 입장 후 백그라운드 또는 정산서·작가 화면에서 필요할 때 */
+const ensurePeople=()=>PLOADED&&DECOK?Promise.resolve():(PPR??=loadPeople().finally(()=>{PPR=null}));
 function renderPeople(){const q=$('#aq').value.trim().toLowerCase();
   const rows=PEOPLE.map(p=>({p,d:DEC[p.id]||{},pens:AUTHORS.filter(a=>a.person_id===p.id)})).filter(({p,d,pens})=>!q||[d.legal_name||p.name_masked,d.phone,d.address,...pens.flatMap(a=>[a.pen_name,a.email])].join(' ').toLowerCase().includes(q));
   $('#alist').innerHTML=rows.map(({p,d,pens})=>{const st=STAT[p.id],list=pens.length?pens:[{}],n=list.length,
@@ -17,7 +19,7 @@ function renderPeople(){const q=$('#aq').value.trim().toLowerCase();
     acts=['edit:수정','link:링크 재발급','del:삭제'].map(x=>{const[k,t]=x.split(':');return `<button class="ghost" data-pa="${k}" data-id="${p.id}">${t}</button>`}).join('');
     return list.map((a,i)=>{const ws=WORKS.filter(w=>(WA[w.id]||[]).includes(a.id)).map(w=>`<button class="lnk" data-pa="work" data-id="${w.id}">${esc(w.title)}</button>`).join('<br>')||'<span class="k">-</span>';
       return `<tr class="${i?'':'first'}">${i?'':`<th scope="row" rowspan="${n}"><button class="lnk" data-pa="view" data-id="${p.id}">${esc(d.legal_name||p.name_masked)}</button></th>`}<td>${a.id?`<button class="lnk" data-pa="pen" data-id="${a.id}">${esc(a.pen_name)}</button>`:'-'}</td><td>${ws}</td>${i?'':`<td class="hm" rowspan="${n}">${esc(d.phone||p.phone_masked||'-')}</td>`}<td class="hm">${esc(a.email||'-')}</td>${i?'':`<td class="cc" rowspan="${n}">${stat}</td><td class="cc" rowspan="${n}">${acts}</td>`}</tr>`}).join('')}).join('')||'<tr><td colspan="7" class="k em">등록된 작가가 없습니다.</td></tr>'}
-async function loadDec(){const{data}=await call({action:'list_people'});if(data){DEC=data.people||{};renderPeople()}}
+async function loadDec(){const{data}=await call({action:'list_people'});if(data){DEC=data.people||{};DECOK=true;renderPeople()}}
 $('#aq').oninput=renderPeople;
 let EDIT=null;
 const penRow=(p={})=>`<div class="pr"${p.id?` data-id="${p.id}"`:''}><input class="pn" type="text" placeholder="필명" aria-label="필명" value="${esc(p.pen_name||'')}" required><input class="pe" type="email" placeholder="이메일" aria-label="필명별 이메일" value="${esc(p.email||'')}" required><button type="button" class="ghost" data-rm aria-label="이 줄 삭제">삭제</button></div>`;

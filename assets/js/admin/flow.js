@@ -23,8 +23,8 @@ function flowDraw(){const box=$('#flow'),pg=flowPage();if(!box)return;box.hidden
   box.innerHTML=`<section class="fl" aria-label="월 마감 체크리스트"><div class="flh"><div><b>${esc(m.slice(0,4))}년 ${+m.slice(5)}월 정산 마감</b><span class="k"> ${s?(warn?`· 확인 필요 ${warn}건`:'· 준비 완료'):'· 확인 중…'}</span></div><button type="button" class="ghost" data-tog="1" aria-expanded="${FLOWOPEN}">${FLOWOPEN?'접기':'펴기'}</button></div>
   ${FLOWOPEN?`<ol class="flr">${S.map((x,i)=>`<li class="${x.st}${i===cur?' now':''}"><span class="fic" aria-hidden="true">${ic[x.st]}</span><div class="fbd"><div class="ft"><b>${i+1}. ${x.t}</b><span class="ftag ${x.st}">${lab[x.st]}</span>${i===cur?'<span class="ftag now">지금 할 일</span>':''}</div><p class="fd">${x.d}</p>${x.x||''}</div>${x.a?`<div class="fa">${x.a}</div>`:''}</li>`).join('')}</ol>`:''}</section>`}
 async function flowLoad(){const pg=flowPage();if(!pg)return;const m=flowMonth(),mm=m+'-01',last=new Date(+m.slice(0,4),+m.slice(5,7),0),end=m+'-'+String(last.getDate()).padStart(2,'0');
-  try{if(!WORKS.length)await loadRefs();
-    const[f,t,sr,wr]=await Promise.all([SB.from('v_data_freshness').select('platform_code,platform_name,last_sale_date,last_sale_month'),SB.from('settlements').select('person_id,status,sent_at').eq('period_month',mm),SB.rpc('admin_statement',{p_month:mm}),SB.from('works').select('id,title,release_date')]);
+  try{await ensureRefs();
+    const[f,t,sr,wr]=await Promise.all([getFresh(),SB.from('settlements').select('person_id,status,sent_at').eq('period_month',mm),SB.rpc('admin_statement',{p_month:mm}),Promise.resolve({data:WORKS,error:null})]);
     const qe=f.error||t.error;if(qe)throw qe;
     const lag=(f.data||[]).filter(r=>{const d=r.last_sale_date?String(r.last_sale_date).slice(0,10):'',mo=r.last_sale_month?String(r.last_sale_month).slice(0,7):'';return d?d<end:(mo?mo<m:true)}).map(r=>({n:pnm(r.platform_name),d:r.last_sale_date?String(r.last_sale_date).slice(0,10):''})),
       unl=WORKS.filter(w=>!(WA[w.id]||[]).length).map(w=>({id:w.id,title:w.title})),sold=new Set((sr.data||[]).filter(r=>Number(r.quantity)>0).map(r=>r.work_id)),

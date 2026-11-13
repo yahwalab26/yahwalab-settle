@@ -8,7 +8,7 @@ async function loadToday(){const el=$('#tdb'),my=++TDT,t=kst(),today=iso(t),W='�
   $('#tdd').textContent=`${t.getUTCMonth()+1}월 ${t.getUTCDate()}일 (${W})`;
   const tm=$('#tm');tm.value=flowMonth();
   el.innerHTML='<p class="k">불러오는 중…</p>';
-  const[f,a]=await Promise.all([SB.from('v_data_freshness').select('*').order('platform_code'),SB.from('app_settings').select('value').eq('key','auto_mail_enabled').maybeSingle()]);
+  const[f,a]=await Promise.all([getFresh(),SB.from('app_settings').select('value').eq('key','auto_mail_enabled').maybeSingle()]);
   if(my!==TDT)return;
   const o=['ridi','kyobo','aladin','yes24','bookcube'],k=c=>{const i=o.indexOf(c);return i<0?99:i},
     rows=(f.data||[]).slice().sort((x,y)=>k(x.platform_code)-k(y.platform_code)).map(r=>{const d=r.last_sale_date?String(r.last_sale_date).slice(0,10):'',n=d?tdDays(d,today):null,

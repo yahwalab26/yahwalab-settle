@@ -18,7 +18,7 @@ $('#amc').onchange=e=>{if(IS_B){e.target.checked=!e.target.checked;return alert(
   const save=async()=>{const r=await SB.from('app_settings').upsert({key:'auto_mail_enabled',value:want,updated_at:new Date().toISOString()});closeLay();if(r.error)return alert('저장 실패: '+r.error.message);c.checked=want;autoTxt()};
   confirmLay(want?{title:'자동 발송 켜기',danger:false,body:'<p style="margin:0">매월 25일(주말·공휴일이면 직전 영업일)에 확정된 정산서 중 아직 발송하지 않은 건을 작가 메일로 자동 발송합니다.</p>',ok:'켜기',onOk:save}:{title:'자동 발송 끄기',danger:false,body:'<p style="margin:0">자동 발송을 중지합니다. 수동 메일 발송은 그대로 사용할 수 있습니다.</p>',ok:'끄기',onOk:save})};
 async function loadSettle(){const m=$('#sm');monVal('#sm');loadAuto();loadTaxRate();$('#sl').innerHTML='<tr><td colspan="7" class="k em">불러오는 중…</td></tr>';
-  const[a,b]=await Promise.all([SB.rpc('admin_statement',{p_month:m.value+'-01'}),SB.from('settlements').select('id,person_id,status,author_total,payable_amount,confirmed_at,sent_at').eq('period_month',m.value+'-01')]);
+  const[a,b]=await Promise.all([SB.rpc('admin_statement',{p_month:m.value+'-01'}),SB.from('settlements').select('id,person_id,status,author_total,payable_amount,confirmed_at,sent_at').eq('period_month',m.value+'-01'),ensurePeople().catch(e=>dbg('작가 실명 불러오기',e))]);
   if(a.error){reportErr('정산서 조회',a.error.message);return $('#sl').innerHTML=`<tr><td colspan="7" class="bad em">${esc(a.error.message)}</td></tr>`}
   ST=a.data||[];SS={};(b.data||[]).forEach(x=>SS[x.person_id]=x);if(!PLOADED)await loadPeople();drawSettle()}
 function buildSt(){const P={},seen={};

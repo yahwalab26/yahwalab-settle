@@ -13,6 +13,6 @@ async function enter(u){ME=u;const{data}=await SB.from('profiles').select('role,
   if(data?.role!=='admin')return view('denied');
   if(!await needBundle('admin'))return;
   if(!await mfaGate())return;
-  $('#who').textContent=u.email;$('#ver').textContent=VER;view('app');loadFresh();route();loadPeople();logLogin();
+  $('#who').textContent=u.email;$('#ver').textContent=VER;view('app');route();ensureRefs();setTimeout(()=>ensurePeople().catch(e=>dbg('작가 목록 사전 로드',e)),2500);logLogin();
   try{document.cookie='yw_nt=1;domain=.yahwalab.xyz;path=/;max-age=31536000;SameSite=Lax;Secure'}catch(e){dbg('관리자 제외 쿠키',e)} /* 홈페이지 버튼 클릭 집계에서 관리자 본인 제외 */}
 try{const se=localStorage.getItem('yw_email');if(se){$('#em').value=se;$('#rm').checked=true}}catch(e){dbg('아이디 불러오기',e)}

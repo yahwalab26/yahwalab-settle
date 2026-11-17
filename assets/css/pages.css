@@ -32,3 +32,25 @@ li.ok .fic{background:var(--ok);border-color:var(--ok);color:#fff}li.warn .fic{b
 .fbd .fd{margin:4px 0 0;font-size:13.5px;line-height:1.6}.fbd p{margin:6px 0 0;font-size:13px;line-height:1.7}
 .fa button{white-space:nowrap;min-height:36px;padding:0 14px}
 @media (max-width:560px){ol.flr li{grid-template-columns:28px 1fr}.fa{grid-column:2}}
+
+/* 작가 화면 월별 정산서(#mys 표, 클래스 mst) — 데스크톱은 표 그대로, 모바일은 정산월별 카드형(2026-11-18) */
+table.mst .mo-m{display:none}
+table.mst .acts{display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:600px){
+ table.vm.mst,table.vm.mst tbody,table.vm.mst tr,table.vm.mst td{display:block;width:100%}
+ table.vm.mst thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ table.vm.mst tr{padding:22px 0 20px;border-bottom:1px solid var(--line)}
+ table.vm.mst tr:first-child{padding-top:6px}
+ table.vm.mst td{padding:0;border:0;height:auto!important;text-align:left;font-variant-numeric:tabular-nums}
+ table.vm.mst td.mo{margin-bottom:12px}
+ table.vm.mst .mo-d{display:none}
+ table.vm.mst .mo-m{display:block;font-size:18px;font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+ table.vm.mst td[data-l]{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:5px 0;font-size:15px;text-align:right}
+ table.vm.mst td[data-l]::before{content:attr(data-l);font-size:13px;color:var(--mute);text-align:left}
+ table.vm.mst td.pay{margin-top:8px;padding-top:12px;border-top:1px solid var(--line);font-size:17px;font-weight:700}
+ table.vm.mst td.pay::before{font-weight:400}
+ table.vm.mst td.act{margin-top:16px}
+ table.vm.mst .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+ table.vm.mst td.act button.ghost{width:100%;height:44px!important;min-height:44px!important;margin:0;font-size:14px!important}
+ table.vm.mst td[colspan]{padding:28px 0;text-align:left;line-height:1.6}
+}

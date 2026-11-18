@@ -7,3 +7,9 @@ const fmtD=d=>`${d.getUTCMonth()+1}월 ${d.getUTCDate()}일(${'일월화수목�
 function biz(y,m,d){const x=new Date(Date.UTC(y,m,d));while([0,6].includes(x.getUTCDay())||HOL.has(iso(x)))x.setUTCDate(x.getUTCDate()-1);return x}   // 주말·공휴일이면 앞선 평일
 function drawSchedule(){const t=kst();let y=t.getUTCFullYear(),m=t.getUTCMonth(),pay=biz(y,m+1,0);if(iso(pay)<iso(t)){m++;pay=biz(y,m+1,0)}const mail=biz(y,m,25),mm=mon1(y,m).getUTCMonth()+1;
   $('#sch').innerHTML=`<div class="k" style="font-size:12px;letter-spacing:.06em">${mm}월 정산 일정</div><div class="row" style="gap:36px;margin-top:8px"><div><div class="k">정산 메일 발송</div><div style="font-size:19px;font-weight:700">${fmtD(mail)}</div></div><div><div class="k">정산일</div><div style="font-size:19px;font-weight:700">${fmtD(pay)}</div></div></div><p class="k" style="font-size:12px;margin:14px 0 0;text-align:center">※ 공휴일인 경우 영업일 기준으로 처리</p>`}
+
+/* 작가 화면 바로가기 메뉴(#anav): 누르면 해당 구역으로 부드럽게 이동, 스크롤 위치에 맞춰 현재 구역 표시. 주소(location.hash)는 건드리지 않음 */
+(()=>{const nav=document.getElementById('anav');if(!nav)return;const B=[...nav.querySelectorAll('button[data-t]')],T=B.map(b=>document.getElementById(b.dataset.t));
+  nav.addEventListener('click',e=>{const b=e.target.closest('button[data-t]');const el=b&&document.getElementById(b.dataset.t);if(el)el.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'start'})});
+  const spy=()=>{if(!nav.offsetParent)return;const y=nav.offsetHeight+28;let c=-1;T.forEach((el,i)=>{if(el&&el.getBoundingClientRect().top<=y)c=i});B.forEach((b,i)=>b.setAttribute('aria-current',String(i===c)))};
+  addEventListener('scroll',spy,{passive:true});addEventListener('resize',spy)})();

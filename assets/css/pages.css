@@ -118,3 +118,13 @@ table.rt.dly .u{display:none}
 #anav button[aria-current=true]{color:var(--ink)!important;font-weight:700;border-bottom-color:var(--ink)!important}
 #anav button:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
 #author h2[id^=as-]{scroll-margin-top:60px}
+
+/* 작가 일일 정산 현황 조회 폼(모바일): 플랫폼 칩 동일 너비(3열)·기간 가운데 정렬·밑줄과 간격 축소 */
+@media(max-width:600px){
+ .dsc #pchips{display:grid!important;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+ .dsc #pchips .chp{width:100%!important;min-width:0!important;height:44px!important;padding:0 4px!important;justify-content:center;white-space:nowrap}
+ .dsc #sf,.dsc #se{text-align:center;height:auto!important;min-height:0!important;padding:2px 0 3px!important;line-height:1.3}
+ .dsc #sf::-webkit-date-and-time-value,.dsc #se::-webkit-date-and-time-value{text-align:center}
+ .dsc #sf+span,.dsc #se{align-self:flex-end}
+ .dsc #sdq.row{margin-top:10px}
+}

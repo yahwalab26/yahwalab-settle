@@ -39,3 +39,14 @@ $('#sx').oninput=()=>{if(ST.length)drawSettle()};
 $('#sxe').onclick=()=>{const on=$('#sxw').hidden;$('#sxw').hidden=!on;$('#sxv').hidden=on;$('#sxe').textContent=on?'적용':'수정';if(!on){const v=Number($('#sx').value);if(!(v>=0&&v<=100)){$('#sx').value='3.3'}$('#sxv').textContent=Number($('#sx').value)+'%';drawSettle();saveTaxRate(Number($('#sx').value))}};
 $('#sl').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.sp)openStatement(b.dataset.sp);if(b.dataset.sc)confirmSt([b.dataset.sc]);if(b.dataset.su)unconfirmSt(b.dataset.su);if(b.dataset.sm)mailSt(b.dataset.sm)};
 $('#sca').onclick=()=>confirmSt(buildSt().map(p=>p.id));
+/* ---------- 플래너용 복사: 플랫폼별 총 정산액·출판사 공제(=총 정산액 − 작가 정산액)를 플래너 '한 번에 붙여넣기' 형식으로 복사. 읽기 전용(DB 변경 없음) ---------- */
+function plannerLines(rows,m){const P={},seen={};let nr=0;
+  rows.forEach(r=>{const c=r.platform_code,p=P[c]??={net:0,au:0};p.au+=Number(r.author_amt||0);nr+=Number(r.no_rate||0);
+    const k=r.person_id+r.work_id+c;if(seen[k])return;seen[k]=1;p.net+=Number(r.net||0)});   /* buildSt 와 같은 규칙: 판매는 사람·작품·플랫폼당 한 번만 */
+  const o=c=>{const i=ORD.indexOf(c);return i<0?99:i},cs=Object.keys(P).sort((a,b)=>o(a)-o(b)),pub=c=>Math.round(P[c].net-P[c].au);
+  return{lines:cs.filter(c=>P[c].net||P[c].au).map(c=>`${m} ${PN[c]||c} ${Math.round(P[c].net)} ${pub(c)}`),net:Math.round(cs.reduce((a,c)=>a+P[c].net,0)),pub:cs.reduce((a,c)=>a+pub(c),0),nr}}
+$('#spl').onclick=async()=>{const m=monVal('#sm');if(!ST.length)return alert('이 달에 정산할 판매 내역이 없습니다.');
+  const r=plannerLines(ST,m),txt=r.lines.join('\n'),L=buildSt(),sn=sum(L,'net'),sd=sum(L,'ded');
+  const info=`${m} 플랫폼 ${r.lines.length}곳\n총 정산액 ${won1(r.net)} · 출판사 공제 ${won1(r.pub)}\n(정산 화면 합계: ${won1(sn)} · ${won1(sd)}${r.net===Math.round(sn)&&Math.abs(r.pub-sd)<=L.length+10?'':' — 차이가 있으니 확인하세요'})`+(r.nr?`\n⚠ 계약 비율 미설정 ${r.nr}건: 출판사 공제가 실제보다 크게 나올 수 있습니다.`:'');
+  let ok=false;try{await navigator.clipboard.writeText(txt);ok=true}catch(e){dbg('플래너용 복사',e)}
+  if(ok)alert('복사했습니다. 플래너 매출 탭의 \'한 번에 붙여넣기\'에 붙여넣으세요.\n\n'+info);else prompt('자동 복사가 안 됩니다. 아래 내용을 직접 복사해 플래너에 붙여넣으세요.\n'+info,txt)};

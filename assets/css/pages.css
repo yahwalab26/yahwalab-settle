@@ -54,3 +54,59 @@ table.mst .acts{display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:flex-
  table.vm.mst td.act button.ghost{width:100%;height:44px!important;min-height:44px!important;margin:0;font-size:14px!important}
  table.vm.mst td[colspan]{padding:28px 0;text-align:left;line-height:1.6}
 }
+
+table.rt.dly .u{display:none}
+/* 작가 화면 나머지 표 모바일 개선(2026-11-18) — 계약 비율(rtb)·비율 레이어(rlt)·일일 정산 현황(dly)·조회 폼. 데스크톱은 변경 없음 */
+@media(max-width:600px){
+ /* 계약 정산 비율: 긴 작품명은 줄바꿈, 비율 열 고정 */
+ table.vm.rtb{table-layout:fixed;width:100%}
+ table.vm.rtb th:last-child,table.vm.rtb td:last-child{width:104px}
+ table.vm.rtb th{white-space:nowrap}
+ table.rt.dly .u{display:inline;font-style:normal;font-weight:400;font-size:.85em;margin-left:1px}
+ table.rt.dly td.p2 .u{font-size:14px}
+ table.vm.rtb td{padding-top:6px;padding-bottom:6px}
+ table.vm.rtb td button.lnk{display:block!important;width:100%;padding:10px 0!important;text-align:left!important;white-space:normal!important;overflow-wrap:anywhere;line-height:1.45!important}
+ /* 비율 레이어: 한 행 = 구분·플랫폼·기간(왼쪽) + 비율(오른쪽) */
+ table.vm.rlt,table.vm.rlt tbody,table.vm.rlt tr,table.vm.rlt td{display:block;width:100%}
+ table.vm.rlt thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ table.vm.rlt tr{display:grid;grid-template-columns:1fr auto;grid-template-areas:"a r" "b r" "c r";column-gap:12px;row-gap:3px;padding:14px 0;border-bottom:1px solid var(--line)}
+ table.vm.rlt td{padding:0;border:0;height:auto!important;text-align:left}
+ table.vm.rlt .k1{grid-area:a;font-size:15px;font-weight:700}
+ table.vm.rlt .k2{grid-area:b;font-size:13.5px;color:var(--mute)}
+ table.vm.rlt .k3{grid-area:c;font-size:12.5px;color:var(--mute)}
+ table.vm.rlt .k4{grid-area:r;align-self:center;text-align:right;font-size:20px}
+ /* 일일 정산 현황: 합계 요약 → 내역 카드 */
+ .tw.sc table.rt.dly{display:flex;flex-direction:column;min-width:0;width:100%}
+ table.rt.dly thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+ table.rt.dly tbody{display:block;order:1}
+ table.rt.dly tbody tr{display:grid;grid-template-columns:repeat(3,1fr);grid-template-areas:"t t e" "p d d" "q g n";gap:6px 10px;padding:16px 0;border-bottom:1px solid var(--line)}
+ table.rt.dly td{display:block;padding:0;border:0;height:auto!important;min-width:0;text-align:left!important;white-space:normal;font-variant-numeric:tabular-nums}
+ table.rt.dly td[data-l]::before{content:attr(data-l);display:block;margin-bottom:1px;font-size:11.5px;font-weight:400;color:var(--mute)}
+ table.rt.dly td.tt{grid-area:t;font-size:15px;font-weight:700;line-height:1.4;overflow-wrap:anywhere}
+ table.rt.dly td.e{grid-area:e;text-align:right!important;font-size:15px;font-weight:700}
+ table.rt.dly tbody td.e::before{text-align:right}
+ table.rt.dly td.pf{grid-area:p;justify-self:start;align-self:center;padding:1px 8px;border:1px solid var(--line);font-size:11.5px;color:var(--mute)}
+ table.rt.dly td.d{grid-area:d;align-self:center;font-size:12.5px;color:var(--mute)}
+ table.rt.dly td.q{grid-area:q;margin-top:6px;font-size:14px}
+ table.rt.dly td.g{grid-area:g;margin-top:6px;font-size:14px}
+ table.rt.dly td.n{grid-area:n;margin-top:6px;font-size:14px}
+ table.rt.dly td.q,table.rt.dly td.g,table.rt.dly td.n{text-align:left!important}
+ table.rt.dly tbody td[colspan]{grid-column:1/-1;padding:28px 0!important;text-align:center!important}
+ table.rt.dly tfoot{display:flex;flex-direction:column;order:-1;margin-bottom:6px;padding:18px 16px 12px;background:var(--soft)}
+ table.rt.dly.no tfoot{display:none}
+ table.rt.dly tfoot tr{display:block}
+ table.rt.dly tfoot tr.pay{order:-1;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-bottom:14px;margin-bottom:8px;border-bottom:1px solid var(--line)}
+ table.rt.dly tfoot td.p1{text-align:left!important;font-size:14px;line-height:1.5}
+ table.rt.dly tfoot td.p1 .k{display:block;font-size:12px}
+ table.rt.dly tfoot td.p2{font-size:22px;white-space:nowrap}
+ table.rt.dly tfoot td.hd{display:none}
+ table.rt.dly tfoot td[data-l]{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;text-align:right!important;font-size:14px}
+ table.rt.dly tfoot td[data-l]::before{display:inline;margin:0;font-size:13px}
+ /* 조회 폼 */
+ .dsc #sf,.dsc #se{flex:1 1 0;width:auto!important;min-width:0}
+ .dsc #sdq.row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%}
+ .dsc #sdq button{height:44px!important;min-height:44px!important;padding:0 4px!important;font-size:14px!important}
+ .dsc>.row{justify-content:stretch!important}
+ .dsc #sgo{width:100%;height:48px;font-size:15px}
+ #sres>p.k{margin-top:4px}
+}

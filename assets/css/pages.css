@@ -110,3 +110,11 @@ table.rt.dly .u{display:none}
  .dsc #sgo{width:100%;height:48px;font-size:15px}
  #sres>p.k{margin-top:4px}
 }
+
+/* 작가 화면 바로가기 메뉴 */
+#anav{position:sticky;top:0;z-index:5;display:flex;margin:18px 0 0;background:#fff;border-bottom:1px solid var(--line)}
+#anav button{flex:1 1 0;min-width:0;height:48px!important;min-height:48px!important;padding:0 2px!important;background:none!important;border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;color:var(--mute)!important;font-size:14px!important;font-weight:500;white-space:nowrap}
+#anav button:hover{background:none!important;color:var(--ink)!important}
+#anav button[aria-current=true]{color:var(--ink)!important;font-weight:700;border-bottom-color:var(--ink)!important}
+#anav button:focus-visible{outline:2px solid var(--ink);outline-offset:-4px}
+#author h2[id^=as-]{scroll-margin-top:60px}

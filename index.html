@@ -13,12 +13,12 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/css/tokens.css?v=2.24.9">
-<link rel="stylesheet" href="assets/css/base.css?v=2.24.9">
-<link rel="stylesheet" href="assets/css/shell.css?v=2.24.9">
-<link rel="stylesheet" href="assets/css/components.css?v=2.24.9">
-<link rel="stylesheet" href="assets/css/buttons.css?v=2.24.9">
-<link rel="stylesheet" href="assets/css/pages.css?v=2.24.9">
+<link rel="stylesheet" href="assets/css/tokens.css?v=2.25.2">
+<link rel="stylesheet" href="assets/css/base.css?v=2.25.2">
+<link rel="stylesheet" href="assets/css/shell.css?v=2.25.2">
+<link rel="stylesheet" href="assets/css/components.css?v=2.25.2">
+<link rel="stylesheet" href="assets/css/buttons.css?v=2.25.2">
+<link rel="stylesheet" href="assets/css/pages.css?v=2.25.2">
 </head><body>
 <div class="wrap">
 
@@ -53,11 +53,12 @@
   <header><div><img class="logo" src="https://github.com/yahwalab26/yahwalab/blob/main/assets/img/logo-yahwa.png?raw=true" alt="야화랩 YAHWA LAB"><p class="sub">야화랩 정산 사이트</p></div>
     <div class="who"><span id="awho"></span><span class="wb"><button class="lnk" id="pwb2">비밀번호 변경</button><button class="lnk out">로그아웃</button></span></div></header>
   <div class="card" id="sch" style="margin-top:20px"></div>
-  <h2><small>(01)</small>월별 정산서</h2>
+  <nav id="anav" aria-label="작가 페이지 바로가기"><button type="button" data-t="as-1">월별 정산서</button><button type="button" data-t="as-2">계약 비율</button><button type="button" data-t="as-3">통계</button><button type="button" data-t="as-4">일일 현황</button></nav>
+  <h2 id="as-1"><small>(01)</small>월별 정산서</h2>
   <div class="tw"><table class="vm mst"><caption class="sr-only">발송된 월별 정산서</caption><thead><tr><th>정산 기준월</th><th class="r">작가 정산액</th><th class="r">실 지급액</th><th></th></tr></thead><tbody id="mys"></tbody></table></div>
-  <h2><small>(02)</small>계약 정산 비율</h2><div id="rtl"></div>
-  <h2><small>(03)</small>정산 통계</h2><div id="stt"></div>
-  <h2><small>(04)</small>일일 정산 현황</h2>
+  <h2 id="as-2"><small>(02)</small>계약 정산 비율</h2><div id="rtl"></div>
+  <h2 id="as-3"><small>(03)</small>정산 통계</h2><div id="stt"></div>
+  <h2 id="as-4"><small>(04)</small>일일 정산 현황</h2>
   <p class="k" style="text-align:center;margin:0 0 12px;font-size:12px;line-height:1.9">정산 내역은 매일 00시~01시에 업데이트되므로, 전일까지의 판매 내역만 확인할 수 있습니다.<br>리디북스는 플랫폼 정산 내역 제공 기준에 따라 판매일로부터 이틀 후(익익일) 정산 내역이 업데이트됩니다.<br>(※ 본 정산 현황은 미확정 금액입니다. 취소분 등으로 인하여 실제 정산액과 차이가 있을 수 있습니다.)</p>
   <div class="card dsc" style="text-align:left;padding-top:8px">
     <div class="fr"><span class="fl">정산 기간</span><div class="row" style="justify-content:flex-start"><input id="sf" type="date" aria-label="정산 시작일" style="width:auto"><span>~</span><input id="se" type="date" aria-label="정산 종료일" style="width:auto">
@@ -212,19 +213,19 @@
 <div id="rrnpk" hidden role="status" aria-live="polite" style="position:fixed;right:12px;bottom:12px;z-index:9999;background:#fff;border:1px solid #17171A;padding:12px 14px;max-width:min(380px,calc(100vw - 24px));box-shadow:0 4px 18px rgba(0,0,0,.18)"></div>
 <div id="lay" class="lay" hidden><div class="lp" role="dialog" aria-modal="true" aria-labelledby="lt"><button class="ghost lx" id="lxb">닫기</button><div id="lbody"></div></div></div>
 <script src="/libs/supabase-2.49.4.js"></script>
-<script src="assets/js/core/boot.js?v=2.24.9"></script>
-<script src="assets/js/core/loader.js?v=2.24.9"></script>
-<script src="assets/js/core/auth.js?v=2.24.9"></script>
-<script src="assets/js/core/enter.js?v=2.24.9"></script>
-<script src="assets/js/core/password.js?v=2.24.9"></script>
-<script src="assets/js/core/start-hash.js?v=2.24.9"></script>
-<script src="assets/js/core/embed.js?v=2.24.9"></script>
-<script src="assets/js/core/dates.js?v=2.24.9"></script>
-<script src="assets/js/core/session.js?v=2.24.9"></script>
-<script src="assets/js/core/layer.js?v=2.24.9"></script>
-<script src="assets/js/core/work-shared.js?v=2.24.9"></script>
-<script src="assets/js/core/statement-calc.js?v=2.24.9"></script>
-<script src="assets/js/core/statement-html.js?v=2.24.9"></script>
-<script src="assets/js/core/statement-print.js?v=2.24.9"></script>
-<script src="assets/js/core/error-report.js?v=2.24.9"></script>
-<script src="assets/js/core/invite.js?v=2.24.9"></script></body></html>
+<script src="assets/js/core/boot.js?v=2.25.2"></script>
+<script src="assets/js/core/loader.js?v=2.25.2"></script>
+<script src="assets/js/core/auth.js?v=2.25.2"></script>
+<script src="assets/js/core/enter.js?v=2.25.2"></script>
+<script src="assets/js/core/password.js?v=2.25.2"></script>
+<script src="assets/js/core/start-hash.js?v=2.25.2"></script>
+<script src="assets/js/core/embed.js?v=2.25.2"></script>
+<script src="assets/js/core/dates.js?v=2.25.2"></script>
+<script src="assets/js/core/session.js?v=2.25.2"></script>
+<script src="assets/js/core/layer.js?v=2.25.2"></script>
+<script src="assets/js/core/work-shared.js?v=2.25.2"></script>
+<script src="assets/js/core/statement-calc.js?v=2.25.2"></script>
+<script src="assets/js/core/statement-html.js?v=2.25.2"></script>
+<script src="assets/js/core/statement-print.js?v=2.25.2"></script>
+<script src="assets/js/core/error-report.js?v=2.25.2"></script>
+<script src="assets/js/core/invite.js?v=2.25.2"></script></body></html>

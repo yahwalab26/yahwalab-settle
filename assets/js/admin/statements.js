@@ -10,10 +10,14 @@ async function saveTaxRate(v){const r=await SB.from('app_settings').upsert({key:
 async function loadAuto(){const c=$('#amc'),{data,error}=await SB.from('app_settings').select('value').eq('key','auto_mail_enabled').maybeSingle();
   if(error||!data){c.disabled=true;$('#ams').textContent=error?'설정을 불러오지 못했습니다: '+error.message:'설정 항목이 없습니다.';return}
   c.checked=data.value===true;c.disabled=false;autoTxt()}
-$('#amt').onclick=async()=>{const b=$('#amt'),x=Object.values(SS).find(v=>v.status!=='draft'),m=monVal('#sm')+'-01';
-  if(!x)return alert('이 달에 확정된 정산서가 없습니다. 먼저 정산서를 확정해 주세요.');
+/* 시험 발송 대상 선택칸: 확정된 작가만 나열(작품 수 표시). 비워 두면 확정된 첫 번째 작가. 다시 그려도 고른 작가는 유지 */
+function fillAmp(L){const s=$('#amp'),cur=s.value,o=L.filter(p=>SS[p.id]&&SS[p.id].status!=='draft');
+  s.innerHTML='<option value="">확정된 첫 번째 작가(자동)</option>'+o.map(p=>`<option value="${p.id}">${esc([...p.pens].join(', '))} · 작품 ${p.W.length}개</option>`).join('');
+  if(o.some(p=>p.id===cur))s.value=cur}
+$('#amt').onclick=async()=>{const b=$('#amt'),sel=$('#amp').value,x=sel?SS[sel]:Object.values(SS).find(v=>v.status!=='draft'),m=monVal('#sm')+'-01';
+  if(!x||x.status==='draft')return alert('이 달에 확정된 정산서가 없습니다. 먼저 정산서를 확정해 주세요.');
   b.disabled=true;const r=await call({action:'send_test_statement',person_id:x.person_id,month:m});b.disabled=false;
-  if(r.error)return alert(r.error);alert(`${r.data.to} 로 시험 발송했습니다. 확정된 첫 번째 정산서로 만든 PDF이며, 작가에게는 발송되지 않았습니다.`)};
+  if(r.error)return alert(r.error);const who=[...((buildSt().find(q=>q.id===x.person_id)||{pens:[]}).pens)].join(', ')||'-';alert(`${r.data.to} 로 시험 발송했습니다. 대상 작가: ${who}. 이 작가의 확정 정산서로 만든 PDF이며, 작가에게는 발송되지 않았습니다.`)};
 $('#amc').onchange=e=>{if(IS_B){e.target.checked=!e.target.checked;return alert(B_MSG)}const c=e.target,want=c.checked;c.checked=!want;
   const save=async()=>{const r=await SB.from('app_settings').upsert({key:'auto_mail_enabled',value:want,updated_at:new Date().toISOString()});closeLay();if(r.error)return alert('저장 실패: '+r.error.message);c.checked=want;autoTxt()};
   confirmLay(want?{title:'자동 발송 켜기',danger:false,body:'<p style="margin:0">매월 25일(주말·공휴일이면 직전 영업일)에 확정된 정산서 중 아직 발송하지 않은 건을 작가 메일로 자동 발송합니다.</p>',ok:'켜기',onOk:save}:{title:'자동 발송 끄기',danger:false,body:'<p style="margin:0">자동 발송을 중지합니다. 수동 메일 발송은 그대로 사용할 수 있습니다.</p>',ok:'끄기',onOk:save})};
@@ -33,7 +37,7 @@ function drawSettle(){const L=buildSt();
   $('#sl').innerHTML=L.map(p=>{const x=SS[p.id],ok=x&&x.status!=='draft',chg=ok&&(Number(x.author_total)!==p.A||Number(x.payable_amount)!==p.pay);
     const sent=x&&x.status==='sent',stt=ok?`<span class="ok">${sent?'확정 · 메일 발송':'확정'}</span>${chg?' <span class="bad">확정 후 변경됨</span>':''}<br><span class="k">${(x.confirmed_at||'').slice(0,10)}${sent&&x.sent_at?' · 발송 '+x.sent_at.slice(0,10):''}</span>`:'<span class="k">미확정</span>';
     return `<tr><td><button class="lnk" data-sp="${p.id}">${esc([...p.pens].join(', '))}</button>${p.nr?`<br><span class="bad" style="font-size:12px">계약 비율 미설정 ${p.nr}건</span>`:''}${p.A<0?'<br><span class="bad" style="font-size:12px">마이너스 정산 — 이월 공제 기능이 준비되기 전에는 확정할 수 없습니다</span>':''}</td><td class="r">${won1(p.net)}</td><td class="r">${won1(p.A)}</td><td class="r hm">${won1(p.tax)}</td><td class="r"><b>${won1(p.pay)}</b></td><td class="r hm">${won1(p.ded)}</td><td class="cc">${stt}<br><button class="ghost" data-sc="${p.id}">${ok?'재확정':'확정'}</button>${ok?`<button class="ghost" data-su="${p.id}">취소</button><button class="ghost" data-sm="${p.id}">${sent?'메일 재발송':'메일 발송'}</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="7" class="k em">이 달에 정산할 판매 내역이 없습니다.</td></tr>';
-  $('#slf').innerHTML=L.length?`<tr><td><b>합계 (${L.length}명)</b></td><td class="r"><b>${won1(sum(L,'net'))}</b></td><td class="r"><b>${won1(sum(L,'A'))}</b></td><td class="r hm"><b>${won1(sum(L,'tax'))}</b></td><td class="r"><b>${won1(sum(L,'pay'))}</b></td><td class="r hm"><b>${won1(sum(L,'ded'))}</b></td><td></td></tr>`:''}
+  $('#slf').innerHTML=L.length?`<tr><td><b>합계 (${L.length}명)</b></td><td class="r"><b>${won1(sum(L,'net'))}</b></td><td class="r"><b>${won1(sum(L,'A'))}</b></td><td class="r hm"><b>${won1(sum(L,'tax'))}</b></td><td class="r"><b>${won1(sum(L,'pay'))}</b></td><td class="r hm"><b>${won1(sum(L,'ded'))}</b></td><td></td></tr>`:'';fillAmp(L)}
 $('#sm').onchange=loadSettle;
 $('#sx').oninput=()=>{if(ST.length)drawSettle()};
 $('#sxe').onclick=()=>{const on=$('#sxw').hidden;$('#sxw').hidden=!on;$('#sxv').hidden=on;$('#sxe').textContent=on?'적용':'수정';if(!on){const v=Number($('#sx').value);if(!(v>=0&&v<=100)){$('#sx').value='3.3'}$('#sxv').textContent=Number($('#sx').value)+'%';drawSettle();saveTaxRate(Number($('#sx').value))}};
